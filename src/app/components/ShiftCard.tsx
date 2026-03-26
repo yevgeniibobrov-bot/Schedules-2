@@ -496,7 +496,7 @@ function CompositionStrip({ shift }: { shift: ShiftData }) {
   return (
     <div
       className="flex w-full overflow-hidden rounded-full mt-1"
-      style={{ height: 3, opacity: 0.55 }}
+      style={{ height: 3, opacity: 0.4 }}
     >
       {timeline.map((t, i) => (
         <div
@@ -522,8 +522,8 @@ function ValidationBadge({ level }: { level: "error" | "warning" | null }) {
         position: "absolute",
         top: -2,
         right: -2,
-        width: 8,
-        height: 8,
+        width: 9,
+        height: 9,
         borderRadius: "50%",
         backgroundColor: "var(--destructive)",
         zIndex: 3,
@@ -758,6 +758,9 @@ export function ShiftCard({
 
         {/* Row 3: Break meta */}
         <BreakAndBar shift={shift} breakText={shift.breakText} />
+
+        {/* Row 4: Composition strip — quiet structural cue */}
+        <CompositionStrip shift={shift} />
       </button>
     </div>
   );
@@ -866,6 +869,9 @@ export function OpenShiftCard({
 
       {/* Row 3: Break meta */}
       <BreakAndBar shift={shift} breakText={shift.breakText} />
+
+      {/* Row 4: Composition strip */}
+      <CompositionStrip shift={shift} />
     </button>
   );
 
