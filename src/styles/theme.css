@@ -1,0 +1,311 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  /* Typography font sizes */
+  --text-3xl: 36px;
+  --text-2xl: 24px;
+  --text-xl: 18px;
+  --text-lg: 16px;
+  --text-base: 14px;
+  --text-sm: 12px;
+  --text-xs: 11px;
+  --text-2xs: 10px;
+  --text-3xs: 9px;
+
+  /* ── Alpha / tint backgrounds (semantic) ────────────────────────── */
+  /* Primary (blue) alpha variants */
+  --primary-alpha-4: rgba(62, 113, 206, 0.04);
+  --primary-alpha-5: rgba(62, 113, 206, 0.05);
+  --primary-alpha-6: rgba(62, 113, 206, 0.06);
+  --primary-alpha-8: rgba(62, 113, 206, 0.08);
+  --primary-alpha-10: rgba(62, 113, 206, 0.10);
+  --primary-alpha-12: rgba(62, 113, 206, 0.12);
+  --primary-alpha-25: rgba(62, 113, 206, 0.25);
+  --primary-alpha-40: rgba(62, 113, 206, 0.40);
+  /* Destructive (red) alpha variants */
+  --destructive-alpha-4: rgba(202, 52, 72, 0.04);
+  --destructive-alpha-5: rgba(202, 52, 72, 0.05);
+  --destructive-alpha-6: rgba(202, 52, 72, 0.06);
+  --destructive-alpha-8: rgba(202, 52, 72, 0.08);
+  --destructive-alpha-10: rgba(202, 52, 72, 0.10);
+  --destructive-alpha-12: rgba(202, 52, 72, 0.12);
+  --destructive-alpha-15: rgba(202, 52, 72, 0.15);
+  /* Success / chart-2 (green) alpha variants */
+  --success-alpha-4: rgba(49, 134, 51, 0.04);
+  --success-alpha-5: rgba(49, 134, 51, 0.05);
+  --success-alpha-8: rgba(49, 134, 51, 0.08);
+  --success-alpha-10: rgba(49, 134, 51, 0.10);
+  --success-alpha-12: rgba(49, 134, 51, 0.12);
+  --success-alpha-25: rgba(49, 134, 51, 0.25);
+  --success-alpha-40: rgba(49, 134, 51, 0.40);
+  /* Warning / chart-3 (amber) alpha variants */
+  --warning-alpha-4: rgba(175, 99, 15, 0.04);
+  --warning-alpha-5: rgba(175, 99, 15, 0.05);
+  --warning-alpha-8: rgba(175, 99, 15, 0.08);
+  --warning-alpha-10: rgba(175, 99, 15, 0.10);
+  /* Accent-purple / chart-5 alpha variants */
+  --purple-alpha-5: rgba(123, 88, 206, 0.05);
+  --purple-alpha-8: rgba(123, 88, 206, 0.08);
+  --purple-alpha-12: rgba(123, 88, 206, 0.12);
+
+  /* Chart color alpha variants for timeline segments */
+  --chart-1-alpha-20: rgba(62, 113, 206, 0.20);
+  --chart-2-alpha-20: rgba(49, 134, 51, 0.20);
+  --chart-3-alpha-20: rgba(175, 99, 15, 0.20);
+  --chart-4-alpha-20: rgba(202, 52, 72, 0.20);
+  --chart-5-alpha-20: rgba(123, 88, 206, 0.20);
+
+  /* The default background color for the application. */
+  --background: rgba(255, 255, 255, 1.00);
+  /* The default color for elements or text that appears on top of the background. */
+  --foreground: rgba(23, 21, 26, 1.00);
+  /* The background color for cards, modals, and other containers. */
+  --card: rgba(255, 255, 255, 1.00);
+  /* The default color for text or elements that appear on top of cards, modals and other background containers. */
+  --card-foreground: rgba(23, 21, 26, 1.00);
+  /* The background color for dropdowns and tooltips. */
+  --popover: rgba(255, 255, 255, 1.00);
+  /* The default color for text or elements that appear on top of dropdowns and tooltips. */
+  --popover-foreground: rgba(23, 21, 26, 1.00);
+  /* The primary color used for buttons, links, and other interactive elements. */
+  --primary: rgba(62, 113, 206, 1.00);
+  /* The default color for text or elements that appear on top of primary colored elements. */
+  --primary-foreground: rgba(255, 255, 255, 1.00);
+  /* The secondary color used for secondary(but NOT-DESTRUCTIVE) buttons and interactive elements. */
+  --secondary: rgba(117, 113, 126, 1.00);
+  /* The default color for text or elements that appear on top of secondary colored elements. */
+  --secondary-foreground: rgba(255, 255, 255, 1.00);
+  /* The muted color used for less prominent elements, such as disabled buttons or disabled text. */
+  --muted: rgba(250, 249, 252, 1.00);
+  /* The default color for text or elements that appear on top of muted colored elements. */
+  --muted-foreground: rgba(94, 90, 102, 1.00);
+  /* The accent color used for highlights, links, and other interactive elements. */
+  --accent: rgba(62, 113, 206, 1.00);
+  /* The default color for text or elements that appear on top of accent colored elements. */
+  --accent-foreground: rgba(255, 255, 255, 1.00);
+  /* The color used for background in destructive actions, such as delete buttons or error messages. */
+  --destructive: rgba(202, 52, 72, 1.00);
+  /* The default color for text or elements that appear on top of destructive colored elements. */
+  --destructive-foreground: rgba(255, 255, 255, 1.00);
+  /* The default border color for elements such as inputs, buttons, and other containers. */
+  --border: rgba(117, 113, 126, 0.25);
+  /* The default background color for input fields once the text has been filled. Should be either transparent or match the input-background. */
+  --input: rgba(255, 255, 255, 1.00);
+  /* The default background color for input fields, text areas, and other input elements. */
+  --input-background: rgba(255, 255, 255, 1.00);
+  /* The default font weight for medium text. */
+  --font-weight-medium: 500;
+  /* The default font weight for normal text. */
+  --font-weight-normal: 400;
+  /* The default font weight for semi-bold text. */
+  --font-weight-semibold: 600;
+  /* The color for focus rings, outlines, and other focus indicators. */
+  --ring: rgba(62, 113, 206, 1.00);
+  /* Shadow for small elevations, such as cards or modals. */
+  --elevation-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  /* Shadow for medium elevations, such as drag previews. */
+  --elevation-md: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+  /* Shadow for large elevations, such as floating panels. */
+  --elevation-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+  /* Modal/dialog overlay background */
+  --overlay: rgba(0, 0, 0, 0.4);
+  /* The color for chart elements, such as a bar or line in a chart. */
+  --chart-1: rgba(62, 113, 206, 1.00);
+  /* The color for another chart element, such as a bar or line in a chart. */
+  --chart-2: rgba(49, 134, 51, 1.00);
+  /* The color for another chart element, such as a bar or line in a chart. */
+  --chart-3: rgba(175, 99, 15, 1.00);
+  /* The color for another chart element, such as a bar or line in a chart. */
+  --chart-4: rgba(202, 52, 72, 1.00);
+  /* The color for another chart element, such as a bar or line in a chart. */
+  --chart-5: rgba(123, 88, 206, 1.00);
+  /* The default border radius for elements such as buttons, tooltip, and other containers. */
+  --radius: 8px;
+  /* The larger border radius used for card containers. */
+  --radius-card: 24px;
+  /* The background color for sidebars, navigation menus, and other persistent elements. */
+  --sidebar: rgba(236, 234, 239, 1.00);
+  /* The default color for text or elements that appear on top of sidebars, navigation menus, and other persistent elements. */
+  --sidebar-foreground: rgba(23, 21, 26, 1.00);
+  /* The primary color used for buttons, links, and other interactive elements in sidebars and navigation menus. */
+  --sidebar-primary: rgba(62, 113, 206, 1.00);
+  /* The default color for text or elements that appear on top of primary colored elements in sidebars and navigation menus. */
+  --sidebar-primary-foreground: rgba(255, 255, 255, 1.00);
+  /* The accent color used for highlights, links, and other interactive elements in sidebars and navigation menus. */
+  --sidebar-accent: rgba(117, 113, 126, 1.00);
+  /* The default color for text or elements that appear on top of accent colored elements in sidebars and navigation menus. */
+  --sidebar-accent-foreground: rgba(255, 255, 255, 1.00);
+  /* The default border color for elements in sidebars and navigation menus. */
+  --sidebar-border: rgba(117, 113, 126, 0.25);
+  /* The default color for focus rings, outlines, and other focus indicators in sidebars and navigation menus. */
+  --sidebar-ring: rgba(62, 113, 206, 1.00);
+}
+
+.dark {
+  --background: rgba(23, 21, 26, 1.00);
+  --foreground: rgba(255, 255, 255, 1.00);
+  --card: rgba(23, 21, 26, 1.00);
+  --card-foreground: rgba(255, 255, 255, 1.00);
+  --popover: rgba(23, 21, 26, 1.00);
+  --popover-foreground: rgba(255, 255, 255, 1.00);
+  --primary: rgba(62, 113, 206, 1.00);
+  --primary-foreground: rgba(255, 255, 255, 1.00);
+  --secondary: rgba(94, 90, 102, 1.00);
+  --secondary-foreground: rgba(255, 255, 255, 1.00);
+  --muted: rgba(94, 90, 102, 1.00);
+  --muted-foreground: rgba(250, 249, 252, 1.00);
+  --accent: rgba(62, 113, 206, 1.00);
+  --accent-foreground: rgba(255, 255, 255, 1.00);
+  --destructive: rgba(202, 52, 72, 1.00);
+  --destructive-foreground: rgba(255, 255, 255, 1.00);
+  --border: rgba(117, 113, 126, 0.25);
+  --input: rgba(23, 21, 26, 1.00);
+  --ring: rgba(62, 113, 206, 1.00);
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --font-weight-semibold: 600;
+  --chart-1: rgba(62, 113, 206, 1.00);
+  --chart-2: rgba(49, 134, 51, 1.00);
+  --chart-3: rgba(175, 99, 15, 1.00);
+  --chart-4: rgba(202, 52, 72, 1.00);
+  --chart-5: rgba(123, 88, 206, 1.00);
+  --sidebar: rgba(94, 90, 102, 1.00);
+  --sidebar-foreground: rgba(255, 255, 255, 1.00);
+  --sidebar-primary: rgba(62, 113, 206, 1.00);
+  --sidebar-primary-foreground: rgba(255, 255, 255, 1.00);
+  --sidebar-accent: rgba(117, 113, 126, 1.00);
+  --sidebar-accent-foreground: rgba(255, 255, 255, 1.00);
+  --sidebar-border: rgba(117, 113, 126, 0.25);
+  --sidebar-ring: rgba(62, 113, 206, 1.00);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-card: var(--radius-card);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+h1 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.11;
+}
+
+h2 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.17;
+}
+
+h3 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.22;
+}
+
+h4 {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.125;
+}
+
+p {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.43;
+}
+
+span {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.43;
+}
+
+label {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.33;
+}
+
+button {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.43;
+}
+
+input {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.43;
+}
+
+select {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: var(--text-base);
+  font-weight: var(--font-weight-normal);
+  line-height: 1.43;
+}
+
+option {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+html {
+  font-size: var(--font-size);
+}

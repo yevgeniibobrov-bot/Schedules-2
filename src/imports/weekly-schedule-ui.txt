@@ -1,0 +1,124 @@
+Create a desktop low-fidelity UI layout for an enterprise workforce planning system called Weekly Schedule 2.0.
+
+Build actual UI frames and components.
+
+Use auto layout and grid structure.
+Use existing UI Kit components where possible.
+
+Create a main desktop frame (1440px width).
+
+At the top place a header with:
+
+Department dropdown
+
+Today button
+
+Week date selector with arrows
+
+View switcher (Week / Day)
+
+Plan / Fact toggle
+
+Publish button
+
+Print button
+
+Error indicator badge with counter
+
+Do not add a Create button in the header.
+
+Below the header create a structured weekly planning table.
+
+Table structure:
+
+First column: Employee (fixed width)
+
+7 equal day columns (Mon–Sun)
+
+Last column: Weekly summary
+
+Group rows by Department.
+
+Each department section must contain:
+
+Collapsible department header row
+
+Open shifts row
+
+Employee rows
+
+Department weekly summary row
+
+Employee row must include:
+
+Name
+
+Position
+
+FTE %
+
+Monthly progress bar (normed monthly hours vs worked hours)
+
+Do not display:
+
+Weekly delta
+
+Weekly norm
+
+Exchange metrics
+
+Day cells must contain shift cards only.
+
+Use fixed row height.
+
+Create a reusable Shift Card component.
+
+Vertical layout:
+
+Time range (bold)
+
+Break text
+
+Sub-unit lines (support multiple lines)
+
+Example:
+09:00–13:00 — Sub-unit A
+13:00–17:00 — Sub-unit B
+
+Shift card must not expand row height.
+
+Create a separate frame showing Shift Details drawer open (right side).
+
+Drawer must include:
+
+Employee
+
+Department
+
+Position
+
+Time blocks
+
+Sub-unit allocation editor
+
+Break input
+
+Validation message area
+
+Create another frame showing Employee Inspector open.
+
+Inspector must include:
+
+FTE %
+
+Monthly norm
+
+Worked hours
+
+Monthly progress bar
+
+No monthly calendar grid.
+
+Use neutral grayscale styling.
+
+Focus on structure, alignment, and layout accuracy.
