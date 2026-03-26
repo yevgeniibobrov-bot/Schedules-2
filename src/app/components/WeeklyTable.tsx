@@ -282,13 +282,8 @@ function computeShiftValidation(
     return { validationLevel: "error", validationMessage: "Нічна зміна для неповнолітнього" };
   }
 
-  // 5. Near or over monthly norm (warning)
-  if (employee.workedHours >= employee.monthlyNorm) {
-    return { validationLevel: "warning", validationMessage: `Понаднормово: ${employee.workedHours}/${employee.monthlyNorm}г` };
-  }
-  if (employee.workedHours >= employee.monthlyNorm * 0.9) {
-    return { validationLevel: "warning", validationMessage: `Близько до норми: ${employee.workedHours}/${employee.monthlyNorm}г` };
-  }
+  // 5. Soft warnings (over monthly norm, near limit) — kept in drawer/popover only.
+  // Removed from face-card display to avoid mixing aggregate and entity-level signals.
 
   return { validationLevel: null, validationMessage: "" };
 }
@@ -702,23 +697,27 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
   // Combined overall status — coverage is the ONLY driver for the banner.
   const combined = coverageStatus; // "ok" | "critical"
   const combinedIsOk = combined === "ok";
-  const combinedText = combinedIsOk ? "День у нормі" : "Є відхилення";
-  const combinedColor = combinedIsOk ? "var(--chart-2)" : "var(--destructive)";
-  const combinedBg = combinedIsOk ? "var(--success-alpha-8)" : "var(--destructive-alpha-5)";
+  const combinedText = combinedIsOk ? "День у нормі" : "Потребує уваги";
+  // Icon stays colored (green/red) — the primary visual signal.
+  // Text uses foreground (not red) for critical — avoids triple-red alarm overlap with card-level badges.
+  // Bg is calmer: transparent for ok, barely-tinted for critical — diagnostic, not alert panel.
+  const combinedIconColor = combinedIsOk ? "var(--chart-2)" : "var(--destructive)";
+  const combinedTextColor = combinedIsOk ? "var(--muted-foreground)" : "var(--foreground)";
+  const combinedBg = combinedIsOk ? "transparent" : "var(--destructive-alpha-4)";
 
   const planLabel = isFact ? "Факт" : "План";
 
-  // Section label — active=true when section has a problem (lifts to foreground)
+  // Section label — active=true when section has a problem (lifts to foreground + stronger)
   const sectionLabel = (active = false): React.CSSProperties => ({
-    fontSize: 11,
-    fontWeight: "var(--font-weight-semibold)" as any,
+    fontSize: 12,
+    fontWeight: "var(--font-weight-bold)" as any,
     color: active ? "var(--foreground)" : "var(--muted-foreground)",
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    textTransform: "uppercase" as any,
+    letterSpacing: "0.04em",
   });
-  // Shared badge style
+  // Severity badge — status signal, not decoration
   const badge = (color: string, bg: string, text: string) => (
-    <span className="px-1.5 py-0.5 rounded-full" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color, backgroundColor: bg }}>
+    <span className="px-2 py-0.5 rounded-full" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-bold)" as any, color, backgroundColor: bg, letterSpacing: "-0.01em" }}>
       {text}
     </span>
   );
@@ -731,14 +730,21 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between px-3 py-2 border-b border-[var(--border)]" style={{ backgroundColor: "var(--muted)" }}>
+      {/* ── Header with inline status ── */}
+      <div className="flex items-start justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--border)" }}>
         <div>
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>
-            {dayLabel}
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>
+              {dayLabel}
+            </span>
+            {/* Inline status indicator */}
+            {combinedIsOk
+              ? <CheckCircle2 size={12} style={{ color: combinedIconColor, flexShrink: 0 }} />
+              : <CircleAlert size={12} style={{ color: combinedIconColor, flexShrink: 0 }} />
+            }
+          </div>
           <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 1 }}>
-            {dept.name}
+            Покриття та ефективність за день
           </p>
         </div>
         <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors">
@@ -746,169 +752,141 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
         </button>
       </div>
 
-      {/* ── Overall day status ── */}
-      {/* ok: green bg + check icon. critical: red bg + alert icon */}
-      <div
-        className="flex items-center gap-1.5 px-3 py-1.5 border-b border-[var(--border)]"
-        style={{ backgroundColor: combinedBg }}
-      >
-        {combinedIsOk
-          ? <CheckCircle2 size={13} style={{ color: combinedColor, flexShrink: 0 }} />
-          : <CircleAlert size={13} style={{ color: combinedColor, flexShrink: 0 }} />
-        }
-        <span style={{
-          fontSize: "var(--text-xs)",
-          fontWeight: "var(--font-weight-semibold)" as any,
-          color: combinedColor,
-        }}>
-          {combinedText}
-        </span>
-      </div>
+      {/* ── Body ── */}
+      <div style={{ padding: "8px 12px 12px" }}>
 
-      {/* ── Ефективність ── */}
-      <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>
-        <div className="flex items-center justify-between mb-2">
-          <span style={sectionLabel(!effIsOk)}>Ефективність</span>
-          {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
+        {/* ── Ефективність ── */}
+        <div style={{ paddingBottom: 10 }}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span style={sectionLabel(!effIsOk)}>Ефективність</span>
+            {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
+          </div>
+          {eff.status !== "ok" ? (
+            <>
+              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {eff.description.split(", ").map((part, i) => {
+                  const isDeficit = part.includes("нестача");
+                  const isExcess = part.includes("перебір");
+                  const marker = isDeficit ? "↓" : isExcess ? "↑" : "•";
+                  const markerColor = isDeficit
+                    ? "var(--destructive)"
+                    : isExcess
+                      ? "var(--chart-3)"
+                      : "var(--muted-foreground)";
+                  return (
+                    <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+                      <span style={{
+                        fontSize: "var(--text-xs)",
+                        fontWeight: "var(--font-weight-bold)" as any,
+                        color: markerColor,
+                        flexShrink: 0,
+                        lineHeight: 1.3,
+                      }}>
+                        {marker}
+                      </span>
+                      <span style={{
+                        fontSize: "var(--text-xs)",
+                        fontWeight: "var(--font-weight-medium)" as any,
+                        color: "var(--foreground)",
+                        lineHeight: 1.3,
+                      }}>
+                        {part}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
+                  onClose();
+                }}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+                  fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any,
+                  color: "var(--primary)", backgroundColor: "var(--primary-alpha-8)",
+                  border: "none", borderRadius: "var(--radius-sm)",
+                  padding: "5px 10px", marginTop: 8,
+                  cursor: "pointer", width: "100%",
+                }}
+              >
+                Переглянути розподіл →
+              </button>
+            </>
+          ) : (
+            <p style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
+              Зміни рівномірно розподілені
+            </p>
+          )}
         </div>
-        {eff.status !== "ok" ? (
-          <>
-            {/* Structured problem summary — one item per line, icon-prefixed */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-              {eff.description.split(", ").map((part, i) => {
-                const isDeficit = part.includes("нестача");
-                const isExcess = part.includes("перебір");
-                const marker = isDeficit ? "↓" : isExcess ? "↑" : "•";
-                const markerColor = isDeficit
-                  ? "var(--destructive)"
-                  : isExcess
-                    ? "var(--chart-3)"
-                    : "var(--muted-foreground)";
+
+        {/* Divider */}
+        <div style={{ height: 1, backgroundColor: "var(--border)", margin: "0 0 10px" }} />
+
+        {/* ── Покриття ── */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <span style={sectionLabel(false)}>Покриття</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-bold)" as any, color: coverageColor, backgroundColor: coverageBadgeBg, letterSpacing: "-0.01em" }}>
+              {coverageStatus === "ok" && <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--chart-2)", flexShrink: 0 }} />}
+              {coveragePct}%
+            </span>
+          </div>
+          {/* Compact metrics line */}
+          <div className="flex items-baseline gap-2 flex-wrap" style={{ fontSize: "var(--text-xs)" }}>
+            <span style={{ color: "var(--muted-foreground)" }}>Прогноз: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span></span>
+            <span style={{ color: "var(--muted-foreground)" }}>{planLabel}: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span></span>
+            <span style={{ color: "var(--muted-foreground)" }}>Різн.: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: deltaColor(deptMetrics.delta) }}>{fmtDelta(deptMetrics.delta)}</span></span>
+          </div>
+
+          {/* Sub-unit breakdown */}
+          {rc.subUnits.length > 0 && (
+            <div className="flex flex-col gap-0.5" style={{ marginTop: 8 }}>
+              <div className="flex items-center px-1 py-0.5">
+                <span className="flex-1" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Дільниця</span>
+                <div className="flex flex-shrink-0" style={{ width: 130 }}>
+                  <span className="w-[36px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогн.</span>
+                  <span className="w-[40px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
+                  <span className="w-[46px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.</span>
+                </div>
+              </div>
+              {rc.subUnits.map((su) => {
+                const m = computeMetrics(su);
                 return (
-                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                    <span style={{
-                      fontSize: "var(--text-xs)",
-                      fontWeight: "var(--font-weight-bold)" as any,
-                      color: markerColor,
-                      flexShrink: 0,
-                      lineHeight: 1.3,
-                    }}>
-                      {marker}
+                  <div key={su.name} className="flex items-center px-1 py-1 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
+                    <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>
+                      {su.name}
                     </span>
-                    <span style={{
-                      fontSize: "var(--text-xs)",
-                      fontWeight: "var(--font-weight-medium)" as any,
-                      color: "var(--foreground)",
-                      lineHeight: 1.3,
-                    }}>
-                      {part}
-                    </span>
+                    <div className="flex flex-shrink-0" style={{ width: 130 }}>
+                      <span className="w-[36px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
+                      <span className="w-[40px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
+                      <span className="w-[46px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
+                        {fmtDelta(m.delta)}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
             </div>
-            {/* Text-button CTA — no outline, no bg box */}
+          )}
+
+          {/* Create open shift — only when under-covered */}
+          {coverageStatus !== "ok" && onCreateOpenShift && (
             <button
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
-                onClose();
-              }}
+              onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
               style={{
-                display: "flex", alignItems: "center", gap: 3,
+                display: "block", width: "100%", textAlign: "center",
                 fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
-                color: "var(--primary)", backgroundColor: "transparent",
-                border: "none", padding: "3px 0", marginTop: 7,
-                cursor: "pointer",
+                color: "var(--primary)", backgroundColor: "var(--primary-alpha-8)",
+                border: "none", borderRadius: "var(--radius-sm)",
+                padding: "5px 12px", marginTop: 10, cursor: "pointer",
               }}
             >
-              Переглянути розподіл →
+              Створити відкриту зміну
             </button>
-          </>
-        ) : (
-          <p style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
-            Зміни рівномірно розподілені
-          </p>
-        )}
-      </div>
-
-      {/* ── Покриття ── */}
-      <div style={{ padding: "10px 12px 0" }}>
-        <div className="flex items-center justify-between mb-2">
-          <span style={sectionLabel(false)}>Покриття</span>
-          {badge(coverageColor, coverageBadgeBg, `${coveragePct}%`)}
-        </div>
-        {/* Totals row — forecast + plan as context, delta as the headline number */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогноз</span>
-              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
-              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span>
-            </div>
-          </div>
-          {/* Delta is the key diagnostic number — larger, heavier */}
-          <span style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: "var(--font-weight-bold)" as any,
-            color: deltaColor(deptMetrics.delta),
-          }}>
-            {fmtDelta(deptMetrics.delta)}
-          </span>
+          )}
         </div>
       </div>
-
-      {/* Sub-unit breakdown */}
-      {rc.subUnits.length > 0 && (
-        <div className="px-3 pb-2 flex flex-col gap-0.5" style={{ paddingTop: 6 }}>
-          {/* Column headers */}
-          <div className="flex items-center px-2 py-0.5">
-            <span className="flex-1" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Дільниця</span>
-            <div className="flex flex-shrink-0" style={{ width: 130 }}>
-              <span className="w-[36px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогн.</span>
-              <span className="w-[40px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
-              <span className="w-[46px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.</span>
-            </div>
-          </div>
-          {rc.subUnits.map((su) => {
-            const m = computeMetrics(su);
-            return (
-              <div key={su.name} className="flex items-center px-2 py-1 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
-                <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>
-                  {su.name}
-                </span>
-                <div className="flex flex-shrink-0" style={{ width: 130 }}>
-                  <span className="w-[36px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
-                  <span className="w-[40px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
-                  <span className="w-[46px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
-                    {fmtDelta(m.delta)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* ── Create open shift CTA — only when coverage is below target ── */}
-      {coverageStatus !== "ok" && onCreateOpenShift && (
-        <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
-          <button
-            onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
-            style={{
-              display: "block", width: "100%", textAlign: "center",
-              fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
-              color: "var(--primary)", backgroundColor: "var(--primary-alpha-8)",
-              border: "none", borderRadius: "var(--radius-sm)",
-              padding: "5px 12px", cursor: "pointer",
-            }}
-          >
-            Створити відкриту зміну
-          </button>
-        </div>
-      )}
 
     </div>
   );
@@ -1471,7 +1449,7 @@ export function WeeklyTable({
                       <tr key={emp.id} className="hover:bg-[var(--muted)] transition-colors" style={{ height: 72 }}>
                         <td
                           className="sticky left-0 z-10 px-3 py-1.5 cursor-pointer hover:bg-[var(--muted)] transition-colors"
-                          style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderLeftWidth: 0, borderTopWidth: 0, boxShadow: `inset 3px 0 0 ${deptAccent}` }}
+                          style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderLeftWidth: 0, borderTopWidth: 0 }}
                           onClick={() => onEmployeeClick(emp)}
                         >
                           <div className="flex items-center gap-2.5">

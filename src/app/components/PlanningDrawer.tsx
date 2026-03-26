@@ -1284,7 +1284,19 @@ export function PlanningDrawer({
   const hasHardErrors = hardErrorCount > 0;
   // Block-level errors (overlap, missing unit) also prevent save
   const blockHasErrors = Object.values(blockValidationMap).some((v) => v.severity === "error");
+  const blockErrorCount = Object.values(blockValidationMap).filter((v) => v.severity === "error").length;
   const isBlocked = hasHardErrors || blockHasErrors;
+
+  // Smart summary rule:
+  // - 1 local error only → shown inline, no summary section
+  // - multiple errors or cross-section issues → show "Перевірка"
+  // - 0 errors → no success block
+  const totalErrorSurfaces = hardErrorCount + blockErrorCount;
+  const showValidationSummary = validationMessages.length > 0 && (
+    validationMessages.length > 1 || // multiple cross-form messages
+    totalErrorSurfaces > 1 || // errors from different places
+    (hardErrorCount > 0 && blockErrorCount > 0) // cross-section: block + form-level
+  );
 
   // ── Time block handlers ─────────────────────────────────────────────
   const addBlock = useCallback(() => {
@@ -1402,6 +1414,81 @@ export function PlanningDrawer({
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
 
+        {/* ═══ Status / Context Card — edit mode only ═══════════════ */}
+        {isShiftMode && typeMode === "shift" && (() => {
+          // Determine current shift status context
+          let statusIcon: React.ReactNode;
+          let statusTitle: string;
+          let statusDesc: string;
+          let statusAccent: string;
+
+          if (editingExchangeShift) {
+            statusIcon = <ArrowRightLeft size={15} />;
+            statusTitle = "Зміна біржі";
+            statusDesc = "Опублікована на біржі змін";
+            statusAccent = "var(--chart-5)";
+          } else if (shift?.proposalStatus === "pending") {
+            statusIcon = <Send size={15} />;
+            statusTitle = "Пропозиція";
+            statusDesc = displayEmp?.name
+              ? `Чекає підтвердження від ${displayEmp.name}`
+              : "Чекає підтвердження від працівника";
+            statusAccent = "var(--chart-3)";
+          } else if (editingOpenShift) {
+            statusIcon = <UserPlus size={15} />;
+            statusTitle = "Відкрита зміна";
+            statusDesc = "Без виконавця, доступна для призначення";
+            statusAccent = "var(--chart-3)";
+          } else {
+            statusIcon = <User size={15} />;
+            statusTitle = "Призначена зміна";
+            statusDesc = displayEmp?.name ? `Закріплена за ${displayEmp.name}` : "Закріплена за працівником";
+            statusAccent = "var(--primary)";
+          }
+
+          return (
+            <div
+              className="flex items-start gap-3 px-3 py-2.5 rounded-[var(--radius)]"
+              style={{
+                border: "1px solid var(--border)",
+                backgroundColor: "var(--muted)",
+              }}
+            >
+              <div
+                className="flex-shrink-0 flex items-center justify-center rounded-[var(--radius-sm)] mt-0.5"
+                style={{
+                  width: 28,
+                  height: 28,
+                  position: "relative",
+                }}
+              >
+                <div style={{ position: "absolute", inset: 0, borderRadius: "var(--radius-sm)", backgroundColor: statusAccent, opacity: 0.12 }} />
+                <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", color: statusAccent }}>
+                  {statusIcon}
+                </div>
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <span style={{
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "var(--font-weight-semibold)" as any,
+                  color: "var(--foreground)",
+                  lineHeight: 1.35,
+                }}>
+                  {statusTitle}
+                </span>
+                <span style={{
+                  fontSize: "var(--text-xs)",
+                  fontWeight: "var(--font-weight-normal)" as any,
+                  color: "var(--muted-foreground)",
+                  lineHeight: 1.4,
+                }}>
+                  {statusDesc}
+                </span>
+              </div>
+            </div>
+          );
+        })()}
+
         {/* ═══ Type Switch (Shift / Absence) ═══════════════════════ */}
         {isShiftOrCreate && (
           <TypeSwitch value={typeMode} onChange={setTypeMode} />
@@ -1420,19 +1507,19 @@ export function PlanningDrawer({
                   <div className="flex flex-col gap-1.5">
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--muted-foreground)", textTransform: "uppercase" as any, letterSpacing: "0.04em" }}>Тип зміни</span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {/* Row 1: direct assignment types */}
+                      {/* Row 1: Main — direct assignment */}
                       <ShiftTypeOption
                         selected={shiftType === "standard"}
                         icon={<User size={13} />}
                         title="Призначена"
-                        description="Напряму в графік конкретного працівника"
+                        description="Напряму конкретному працівнику"
                         onSelect={() => setShiftType("standard")}
                       />
                       <ShiftTypeOption
                         selected={shiftType === "open"}
                         icon={<UserPlus size={13} />}
                         title="Відкрита"
-                        description="Без виконавця · доступна для призначення"
+                        description="Без виконавця, для призначення"
                         onSelect={() => { setShiftType("open"); setSelectedEmpId(""); }}
                       />
                       {/* Separator — spans both columns */}
@@ -1446,12 +1533,12 @@ export function PlanningDrawer({
                         </span>
                         <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
                       </div>
-                      {/* Row 2: exchange-based types */}
+                      {/* Row 2: Via exchange */}
                       <ShiftTypeOption
                         selected={shiftType === "marketplace"}
                         icon={<ArrowRightLeft size={13} />}
                         title="На біржі"
-                        description="Всі відповідні бачать · хто перший візьме"
+                        description="Видима всім, хто перший — того"
                         onSelect={() => { setShiftType("marketplace"); setSelectedEmpId(""); }}
                         disabled={tooManyForExchange}
                         disabledHint={`Біржа: до 2 дільниць (зараз ${uniqueUnitsCount})`}
@@ -1460,12 +1547,28 @@ export function PlanningDrawer({
                         selected={shiftType === "proposal"}
                         icon={<Send size={13} />}
                         title="Пропозиція"
-                        description="Адресно одному · обходить ліміт годин"
+                        description="Адресно одному працівнику"
                         onSelect={() => setShiftType("proposal")}
                       />
                     </div>
                   </div>
                 );
+              })()}
+
+              {/* ── Context helper — explains state-dependent rules for selected type ── */}
+              {typeMode === "shift" && (() => {
+                const hints: Record<string, string | null> = {
+                  standard: null,
+                  open: "Зміна з'явиться у рядку відкритих змін і буде доступна для перетягування на працівника.",
+                  marketplace: "Зміна потрапить на біржу. Працівники з відповідними дільницями побачать її в додатку.",
+                  proposal: "Пропозиція обходить ліміт годин і потребує підтвердження працівника.",
+                };
+                const hint = hints[shiftType];
+                return hint ? (
+                  <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: -2 }}>
+                    {hint}
+                  </p>
+                ) : null;
               })()}
 
               {/* ── Employee selector — visible only for types that need a specific employee ── */}
@@ -1967,7 +2070,7 @@ export function PlanningDrawer({
         )}
 
         {/* ═══ Validation — only cross-form issues not shown inline ════ */}
-        {isShiftOrCreate && validationMessages.length > 0 && (
+        {isShiftOrCreate && showValidationSummary && (
           <div className="contents">
             <SectionDivider />
             <div className="flex flex-col gap-2">

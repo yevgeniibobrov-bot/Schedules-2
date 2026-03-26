@@ -143,49 +143,21 @@ function hasMarketplaceSignal(shift: ShiftData): boolean {
   return !!(shift.marketplaceSource || shift.exchangeStatus === "on-exchange" || shift.proposalStatus);
 }
 
-// ── Row 2: Unit names (no break here) ────────────────────────────────
-
-/**
- * Short display aliases for card view.
- * Full name is always preserved in the `title` tooltip attribute.
- * Aliases are chosen to be maximally scannable within a narrow card column.
- */
-const UNIT_CARD_ALIASES: Record<string, string> = {
-  // "X - Виробництво" family — use the DISTINGUISHING word, drop shared dept prefix
-  // "Пек. Вир." and "Пекарня" shared the "Пек." prefix → hard to scan
-  "Пекарня - Виробництво":                  "Виробн.",    // was "Пек. Вир." — now clearly ≠ "Пекарня"
-  "Кулінарія - Виробництво":                "Кулін.",     // was "Кул. Вир."
-  "Риба - Виробництво":                     "Риба",       // was "Риба Вир." — suffix was redundant
-  // Long formal titles
-  'Продавець прод.товарів "Лавки традицій"': "Лавки",
-  "Фахівець з приймання та обліку товарів":  "Приймання",
-  "Стелажна торгівля":                      "Стелажна",
-  "Помічник кухаря":                        "Пом. кух.",  // was "Пом. кухаря" — tighter
-};
-
-const UNIT_NAME_MAX_CHARS = 14;
-
-/** Resolve card-face display name: alias → truncation fallback */
-function cardDisplayName(name: string): string {
-  if (UNIT_CARD_ALIASES[name]) return UNIT_CARD_ALIASES[name];
-  if (name.length <= UNIT_NAME_MAX_CHARS) return name;
-  return name.slice(0, UNIT_NAME_MAX_CHARS - 1).trimEnd() + "\u2026";
-}
+// ── Row 2: District label ─────────────────────────────────────────────
+// Full district name, naturally truncated by CSS ellipsis.
+// No ugly auto-generated abbreviations.
+// 1 district → full readable name.
+// 2+ districts → primary name + "+N" as small inline badge on the same line.
 
 function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }) {
   if (subUnits.length === 0) return null;
   const primary = subUnits[0].unit;
   const extra = subUnits.length - 1;
-  const unitColor = getSubUnitColor(primary);
 
   return (
     <div className="flex items-center gap-1 min-w-0">
       <span
-        className="flex-shrink-0"
-        style={{ width: 5, height: 5, borderRadius: "50%", backgroundColor: unitColor, opacity: 0.75 }}
-      />
-      <span
-        title={primary}
+        title={subUnits.map((s) => s.unit).join(", ")}
         style={{
           fontSize: "var(--text-xs)",
           fontWeight: "var(--font-weight-normal)" as any,
@@ -198,7 +170,7 @@ function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }
           flex: 1,
         }}
       >
-        {cardDisplayName(primary)}
+        {primary}
       </span>
       {extra > 0 && (
         <span
@@ -429,10 +401,9 @@ function ShiftTooltip({ shift, children, validationLevel, validationMessage }: S
 
 export { ShiftTooltip };
 
-// ── Row 3+4: Break indicator, then progress bar ───────────────────────
+// ── Row 3: Break label ─────────────────────────────────────────────────
 
 function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: string }) {
-  // Prefer explicit breakDuration; fallback to parsing breakText
   const breakMins = shift.breakDuration != null && shift.breakDuration > 0
     ? shift.breakDuration
     : parseBreakMinutes(breakText);
@@ -440,7 +411,6 @@ function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: strin
 
   return (
     <div className="flex flex-col gap-0.5 mt-0.5">
-      {/* Line 3: Break label */}
       {hasBreak && (
         <div className="flex items-center gap-1">
           <Coffee size={10} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
@@ -460,31 +430,107 @@ function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: strin
   );
 }
 
+// ── Composition Strip — quiet structural cue at card bottom ───────────
+// Always shown. Proportional sub-unit segments with subtle break gap.
+// Structural cue, not a progress bar — stays quieter than text.
+
+function CompositionStrip({ shift }: { shift: ShiftData }) {
+  const rangeParts = shift.timeRange.split("–");
+  if (rangeParts.length !== 2) return null;
+
+  const shiftStart = parseTime(rangeParts[0].trim());
+  let shiftEnd = parseTime(rangeParts[1].trim());
+  if (shiftEnd <= shiftStart) shiftEnd += 24;
+  const totalDur = shiftEnd - shiftStart;
+  if (totalDur <= 0) return null;
+
+  // Build work segments from sub-units
+  type Seg = { start: number; end: number; color: string; isBreak: boolean };
+  const segments: Seg[] = [];
+
+  const hasIndividualTimes = shift.subUnits.some(
+    (su) => su.time && su.time !== shift.timeRange && su.time.includes("–")
+  );
+
+  if (hasIndividualTimes) {
+    for (const su of shift.subUnits) {
+      const tp = (su.time || shift.timeRange).split("–");
+      if (tp.length !== 2) continue;
+      let s = parseTime(tp[0].trim());
+      let e = parseTime(tp[1].trim());
+      if (e <= s) e += 24;
+      segments.push({ start: s, end: e, color: getSubUnitColor(su.unit), isBreak: false });
+    }
+  } else if (shift.subUnits.length > 0) {
+    segments.push({ start: shiftStart, end: shiftEnd, color: getSubUnitColor(shift.subUnits[0].unit), isBreak: false });
+  } else {
+    segments.push({ start: shiftStart, end: shiftEnd, color: "var(--muted-foreground)", isBreak: false });
+  }
+
+  // Insert break gap if available
+  const breakMins = shift.breakDuration != null && shift.breakDuration > 0
+    ? shift.breakDuration
+    : parseBreakMinutes(shift.breakText);
+  if (breakMins && breakMins > 0 && shift.breakStart) {
+    const bStart = parseTime(shift.breakStart);
+    const bEnd = bStart + breakMins / 60;
+    segments.push({ start: bStart, end: bEnd, color: "transparent", isBreak: true });
+  }
+
+  segments.sort((a, b) => a.start - b.start);
+
+  // Build flat timeline with gaps
+  const timeline: { pct: number; color: string; isBreak: boolean }[] = [];
+  let cursor = shiftStart;
+  for (const seg of segments) {
+    if (seg.start > cursor) {
+      timeline.push({ pct: ((seg.start - cursor) / totalDur) * 100, color: "transparent", isBreak: false });
+    }
+    const dur = Math.max(seg.end - Math.max(seg.start, cursor), 0);
+    if (dur > 0) {
+      timeline.push({ pct: (dur / totalDur) * 100, color: seg.color, isBreak: seg.isBreak });
+    }
+    cursor = Math.max(cursor, seg.end);
+  }
+
+  return (
+    <div
+      className="flex w-full overflow-hidden rounded-full mt-1"
+      style={{ height: 3, opacity: 0.55 }}
+    >
+      {timeline.map((t, i) => (
+        <div
+          key={i}
+          style={{
+            width: `${Math.max(t.pct, 0.5)}%`,
+            height: "100%",
+            backgroundColor: t.isBreak || t.color === "transparent" ? "var(--card)" : t.color,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Severity badge (error / warning) ─────────────────────────────────
 
 function ValidationBadge({ level }: { level: "error" | "warning" | null }) {
-  if (!level) return null;
-  const bg = level === "error" ? "var(--destructive)" : "#F97316";
+  if (!level || level !== "error") return null; // only hard errors on face-cards
   return (
     <div
       style={{
         position: "absolute",
-        top: -4,
-        right: -4,
-        width: 16,
-        height: 16,
+        top: -2,
+        right: -2,
+        width: 8,
+        height: 8,
         borderRadius: "50%",
-        backgroundColor: bg,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        backgroundColor: "var(--destructive)",
         zIndex: 3,
         pointerEvents: "none",
         boxShadow: "0 0 0 1.5px var(--card)",
       }}
-    >
-      <span style={{ color: "#fff", fontSize: "10px", fontWeight: 700, lineHeight: 1, userSelect: "none" }}>!</span>
-    </div>
+    />
   );
 }
 
@@ -670,7 +716,9 @@ export function ShiftCard({
   }, [isSelected]);
 
   const cardContent = (
-    <div ref={cardRef}>
+    <div ref={cardRef} style={{ position: "relative" }}>
+      {/* Corner badge — entity-level error/warning signal, semantically distinct from aggregate day indicators */}
+      <ValidationBadge level={validationLevel} />
       <button
         ref={combinedRef}
         onClick={onClick}
@@ -705,7 +753,7 @@ export function ShiftCard({
           {hasMarketplaceSignal(shift) && <MarketplaceIndicator shift={shift} />}
         </div>
 
-        {/* Row 2: Unit + badge */}
+        {/* Row 2: District name + overflow */}
         <SubUnitRow subUnits={shift.subUnits} />
 
         {/* Row 3: Break meta */}
@@ -813,17 +861,35 @@ export function OpenShiftCard({
         {isOnExchange && <MarketplaceIndicator shift={shift} />}
       </div>
 
-      {/* Row 2: Unit + badge */}
+      {/* Row 2: District name + overflow */}
       <SubUnitRow subUnits={shift.subUnits} />
 
-      {/* Row 3+4: Break meta + bar */}
+      {/* Row 3: Break meta */}
       <BreakAndBar shift={shift} breakText={shift.breakText} />
     </button>
   );
 
+  // Pulse animation for newly created open shifts
+  const isNew = sessionCreatedShiftIds.has(shift.id);
+  const openCardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isNew && openCardRef.current) {
+      const el = openCardRef.current;
+      el.style.animation = "shiftCreatedPulse 1.5s ease-out";
+      const handler = () => {
+        el.style.animation = "";
+        sessionCreatedShiftIds.delete(shift.id);
+      };
+      el.addEventListener("animationend", handler, { once: true });
+      return () => el.removeEventListener("animationend", handler);
+    }
+  }, [isNew, shift.id]);
+
   return (
     <ShiftTooltip shift={shift}>
-      {cardContent}
+      <div ref={openCardRef}>
+        {cardContent}
+      </div>
     </ShiftTooltip>
   );
 }
