@@ -10,6 +10,7 @@ import {
   Coffee,
   ArrowRightLeft,
   Send,
+  AlertTriangle,
 } from "lucide-react";
 import { getSubUnitColor } from "./subUnitColors";
 
@@ -406,10 +407,9 @@ function ShiftTooltip({ shift, children, validationLevel, validationMessage }: S
 
 export { ShiftTooltip };
 
-// ── Row 3+4: Break indicator, then progress bar ───────────────────────
+// ── Row 3+4: Break label + timeline bar ──────────────────────────────
 
 function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: string }) {
-  // Prefer explicit breakDuration; fallback to parsing breakText
   const breakMins = shift.breakDuration != null && shift.breakDuration > 0
     ? shift.breakDuration
     : parseBreakMinutes(breakText);
@@ -433,34 +433,8 @@ function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: strin
           </span>
         </div>
       )}
-    </div>
-  );
-}
-
-// ── Severity badge (error / warning) ─────────────────────────────────
-
-function ValidationBadge({ level }: { level: "error" | "warning" | null }) {
-  if (!level) return null;
-  const bg = level === "error" ? "var(--destructive)" : "#F97316";
-  return (
-    <div
-      style={{
-        position: "absolute",
-        top: -4,
-        right: -4,
-        width: 16,
-        height: 16,
-        borderRadius: "50%",
-        backgroundColor: bg,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 3,
-        pointerEvents: "none",
-        boxShadow: "0 0 0 1.5px var(--card)",
-      }}
-    >
-      <span style={{ color: "#fff", fontSize: "10px", fontWeight: 700, lineHeight: 1, userSelect: "none" }}>!</span>
+      {/* Line 4: Timeline strip */}
+      <ShiftTimelineBar shift={shift} height={4} />
     </div>
   );
 }
@@ -599,16 +573,13 @@ export function ShiftCard({
   }
 
   // ── Normal shift card ──
-  // ── State priority: error > selected-ring > marketplace > new-pulse > normal ──
+  // Border: marketplace gets dashed purple; errors/warnings use inline icon only (no border change)
   const isMarketplace = hasMarketplaceSignal(shift);
-  const isError = validationLevel === "error";
-  const borderColor = isError ? "var(--destructive)" : isMarketplace ? "var(--chart-5)" : "var(--border)";
-  const borderWidth = isError ? 2 : 1;
-  // Dashed border only for marketplace when NOT in error state
-  const borderStyle = isMarketplace && !isError ? "dashed" : "solid";
+  const borderColor = isMarketplace ? "var(--chart-5)" : "var(--border)";
+  const borderWidth = 1;
+  const borderStyle = isMarketplace ? "dashed" : "solid";
   const cardBg = isMarketplace ? "var(--purple-alpha-5)" : "var(--card)";
-  // Ring only when selected AND NOT in error state — error border IS the priority signal
-  const showRing = isSelected && !isError;
+  const showRing = isSelected;
 
   // "Recently created" one-time entry animation
   const isNew = sessionCreatedShiftIds.has(shift.id);
@@ -664,7 +635,7 @@ export function ShiftCard({
           animation: postEditGlow ? "shiftPostEditFade 0.7s ease-out forwards" : undefined,
         }}
       >
-        {/* Row 1: Time + marketplace indicator */}
+        {/* Row 1: Time (left) + status icons row (right) */}
         <div className="flex items-center justify-between gap-1">
           <p
             className="truncate"
@@ -672,13 +643,21 @@ export function ShiftCard({
           >
             {shift.timeRange}
           </p>
-          {hasMarketplaceSignal(shift) && <MarketplaceIndicator shift={shift} />}
+          {/* Right: critical error + marketplace icons only */}
+          {(validationLevel === "error" || hasMarketplaceSignal(shift)) && (
+            <div className="flex items-center gap-0.5 flex-shrink-0">
+              {validationLevel === "error" && (
+                <AlertTriangle size={11} style={{ color: "var(--destructive)", flexShrink: 0 }} />
+              )}
+              {hasMarketplaceSignal(shift) && <MarketplaceIndicator shift={shift} />}
+            </div>
+          )}
         </div>
 
-        {/* Row 2: Unit + badge */}
+        {/* Row 2: Unit name + +N badge */}
         <SubUnitRow subUnits={shift.subUnits} />
 
-        {/* Row 3: Break meta */}
+        {/* Row 3+4: Break label (☕ 30хв) + ShiftTimelineBar */}
         <BreakAndBar shift={shift} breakText={shift.breakText} />
       </button>
     </div>
