@@ -508,12 +508,64 @@ function CustomDragLayer() {
 // Measures how evenly shifts are distributed throughout the day.
 // 100% = perfect match with forecast curve, lower = imbalance.
 
+function formatHalfHourLabel(hour: number): string {
+  const hh = String(Math.floor(hour) % 24).padStart(2, "0");
+  const mm = hour % 1 === 0 ? "00" : "30";
+  return `${hh}:${mm}`;
+}
+
+function findPrimaryImbalanceRange(
+  slotDeltas: { start: number; end: number; delta: number }[],
+  kind: "surplus" | "deficit",
+): string | null {
+  const threshold = 0.5;
+  let current: { start: number; end: number; weight: number } | null = null;
+  let strongest: { start: number; end: number; weight: number } | null = null;
+
+  const flushCurrent = () => {
+    if (!current) return;
+    if (!strongest || current.weight > strongest.weight) strongest = current;
+    current = null;
+  };
+
+  for (const slot of slotDeltas) {
+    const weight = kind === "surplus" ? slot.delta : Math.abs(slot.delta);
+    const matches = kind === "surplus" ? slot.delta > threshold : slot.delta < -threshold;
+
+    if (!matches) {
+      flushCurrent();
+      continue;
+    }
+
+    if (!current) {
+      current = { start: slot.start, end: slot.end, weight };
+      continue;
+    }
+
+    if (Math.abs(slot.start - current.end) < 0.001) {
+      current.end = slot.end;
+      current.weight += weight;
+      continue;
+    }
+
+    flushCurrent();
+    current = { start: slot.start, end: slot.end, weight };
+  }
+
+  flushCurrent();
+
+  if (!strongest) return null;
+
+  return `${formatHalfHourLabel(strongest.start)}-${formatHalfHourLabel(strongest.end)}`;
+}
+
 function computeEfficiency(
   dept: Department,
   dayIndex: number,
 ): { efficiency: number; status: "ok" | "warn" | "problem"; description: string } {
   // Build 30-min slot coverage for this department-day
   const slots: { scheduled: number; forecast: number }[] = [];
+  const slotDeltas: { start: number; end: number; delta: number }[] = [];
 
   // Helper to parse time range
   const pTime = (t: string) => {
@@ -593,9 +645,6 @@ function computeEfficiency(
   // Calculate efficiency
   let totalDeviation = 0;
   let validSlots = 0;
-  let morningExcess = 0;
-  let eveningDeficit = 0;
-
   for (let i = 0; i < slots.length; i++) {
     const s = slots[i];
     if (s.forecast <= 0) continue;
@@ -605,8 +654,7 @@ function computeEfficiency(
 
     const slotH = rangeStart + i * 0.5;
     const delta = s.scheduled - s.forecast;
-    if (slotH < 13 && delta > 0) morningExcess += delta;
-    if (slotH >= 17 && delta < 0) eveningDeficit += Math.abs(delta);
+    slotDeltas.push({ start: slotH, end: slotH + 0.5, delta });
   }
 
   if (validSlots === 0) {
@@ -624,8 +672,10 @@ function computeEfficiency(
   let description = "";
   if (status !== "ok") {
     const parts: string[] = [];
-    if (morningExcess > 1) parts.push(`перебір зранку (+${Math.round(morningExcess)})`);
-    if (eveningDeficit > 1) parts.push(`нестача ввечері (-${Math.round(eveningDeficit)})`);
+    const surplusRange = findPrimaryImbalanceRange(slotDeltas, "surplus");
+    const deficitRange = findPrimaryImbalanceRange(slotDeltas, "deficit");
+    if (surplusRange) parts.push(`надлишок у ${surplusRange}`);
+    if (deficitRange) parts.push(`нестача у ${deficitRange}`);
     if (parts.length > 0) {
       description = parts.join(", ");
     } else {

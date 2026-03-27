@@ -1353,7 +1353,7 @@ export function PlanningDrawer({
   const contextDate = new Date(WEEK_START);
   contextDate.setDate(WEEK_START.getDate() + contextDayIdx);
 
-  return (
+  const drawerContent = (
     <>
       {/* Overlay */}
       <div className="fixed inset-0 z-39 bg-black/45" onClick={onClose} />
@@ -2041,10 +2041,11 @@ export function PlanningDrawer({
                 });
                 onClose();
               }}
-              className="w-full py-2 rounded-[var(--radius)] transition-colors"
+              className="w-full h-10 rounded-[var(--radius)] transition-colors"
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-medium)" as any,
+                lineHeight: 1.2,
                 color: "var(--destructive)",
                 backgroundColor: "transparent",
                 border: "1px solid var(--destructive)",
@@ -2059,7 +2060,7 @@ export function PlanningDrawer({
               }}
             >
               <span className="inline-flex items-center gap-1.5 justify-center">
-                <Trash2 size={14} />
+                <Trash2 size={13} />
                 Видалити зміну
               </span>
             </button>
@@ -2167,4 +2168,7 @@ export function PlanningDrawer({
       </div>
     </>
   );
+
+  if (typeof document === "undefined") return drawerContent;
+  return createPortal(drawerContent, document.body);
 }

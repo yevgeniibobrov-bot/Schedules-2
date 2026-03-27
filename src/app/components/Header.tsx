@@ -17,8 +17,9 @@ import {
   Maximize2,
   Minimize2,
   Filter,
-  Clock,
+  BarChart3,
   ArrowLeftRight,
+  Target,
 } from "lucide-react";
 
 import type { Department } from "./WeeklyTable";
@@ -612,7 +613,7 @@ export function Header({
         {summaryMetrics ? (
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5" title="Прогноз / Графік годин та покриття">
-              <Clock size={13} style={{ color: "var(--muted-foreground)" }} />
+              <BarChart3 size={13} style={{ color: "var(--muted-foreground)" }} />
               <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-normal)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                 Прогноз
               </span>
@@ -627,19 +628,19 @@ export function Header({
               </span>
               {summaryMetrics.totalForecast > 0 && (() => {
                 const pct = Math.round((summaryMetrics.totalScheduled / summaryMetrics.totalForecast) * 100);
-                const color = pct >= 95 ? "var(--chart-2)" : pct >= 75 ? "var(--chart-3)" : "var(--destructive)";
                 return (
-                  <>
+                  <div className="flex items-center gap-1.5" style={{ marginLeft: 8 }}>
+                    <Target size={13} style={{ color: "var(--muted-foreground)" }} />
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                       Покриття
                     </span>
                     <span
                       title={`Покриття ${pct}% — графік покриває прогноз на ${pct}%`}
-                      style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color, whiteSpace: "nowrap" }}
+                      style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", whiteSpace: "nowrap" }}
                     >
                       {pct}%
                     </span>
-                  </>
+                  </div>
                 );
               })()}
             </div>
