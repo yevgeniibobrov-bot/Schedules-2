@@ -143,11 +143,15 @@ function hasMarketplaceSignal(shift: ShiftData): boolean {
   return !!(shift.marketplaceSource || shift.exchangeStatus === "on-exchange" || shift.proposalStatus);
 }
 
-// ── Row 2: District label ─────────────────────────────────────────────
-// Full district name, naturally truncated by CSS ellipsis.
-// No ugly auto-generated abbreviations.
-// 1 district → full readable name.
-// 2+ districts → primary name + "+N" as small inline badge on the same line.
+// ── Row 2: Unit name + badge (no break here) ─────────────────────────
+
+const UNIT_NAME_MAX_CHARS = 20;
+
+/** Hard-truncate a unit/role name to a max visible length with ellipsis */
+function truncateUnitName(name: string): string {
+  if (name.length <= UNIT_NAME_MAX_CHARS) return name;
+  return name.slice(0, UNIT_NAME_MAX_CHARS - 1).trimEnd() + "\u2026";
+}
 
 function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }) {
   if (subUnits.length === 0) return null;
@@ -155,9 +159,9 @@ function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }
   const extra = subUnits.length - 1;
 
   return (
-    <div className="flex items-center gap-1 min-w-0">
+    <div className="flex items-baseline gap-1 min-w-0">
       <span
-        title={subUnits.map((s) => s.unit).join(", ")}
+        title={primary}
         style={{
           fontSize: "var(--text-xs)",
           fontWeight: "var(--font-weight-normal)" as any,
@@ -167,10 +171,11 @@ function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }
           overflow: "hidden",
           textOverflow: "ellipsis",
           minWidth: 0,
-          flex: 1,
+          maxWidth: "100%",
+          display: "block",
         }}
       >
-        {primary}
+        {truncateUnitName(primary)}
       </span>
       {extra > 0 && (
         <span
@@ -401,9 +406,10 @@ function ShiftTooltip({ shift, children, validationLevel, validationMessage }: S
 
 export { ShiftTooltip };
 
-// ── Row 3: Break label ─────────────────────────────────────────────────
+// ── Row 3+4: Break indicator, then progress bar ───────────────────────
 
 function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: string }) {
+  // Prefer explicit breakDuration; fallback to parsing breakText
   const breakMins = shift.breakDuration != null && shift.breakDuration > 0
     ? shift.breakDuration
     : parseBreakMinutes(breakText);
@@ -411,6 +417,7 @@ function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: strin
 
   return (
     <div className="flex flex-col gap-0.5 mt-0.5">
+      {/* Line 3: Break label */}
       {hasBreak && (
         <div className="flex items-center gap-1">
           <Coffee size={10} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
@@ -430,107 +437,31 @@ function BreakAndBar({ shift, breakText }: { shift: ShiftData; breakText?: strin
   );
 }
 
-// ── Composition Strip — quiet structural cue at card bottom ───────────
-// Always shown. Proportional sub-unit segments with subtle break gap.
-// Structural cue, not a progress bar — stays quieter than text.
-
-function CompositionStrip({ shift }: { shift: ShiftData }) {
-  const rangeParts = shift.timeRange.split("–");
-  if (rangeParts.length !== 2) return null;
-
-  const shiftStart = parseTime(rangeParts[0].trim());
-  let shiftEnd = parseTime(rangeParts[1].trim());
-  if (shiftEnd <= shiftStart) shiftEnd += 24;
-  const totalDur = shiftEnd - shiftStart;
-  if (totalDur <= 0) return null;
-
-  // Build work segments from sub-units
-  type Seg = { start: number; end: number; color: string; isBreak: boolean };
-  const segments: Seg[] = [];
-
-  const hasIndividualTimes = shift.subUnits.some(
-    (su) => su.time && su.time !== shift.timeRange && su.time.includes("–")
-  );
-
-  if (hasIndividualTimes) {
-    for (const su of shift.subUnits) {
-      const tp = (su.time || shift.timeRange).split("–");
-      if (tp.length !== 2) continue;
-      let s = parseTime(tp[0].trim());
-      let e = parseTime(tp[1].trim());
-      if (e <= s) e += 24;
-      segments.push({ start: s, end: e, color: getSubUnitColor(su.unit), isBreak: false });
-    }
-  } else if (shift.subUnits.length > 0) {
-    segments.push({ start: shiftStart, end: shiftEnd, color: getSubUnitColor(shift.subUnits[0].unit), isBreak: false });
-  } else {
-    segments.push({ start: shiftStart, end: shiftEnd, color: "var(--muted-foreground)", isBreak: false });
-  }
-
-  // Insert break gap if available
-  const breakMins = shift.breakDuration != null && shift.breakDuration > 0
-    ? shift.breakDuration
-    : parseBreakMinutes(shift.breakText);
-  if (breakMins && breakMins > 0 && shift.breakStart) {
-    const bStart = parseTime(shift.breakStart);
-    const bEnd = bStart + breakMins / 60;
-    segments.push({ start: bStart, end: bEnd, color: "transparent", isBreak: true });
-  }
-
-  segments.sort((a, b) => a.start - b.start);
-
-  // Build flat timeline with gaps
-  const timeline: { pct: number; color: string; isBreak: boolean }[] = [];
-  let cursor = shiftStart;
-  for (const seg of segments) {
-    if (seg.start > cursor) {
-      timeline.push({ pct: ((seg.start - cursor) / totalDur) * 100, color: "transparent", isBreak: false });
-    }
-    const dur = Math.max(seg.end - Math.max(seg.start, cursor), 0);
-    if (dur > 0) {
-      timeline.push({ pct: (dur / totalDur) * 100, color: seg.color, isBreak: seg.isBreak });
-    }
-    cursor = Math.max(cursor, seg.end);
-  }
-
-  return (
-    <div
-      className="flex w-full overflow-hidden rounded-full mt-1"
-      style={{ height: 3, opacity: 0.4 }}
-    >
-      {timeline.map((t, i) => (
-        <div
-          key={i}
-          style={{
-            width: `${Math.max(t.pct, 0.5)}%`,
-            height: "100%",
-            backgroundColor: t.isBreak || t.color === "transparent" ? "var(--card)" : t.color,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
 // ── Severity badge (error / warning) ─────────────────────────────────
 
 function ValidationBadge({ level }: { level: "error" | "warning" | null }) {
-  if (!level || level !== "error") return null; // only hard errors on face-cards
+  if (!level) return null;
+  const bg = level === "error" ? "var(--destructive)" : "#F97316";
   return (
     <div
       style={{
         position: "absolute",
-        top: -2,
-        right: -2,
-        width: 9,
-        height: 9,
+        top: -4,
+        right: -4,
+        width: 16,
+        height: 16,
         borderRadius: "50%",
-        backgroundColor: "var(--destructive)",
+        backgroundColor: bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
         zIndex: 3,
         pointerEvents: "none",
         boxShadow: "0 0 0 1.5px var(--card)",
       }}
-    />
+    >
+      <span style={{ color: "#fff", fontSize: "10px", fontWeight: 700, lineHeight: 1, userSelect: "none" }}>!</span>
+    </div>
   );
 }
 
@@ -668,23 +599,16 @@ export function ShiftCard({
   }
 
   // ── Normal shift card ──
-  // Error is now a corner badge (ValidationBadge) + subtle bg tint, NOT a red border.
-  // Red border competed visually with aggregate day-level indicators (coverage dots, popover strip).
-  // Entity-level error must be semantically distinct from aggregate day problem.
+  // ── State priority: error > selected-ring > marketplace > new-pulse > normal ──
   const isMarketplace = hasMarketplaceSignal(shift);
   const isError = validationLevel === "error";
-  const borderColor = isMarketplace ? "var(--chart-5)" : "var(--border)";
-  const borderWidth = 1;
-  // Dashed border for marketplace (error no longer overrides this)
-  const borderStyle = isMarketplace ? "dashed" : "solid";
-  // Subtle bg tint signals entity-level issue — calm, does not compete with day aggregate red
-  const cardBg = isError
-    ? "var(--destructive-alpha-4)"
-    : isMarketplace
-      ? "var(--purple-alpha-5)"
-      : "var(--card)";
-  // Ring on selection — error is now the corner badge, not the border priority
-  const showRing = isSelected;
+  const borderColor = isError ? "var(--destructive)" : isMarketplace ? "var(--chart-5)" : "var(--border)";
+  const borderWidth = isError ? 2 : 1;
+  // Dashed border only for marketplace when NOT in error state
+  const borderStyle = isMarketplace && !isError ? "dashed" : "solid";
+  const cardBg = isMarketplace ? "var(--purple-alpha-5)" : "var(--card)";
+  // Ring only when selected AND NOT in error state — error border IS the priority signal
+  const showRing = isSelected && !isError;
 
   // "Recently created" one-time entry animation
   const isNew = sessionCreatedShiftIds.has(shift.id);
@@ -716,9 +640,7 @@ export function ShiftCard({
   }, [isSelected]);
 
   const cardContent = (
-    <div ref={cardRef} style={{ position: "relative" }}>
-      {/* Corner badge — entity-level error/warning signal, semantically distinct from aggregate day indicators */}
-      <ValidationBadge level={validationLevel} />
+    <div ref={cardRef}>
       <button
         ref={combinedRef}
         onClick={onClick}
@@ -753,14 +675,11 @@ export function ShiftCard({
           {hasMarketplaceSignal(shift) && <MarketplaceIndicator shift={shift} />}
         </div>
 
-        {/* Row 2: District name + overflow */}
+        {/* Row 2: Unit + badge */}
         <SubUnitRow subUnits={shift.subUnits} />
 
         {/* Row 3: Break meta */}
         <BreakAndBar shift={shift} breakText={shift.breakText} />
-
-        {/* Row 4: Composition strip — quiet structural cue */}
-        <CompositionStrip shift={shift} />
       </button>
     </div>
   );
@@ -864,38 +783,17 @@ export function OpenShiftCard({
         {isOnExchange && <MarketplaceIndicator shift={shift} />}
       </div>
 
-      {/* Row 2: District name + overflow */}
+      {/* Row 2: Unit + badge */}
       <SubUnitRow subUnits={shift.subUnits} />
 
-      {/* Row 3: Break meta */}
+      {/* Row 3+4: Break meta + bar */}
       <BreakAndBar shift={shift} breakText={shift.breakText} />
-
-      {/* Row 4: Composition strip */}
-      <CompositionStrip shift={shift} />
     </button>
   );
 
-  // Pulse animation for newly created open shifts
-  const isNew = sessionCreatedShiftIds.has(shift.id);
-  const openCardRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (isNew && openCardRef.current) {
-      const el = openCardRef.current;
-      el.style.animation = "shiftCreatedPulse 1.5s ease-out";
-      const handler = () => {
-        el.style.animation = "";
-        sessionCreatedShiftIds.delete(shift.id);
-      };
-      el.addEventListener("animationend", handler, { once: true });
-      return () => el.removeEventListener("animationend", handler);
-    }
-  }, [isNew, shift.id]);
-
   return (
     <ShiftTooltip shift={shift}>
-      <div ref={openCardRef}>
-        {cardContent}
-      </div>
+      {cardContent}
     </ShiftTooltip>
   );
 }

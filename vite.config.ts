@@ -21,6 +21,6 @@ export default defineConfig({
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
   server: {
-    allowedHosts: ['.trycloudflare.com', '.ngrok-free.dev'],
+    allowedHosts: ['.trycloudflare.com'],
   },
 })

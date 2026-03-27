@@ -611,44 +611,38 @@ export function Header({
         {/* Summary metrics */}
         {summaryMetrics ? (
           <div className="flex items-center gap-4">
-            {summaryMetrics.totalForecast > 0 && (() => {
-              const pct = Math.round((summaryMetrics.totalScheduled / summaryMetrics.totalForecast) * 100);
-              // Binary color: problem = destructive, ok = normal foreground (no green)
-              const isOk = pct >= 95;
-              const color = isOk ? "var(--foreground)" : "var(--destructive)";
-              return (
-                <div className="flex items-center gap-2" title={`Покриття ${pct}% — графік покриває прогноз на ${pct}%`}>
-                  {/* Labeled hero: "Покриття" label + colored % */}
-                  <div className="flex items-center gap-1">
-                    <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+            <div className="flex items-center gap-1.5" title="Прогноз / Графік годин та покриття">
+              <Clock size={13} style={{ color: "var(--muted-foreground)" }} />
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-normal)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+                Прогноз
+              </span>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)", whiteSpace: "nowrap" }}>
+                {summaryMetrics.totalForecast}г
+              </span>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-normal)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+                / Графік
+              </span>
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)", whiteSpace: "nowrap" }}>
+                {summaryMetrics.totalScheduled}г
+              </span>
+              {summaryMetrics.totalForecast > 0 && (() => {
+                const pct = Math.round((summaryMetrics.totalScheduled / summaryMetrics.totalForecast) * 100);
+                const color = pct >= 95 ? "var(--chart-2)" : pct >= 75 ? "var(--chart-3)" : "var(--destructive)";
+                return (
+                  <>
+                    <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                       Покриття
                     </span>
-                    <span style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-weight-semibold)" as any, color, whiteSpace: "nowrap", lineHeight: 1 }}>
+                    <span
+                      title={`Покриття ${pct}% — графік покриває прогноз на ${pct}%`}
+                      style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color, whiteSpace: "nowrap" }}
+                    >
                       {pct}%
                     </span>
-                  </div>
-                  {/* Separator */}
-                  <span style={{ width: 1, height: 16, backgroundColor: "var(--border)", flexShrink: 0 }} />
-                  {/* Secondary: Прогноз / Графік */}
-                  <div className="flex items-center gap-1" style={{ lineHeight: 1 }}>
-                    <Clock size={12} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
-                    <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      Прогноз
-                    </span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", whiteSpace: "nowrap" }}>
-                      {summaryMetrics.totalForecast}г
-                    </span>
-                    <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>/</span>
-                    <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      Графік
-                    </span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", whiteSpace: "nowrap" }}>
-                      {summaryMetrics.totalScheduled}г
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
+                  </>
+                );
+              })()}
+            </div>
             {!isFact && summaryMetrics.exchangeCount > 0 && (
               <div className="flex items-center gap-1.5" title="Зміни на біржі">
                 <ArrowLeftRight size={13} style={{ color: "var(--muted-foreground)" }} />

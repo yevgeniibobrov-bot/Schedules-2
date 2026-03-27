@@ -282,8 +282,13 @@ function computeShiftValidation(
     return { validationLevel: "error", validationMessage: "Нічна зміна для неповнолітнього" };
   }
 
-  // 5. Soft warnings (over monthly norm, near limit) — kept in drawer/popover only.
-  // Removed from face-card display to avoid mixing aggregate and entity-level signals.
+  // 5. Near or over monthly norm (warning)
+  if (employee.workedHours >= employee.monthlyNorm) {
+    return { validationLevel: "warning", validationMessage: `Понаднормово: ${employee.workedHours}/${employee.monthlyNorm}г` };
+  }
+  if (employee.workedHours >= employee.monthlyNorm * 0.9) {
+    return { validationLevel: "warning", validationMessage: `Близько до норми: ${employee.workedHours}/${employee.monthlyNorm}г` };
+  }
 
   return { validationLevel: null, validationMessage: "" };
 }
@@ -310,11 +315,13 @@ function wouldOverlap(incoming: ShiftData, existing: ShiftData[]): boolean {
 }
 
 function heatmapBg(delta: number): string {
+  if (delta > 0) return "var(--success-alpha-5)";
   if (delta < 0) return "var(--destructive-alpha-5)";
   return "transparent";
 }
 
 function deltaColor(delta: number): string {
+  if (delta > 0) return "var(--chart-2)";
   if (delta < 0) return "var(--destructive)";
   return "var(--muted-foreground)";
 }
@@ -674,50 +681,34 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
   })();
 
   const coveragePct = deptMetrics.forecast > 0 ? Math.round((deptMetrics.scheduled / deptMetrics.forecast) * 100) : 0;
-  // Binary: ok (≥100%) or critical (<100%) — no amber middle state
-  const coverageStatus = coveragePct >= 100 ? "ok" : "critical";
-  const coverageColor = coverageStatus === "ok" ? "var(--muted-foreground)" : "var(--destructive)";
-  const coverageBadgeBg = coverageStatus === "ok" ? "var(--muted)" : "var(--destructive-alpha-15)";
+  const coverageStatus = coveragePct >= 100 ? "ok" : coveragePct >= 70 ? "warning" : "critical";
+  const coverageColor = coverageStatus === "ok" ? "var(--chart-2)" : coverageStatus === "warning" ? "var(--chart-3)" : "var(--destructive)";
+  const coverageBadgeBg = coverageStatus === "ok" ? "var(--success-alpha-12)" : coverageStatus === "warning" ? "var(--warning-alpha-10)" : "var(--destructive-alpha-10)";
 
   const eff = computeEfficiency(dept, dayIndex);
-  // 3-state: ok / warn / problem — each gets distinct badge color
-  const effIsOk = eff.status === "ok";
-  const effIsWarn = eff.status === "warn";
-  const effColor = effIsOk
-    ? "var(--muted-foreground)"
-    : effIsWarn
-      ? "var(--chart-3)"
-      : "var(--destructive)";
-  const effBadgeBg = effIsOk
-    ? "var(--muted)"
-    : effIsWarn
-      ? "var(--chart-3-alpha-20)"
-      : "var(--destructive-alpha-15)";
+  const effColor = eff.status === "ok" ? "var(--success)" : eff.status === "warn" ? "var(--chart-3)" : "var(--destructive)";
+  const effBadgeBg = eff.status === "ok" ? "var(--success-alpha-12)" : eff.status === "warn" ? "var(--warning-alpha-10)" : "var(--destructive-alpha-10)";
 
   // Combined overall status — coverage is the ONLY driver for the banner.
-  const combined = coverageStatus; // "ok" | "critical"
-  const combinedIsOk = combined === "ok";
-  const combinedText = combinedIsOk ? "День у нормі" : "Потребує уваги";
-  // Icon stays colored (green/red) — the primary visual signal.
-  // Text uses foreground (not red) for critical — avoids triple-red alarm overlap with card-level badges.
-  // Bg is calmer: transparent for ok, barely-tinted for critical — diagnostic, not alert panel.
-  const combinedIconColor = combinedIsOk ? "var(--chart-2)" : "var(--destructive)";
-  const combinedTextColor = combinedIsOk ? "var(--muted-foreground)" : "var(--foreground)";
-  const combinedBg = combinedIsOk ? "transparent" : "var(--destructive-alpha-4)";
+  // Efficiency is informational only and does NOT affect the banner status.
+  const combined = coverageStatus;
+  const combinedText = combined === "ok" ? "День у нормі" : combined === "warning" ? "Є відхилення" : "Потребує уваги";
+  const combinedColor = combined === "ok" ? "var(--chart-2)" : combined === "warning" ? "var(--chart-3)" : "var(--destructive)";
+  const combinedBg = combined === "ok" ? "var(--success-alpha-5)" : combined === "warning" ? "var(--warning-alpha-5)" : "var(--destructive-alpha-5)";
 
   const planLabel = isFact ? "Факт" : "План";
 
-  // Section label — active=true when section has a problem (lifts to foreground + stronger)
-  const sectionLabel = (active = false): React.CSSProperties => ({
-    fontSize: 12,
-    fontWeight: "var(--font-weight-bold)" as any,
-    color: active ? "var(--foreground)" : "var(--muted-foreground)",
-    textTransform: "uppercase" as any,
-    letterSpacing: "0.04em",
-  });
-  // Severity badge — status signal, not decoration
+  // Shared section label style
+  const sectionLabel: React.CSSProperties = {
+    fontSize: 10,
+    fontWeight: "var(--font-weight-semibold)" as any,
+    color: "var(--muted-foreground)",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+  };
+  // Shared badge style (no dot — consistent for both sections)
   const badge = (color: string, bg: string, text: string) => (
-    <span className="px-2 py-0.5 rounded-full" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-bold)" as any, color, backgroundColor: bg, letterSpacing: "-0.01em" }}>
+    <span className="px-1.5 py-px rounded-full" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color, backgroundColor: bg }}>
       {text}
     </span>
   );
@@ -730,21 +721,14 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      {/* ── Header with inline status ── */}
-      <div className="flex items-start justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--border)" }}>
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between px-3 py-2 border-b border-[var(--border)]" style={{ backgroundColor: "var(--muted)" }}>
         <div>
-          <div className="flex items-center gap-1.5">
-            <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>
-              {dayLabel}
-            </span>
-            {/* Inline status indicator */}
-            {combinedIsOk
-              ? <CheckCircle2 size={12} style={{ color: combinedIconColor, flexShrink: 0 }} />
-              : <CircleAlert size={12} style={{ color: combinedIconColor, flexShrink: 0 }} />
-            }
-          </div>
+          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>
+            {dayLabel}
+          </span>
           <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 1 }}>
-            Покриття та ефективність за день
+            {dept.name}
           </p>
         </div>
         <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors">
@@ -752,141 +736,127 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
         </button>
       </div>
 
-      {/* ── Body ── */}
-      <div style={{ padding: "8px 12px 12px" }}>
+      {/* ── Overall day status ── */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: combinedBg }}>
+        {combined === "ok"
+          ? <CheckCircle2 size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+          : combined === "warning"
+            ? <AlertTriangle size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+            : <CircleAlert size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+        }
+        <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: combinedColor }}>
+          {combinedText}
+        </span>
+      </div>
 
-        {/* ── Ефективність ── */}
-        <div style={{ paddingBottom: 10 }}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span style={sectionLabel(!effIsOk)}>Ефективність</span>
-            {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
-          </div>
-          {eff.status !== "ok" ? (
-            <>
-              <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {eff.description.split(", ").map((part, i) => {
-                  const isDeficit = part.includes("нестача");
-                  const isExcess = part.includes("перебір");
-                  const marker = isDeficit ? "↓" : isExcess ? "↑" : "•";
-                  const markerColor = isDeficit
-                    ? "var(--destructive)"
-                    : isExcess
-                      ? "var(--chart-3)"
-                      : "var(--muted-foreground)";
-                  return (
-                    <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-                      <span style={{
-                        fontSize: "var(--text-xs)",
-                        fontWeight: "var(--font-weight-bold)" as any,
-                        color: markerColor,
-                        flexShrink: 0,
-                        lineHeight: 1.3,
-                      }}>
-                        {marker}
-                      </span>
-                      <span style={{
-                        fontSize: "var(--text-xs)",
-                        fontWeight: "var(--font-weight-medium)" as any,
-                        color: "var(--foreground)",
-                        lineHeight: 1.3,
-                      }}>
-                        {part}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <button
-                onClick={() => {
-                  document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
-                  onClose();
-                }}
-                style={{
-                  display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
-                  fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any,
-                  color: "var(--primary)", backgroundColor: "var(--primary-alpha-8)",
-                  border: "none", borderRadius: "var(--radius-sm)",
-                  padding: "5px 10px", marginTop: 8,
-                  cursor: "pointer", width: "100%",
-                }}
-              >
-                Переглянути розподіл →
-              </button>
-            </>
-          ) : (
-            <p style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
-              Зміни рівномірно розподілені
-            </p>
-          )}
+      {/* ── Ефективність розподілу ── */}
+      <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>
+        <div className="flex items-center justify-between mb-1">
+          <span style={sectionLabel}>Ефективність розподілу</span>
+          {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
         </div>
-
-        {/* Divider */}
-        <div style={{ height: 1, backgroundColor: "var(--border)", margin: "0 0 10px" }} />
-
-        {/* ── Покриття ── */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <span style={sectionLabel(false)}>Покриття</span>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-bold)" as any, color: coverageColor, backgroundColor: coverageBadgeBg, letterSpacing: "-0.01em" }}>
-              {coverageStatus === "ok" && <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--chart-2)", flexShrink: 0 }} />}
-              {coveragePct}%
-            </span>
-          </div>
-          {/* Compact metrics line */}
-          <div className="flex items-baseline gap-2 flex-wrap" style={{ fontSize: "var(--text-xs)" }}>
-            <span style={{ color: "var(--muted-foreground)" }}>Прогноз: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span></span>
-            <span style={{ color: "var(--muted-foreground)" }}>{planLabel}: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span></span>
-            <span style={{ color: "var(--muted-foreground)" }}>Різн.: <span style={{ fontWeight: "var(--font-weight-bold)" as any, color: deltaColor(deptMetrics.delta) }}>{fmtDelta(deptMetrics.delta)}</span></span>
-          </div>
-
-          {/* Sub-unit breakdown */}
-          {rc.subUnits.length > 0 && (
-            <div className="flex flex-col gap-0.5" style={{ marginTop: 8 }}>
-              <div className="flex items-center px-1 py-0.5">
-                <span className="flex-1" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Дільниця</span>
-                <div className="flex flex-shrink-0" style={{ width: 130 }}>
-                  <span className="w-[36px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогн.</span>
-                  <span className="w-[40px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
-                  <span className="w-[46px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.</span>
-                </div>
-              </div>
-              {rc.subUnits.map((su) => {
-                const m = computeMetrics(su);
-                return (
-                  <div key={su.name} className="flex items-center px-1 py-1 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
-                    <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>
-                      {su.name}
-                    </span>
-                    <div className="flex flex-shrink-0" style={{ width: 130 }}>
-                      <span className="w-[36px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
-                      <span className="w-[40px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
-                      <span className="w-[46px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
-                        {fmtDelta(m.delta)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Create open shift — only when under-covered */}
-          {coverageStatus !== "ok" && onCreateOpenShift && (
+        {eff.status !== "ok" ? (
+          <>
+            <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: 2 }}>
+              {eff.description}
+            </p>
             <button
-              onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
+              onClick={() => {
+                document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
+                onClose();
+              }}
               style={{
                 display: "block", width: "100%", textAlign: "center",
                 fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
-                color: "var(--primary)", backgroundColor: "var(--primary-alpha-8)",
-                border: "none", borderRadius: "var(--radius-sm)",
-                padding: "5px 12px", marginTop: 10, cursor: "pointer",
+                color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
+                border: "1px solid var(--primary-alpha-25)", padding: "4px 10px", borderRadius: "var(--radius-sm)",
+                cursor: "pointer", marginTop: 6,
               }}
             >
-              Створити відкриту зміну
+              Переглянути розподіл →
             </button>
-          )}
+          </>
+        ) : (
+          <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
+            Зміни рівномірно розподілені
+          </p>
+        )}
+      </div>
+
+      {/* ── Покриття ── */}
+      <div style={{ padding: "10px 12px 0" }}>
+        <div className="flex items-center justify-between mb-1">
+          <span style={sectionLabel}>Покриття</span>
+          {badge(coverageColor, coverageBadgeBg, `${coveragePct}%`)}
+        </div>
+        {/* Totals row */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогноз:</span>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}:</span>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.:</span>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: deltaColor(deptMetrics.delta) }}>
+              {fmtDelta(deptMetrics.delta)}
+            </span>
+          </div>
         </div>
       </div>
+
+      {/* Sub-unit breakdown */}
+      {rc.subUnits.length > 0 && (
+        <div className="px-3 pb-2 flex flex-col gap-0.5" style={{ paddingTop: 6 }}>
+          {/* Column headers */}
+          <div className="flex items-center px-2 py-0.5">
+            <span className="flex-1" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Дільниця</span>
+            <div className="flex flex-shrink-0" style={{ width: 130 }}>
+              <span className="w-[36px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогн.</span>
+              <span className="w-[40px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
+              <span className="w-[46px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.</span>
+            </div>
+          </div>
+          {rc.subUnits.map((su) => {
+            const m = computeMetrics(su);
+            return (
+              <div key={su.name} className="flex items-center px-2 py-1 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
+                <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>
+                  {su.name}
+                </span>
+                <div className="flex flex-shrink-0" style={{ width: 130 }}>
+                  <span className="w-[36px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
+                  <span className="w-[40px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
+                  <span className="w-[46px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
+                    {fmtDelta(m.delta)}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Create open shift CTA — only when coverage is below target ── */}
+      {coverageStatus !== "ok" && onCreateOpenShift && (
+        <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
+          <button
+            onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
+            style={{
+              display: "block", width: "100%", textAlign: "center",
+              fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
+              color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
+              border: "1px solid var(--primary-alpha-25)", borderRadius: "var(--radius-sm)",
+              padding: "5px 12px", cursor: "pointer",
+            }}
+          >
+            Створити відкриту зміну
+          </button>
+        </div>
+      )}
 
     </div>
   );
@@ -915,7 +885,8 @@ interface ResourceSummaryRowProps {
 function rscDayCoverageColor(scheduled: number, forecast: number): string {
   if (forecast <= 0) return "var(--muted-foreground)";
   const ratio = scheduled / forecast;
-  if (ratio >= 1) return "var(--muted-foreground)";
+  if (ratio >= 1) return "var(--chart-2)";
+  if (ratio >= 0.75) return "var(--chart-3)";
   return "var(--destructive)";
 }
 
@@ -1120,7 +1091,7 @@ export function WeeklyTable({
   );
 
   return (
-    <div className="flex-1 overflow-y-scroll overflow-x-auto">
+    <div className="flex-1 overflow-auto">
       <CustomDragLayer />
 
       {/* Fact mode banner */}
@@ -1198,12 +1169,7 @@ export function WeeklyTable({
               style={{ width: 240, minWidth: 240, fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--muted-foreground)", backgroundColor: "var(--muted)", border: "1px solid var(--border)", borderLeftWidth: 0, borderTopWidth: 0 }}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-col min-w-0">
-                  <span>Працівник</span>
-                  <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.2 }}>
-                    {departments.reduce((s, d) => s + d.employees.length, 0)} осіб · {departments.length} відд.
-                  </span>
-                </div>
+                <span>Працівник</span>
                 <button
                   onClick={toggleAll}
                   className="inline-flex items-center gap-1 px-1.5 py-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors"
@@ -1263,15 +1229,16 @@ export function WeeklyTable({
           const openShiftCount = isFact ? 0 : dept.openShifts.length;
           const exchangeCount = isFact ? 0 : dept.openShifts.filter((os) => os.shift.exchangeStatus === "on-exchange").length;
 
-          // Per-day coverage status for micro-indicators — binary: ok or critical only
+          // Per-day coverage status for micro-indicators
           const dayCoverage = days.map((_, di) => {
             const dayData = effectiveDaily[di];
             if (!dayData || dayData.forecast === 0) return "ok" as const;
             const value = isFact ? (dayData.actual ?? dayData.scheduled) : dayData.scheduled;
             const ratio = value / dayData.forecast;
             const dayOpenShifts = dept.openShifts.filter((os) => os.dayIndex === di).length;
-            // ok only when fully covered AND no open shifts waiting for assignment
+            // Dot = coverage only. Efficiency is secondary info shown in the popover.
             if (ratio >= 1 && dayOpenShifts === 0) return "ok" as const;
+            if (ratio >= 0.8) return "warning" as const;  // only 80%+ gets orange, below is red
             return "critical" as const;
           });
 
@@ -1306,6 +1273,14 @@ export function WeeklyTable({
                     >
                       {dept.name}
                     </span>
+                    <span
+                      className="px-1.5 py-px rounded-full shrink-0"
+                      style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)" }}
+                      onMouseEnter={(e) => showTooltip(e.currentTarget, [`Працівників у відділі: ${dept.employees.length}`])}
+                      onMouseLeave={hideTooltip}
+                    >
+                      {dept.employees.length}
+                    </span>
                     {deptIssueCount > 0 && (
                       <span
                         className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
@@ -1333,8 +1308,7 @@ export function WeeklyTable({
                 {/* Per-day coverage dot indicators — always trigger shared popover */}
                 {days.map((_, di) => {
                   const status = dayCoverage[di];
-                  // Binary dot: ok = dim neutral border color, critical = prominent destructive
-                  const dotColor = status === "ok" ? "var(--border)" : "var(--destructive)";
+                  const dotColor = status === "ok" ? "var(--chart-2)" : status === "warning" ? "var(--chart-3)" : "var(--destructive)";
                   const isActive = dotPopover?.deptId === dept.id && dotPopover?.dayIndex === di;
 
                   return (
@@ -1361,7 +1335,7 @@ export function WeeklyTable({
                             width: 6,
                             height: 6,
                             backgroundColor: dotColor,
-                            opacity: 1,
+                            opacity: status === "ok" ? 0.45 : 1,
                           }}
                         />
                       </div>
@@ -1818,8 +1792,8 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
   const currentMonth = MONTH_NAMES[2]; // March 2026
 
   // Multi-month check
-  const weekStart = new Date(2026, 2, 3);
-  const weekEnd = new Date(2026, 2, 9);
+  const weekStart = new Date(2026, 2, 2);
+  const weekEnd = new Date(2026, 2, 8);
   const isCrossMonth = weekStart.getMonth() !== weekEnd.getMonth();
 
   const handleEnter = () => {

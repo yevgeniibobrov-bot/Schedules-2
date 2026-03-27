@@ -832,16 +832,16 @@ const ABSENCE_TYPE_CONFIG: Record<AbsenceType, { label: string; icon: React.Reac
 // SHIFT ACTION STATUS — unified state machine (mutually exclusive)
 // ════════════��═════════════════════════════════════════════════════════
 
-// Shift type — 4 mutually exclusive modes
-type ShiftType = "standard" | "open" | "marketplace" | "proposal";
+type ShiftActionStatus = "standard" | "marketplace" | "proposal";
 
-// ── Shift type radio-card option ──────────────────────────────────────
-function ShiftTypeOption({
+function ActionCard({
   selected,
   icon,
   title,
   description,
-  onSelect,
+  onClick,
+  color,
+  bgColor,
   disabled,
   disabledHint,
 }: {
@@ -849,33 +849,38 @@ function ShiftTypeOption({
   icon: React.ReactNode;
   title: string;
   description: string;
-  onSelect: () => void;
+  onClick: () => void;
+  color: string;
+  bgColor: string;
   disabled?: boolean;
   disabledHint?: string;
 }) {
   return (
     <button
       type="button"
-      onClick={disabled ? undefined : onSelect}
-      className="flex items-start gap-2 w-full px-2.5 py-2 rounded-[var(--radius-sm)] transition-all text-left"
+      onClick={disabled ? undefined : onClick}
+      className="flex items-start gap-2.5 w-full px-3 py-2.5 rounded-[var(--radius)] transition-all text-left"
       style={{
-        backgroundColor: selected ? "var(--primary-alpha-6)" : "var(--card)",
-        border: `1.5px solid ${selected ? "var(--primary)" : "var(--border)"}`,
+        backgroundColor: disabled ? "var(--muted)" : selected ? bgColor : "transparent",
+        borderStyle: "solid",
+        borderWidth: selected ? 1.5 : 1,
+        borderColor: disabled ? "var(--border)" : selected ? color : "var(--border)",
         cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? 0.6 : 1,
       }}
     >
+      <span className="mt-0.5 flex-shrink-0" style={{ color: disabled ? "var(--muted-foreground)" : color }}>{icon}</span>
       <div className="flex flex-col min-w-0 gap-0.5">
-        <div className="flex items-center gap-1.5">
-          <span style={{ color: selected ? "var(--primary)" : "var(--muted-foreground)", flexShrink: 0 }}>{icon}</span>
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: selected ? "var(--primary)" : "var(--foreground)" }}>
-            {title}
-          </span>
-        </div>
+        <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: selected ? color : "var(--foreground)" }}>
+          {title}
+        </span>
         <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
           {disabled && disabledHint ? disabledHint : description}
         </span>
       </div>
+      {selected && !disabled && (
+        <CheckCircle2 size={16} className="mt-0.5 ml-auto flex-shrink-0" style={{ color }} />
+      )}
     </button>
   );
 }
@@ -922,19 +927,15 @@ export function PlanningDrawer({
     isCreateOpen ? "" : employee.id
   );
   const [selectedDay, setSelectedDay] = useState(dayIndex ?? 0);
-  // Shift type — single 4-way mutually exclusive selector
-  const [shiftType, setShiftType] = useState<ShiftType>(() => {
-    if (isCreateOpen) return "open";
+  // Unified shift action state machine (mutually exclusive)
+  const [shiftActionStatus, setShiftActionStatus] = useState<ShiftActionStatus>(() => {
     if (isShiftMode && shift?.proposalStatus === "pending") return "proposal";
     if (isShiftMode && shift?.exchangeStatus === "on-exchange") return "marketplace";
-    if (editingOpenShift && !shift?.exchangeStatus) return "open";
     return "standard";
   });
-  const isProposal = shiftType === "proposal";
-  const isMarketplace = shiftType === "marketplace";
-  const isOpenType = shiftType === "open";
-  // Needs a specific employee: standard or proposal only
-  const needsEmployee = shiftType === "standard" || shiftType === "proposal";
+  // Derived booleans for backward compatibility
+  const isProposal = shiftActionStatus === "proposal";
+  const isMarketplace = shiftActionStatus === "marketplace";
 
   // ── Absence-mode state ──────────────────────────────────────────────
   const [absenceType, setAbsenceType] = useState<AbsenceType>("vacation");
@@ -946,16 +947,16 @@ export function PlanningDrawer({
   const allEmpList = allEmployees ?? activeDept.employees;
   const activeEmp = allEmpList.find((e) => e.id === selectedEmpId) ?? null;
 
-  // Is employee selected? (only meaningful for standard / proposal types)
-  const hasEmployee = needsEmployee && selectedEmpId !== "";
+  // Is employee selected? (for create/shift modes)
+  const hasEmployee = selectedEmpId !== "";
 
-  // Derive shift type for callback
+  // Derive shift type from unified action status
   const derivedShiftType: "standard" | "exchange" | "proposal" =
-    shiftType === "marketplace" ? "exchange" : shiftType === "proposal" ? "proposal" : "standard";
+    shiftActionStatus === "marketplace" ? "exchange" : shiftActionStatus === "proposal" ? "proposal" : "standard";
 
-  // Determine if current operation acts as open/unassigned shift
+  // Determine if current operation acts as open shift
   const isEffectivelyOpen = isAnyCreate
-    ? isOpenType || isMarketplace
+    ? !hasEmployee
     : editingOpenShift;
 
   // Display employee for stats
@@ -974,9 +975,9 @@ export function PlanningDrawer({
     // Today is Friday Mar 6, 2026 → todayDayIndex = 4 (Mon=0)
     const todayDayIndex = 4;
 
-    // Week dates: Mon Mar 3 – Sun Mar 9, all in March → single month
-    const weekStartDate = new Date(2026, 2, 3); // Mar 3
-    const weekEndDate = new Date(2026, 2, 9);   // Mar 9
+    // Week dates: Mon Mar 2 – Sun Mar 8, all in March → single month
+    const weekStartDate = new Date(2026, 2, 2); // Mar 2
+    const weekEndDate = new Date(2026, 2, 8);   // Mar 8
 
     const startMonth = weekStartDate.getMonth();
     const endMonth = weekEndDate.getMonth();
@@ -1222,11 +1223,14 @@ export function PlanningDrawer({
       if (absenceEndDay < absenceStartDay) {
         msgs.push({ type: "error", text: "Кінцевий день не може бути раніше початкового." });
       }
-      // No success-state push — clean form stays clean
+      if (msgs.length === 0) msgs.push({ type: "info", text: "Усі правила дотримано." });
       return msgs;
     }
 
-    // Shift mode validations — "no blocks" is shown locally in the Частини section
+    // Shift mode validations
+    if (isAnyCreate && typeMode === "shift" && timeBlocks.length === 0) {
+      msgs.push({ type: "error", text: "Додайте щонайменше одну частину зміни." });
+    }
     if (isShiftOrCreate && timeBlocks.length > 0) {
       if (hasEmployee) {
         const targetDay = isAnyCreate ? selectedDay : dayIndex;
@@ -1247,7 +1251,7 @@ export function PlanningDrawer({
               const [exS, exE] = existing.timeRange.split("–").map((t) => parseHour(t.trim()));
               const gap = newStart >= exE ? newStart - exE : exS >= newEnd ? exS - newEnd : 0;
               if (gap >= 1.5) {
-                if (shiftType !== "marketplace") {
+                if (shiftActionStatus !== "marketplace") {
                   msgs.push({ type: "error", text: `У працівника вже є зміна в цей день. Розрив ${fmtDuration(gap)} перевищує допустимі 1:30г — система не збереже другу зміну. Щоб обійти обмеження, створіть цю зміну як біржову (опція "На біржу").` });
                 } else {
                   msgs.push({ type: "info", text: `Розрив між змінами ${fmtDuration(gap)} — біржова зміна дозволяє обійти обмеження на мінімальний розрив.` });
@@ -1259,44 +1263,37 @@ export function PlanningDrawer({
         }
       }
       // ── Marketplace + >2 units rule ──
-      if (shiftType === "marketplace") {
+      if (shiftActionStatus === "marketplace") {
         const uniqueUnits = new Set(timeBlocks.map((b) => b.unit).filter(Boolean));
         if (uniqueUnits.size > 2) {
           msgs.push({ type: "error", text: `Біржова зміна підтримує максимум 2 дільниці. Зараз призначено ${uniqueUnits.size} — спростіть зміну або оберіть стандартне створення.` });
+        } else if (uniqueUnits.size === 2) {
+          msgs.push({ type: "info", text: "Біржова зміна з 2 дільницями — це максимум для біржі. Додати більше не вдасться." });
         }
-        // 2-unit info removed — low-value noise, self-evident from the block count
       }
-      // Only cross-form issues — overlap/no-unit/overassignment shown inline per-block;
-      // break warning shown locally in Перерви section
+      if (overlappingBlockIds.size > 0) msgs.push({ type: "error", text: `Перекриття змін: ${overlappingBlockIds.size} блок(ів) мають конфліктуючі часові діапазони.` });
       if (totalShiftHours > 16) msgs.push({ type: "error", text: "Зміна перевищує максимальну тривалість 16 годин." });
+      if (timeBlocks.some((b) => !b.unit)) msgs.push({ type: "error", text: "Кожен сегмент зміни повинен мати призначену дільницю." });
       if (totalShiftHours > 8 && totalShiftHours <= 16) msgs.push({ type: "warning", text: `Зміна ${fmtDuration(totalShiftHours)} — перевищує рекомендований денний ліміт 8г.` });
+      if (breakDurationHours < 0.5 && totalShiftHours >= 6) msgs.push({ type: "warning", text: "Перерва щонайменше 30 хв потрібна для змін >= 6г." });
       if (hasEmployee) {
         const newTotal = displayEmp.workedHours + netHours;
         if (newTotal > displayEmp.monthlyNorm) msgs.push({ type: "warning", text: `Додавання цієї зміни (${fmtDuration(netHours)} нетто) збільшить місячні години до ${newTotal.toFixed(1)}г — понад ${displayEmp.monthlyNorm}г норми.` });
       }
+      const overAssigned = timeBlocks.filter((b) => blockValidationMap[b.id]?.messages.some((m) => m.includes("перепризначено")));
+      if (overAssigned.length > 0) {
+        const unitNames = Array.from(new Set(overAssigned.map((b) => b.unit)));
+        msgs.push({ type: "warning", text: `Перепризначення дільниць: ${unitNames.join(", ")} перевищують прогноз на цей день.` });
+      }
     }
-    // No success-state push — clean form stays clean without a success banner
+    if (msgs.length === 0) msgs.push({ type: "info", text: "Усі правила дотримано." });
     return msgs;
-  }, [isShiftOrCreate, typeMode, isAnyCreate, hasEmployee, selectedDay, dayIndex, timeBlocks, overlappingBlockIds, totalShiftHours, netHours, displayEmp, blockValidationMap, absenceStartDay, absenceEndDay, DAY_LABELS, shiftType, shift]);
+  }, [isShiftOrCreate, typeMode, isAnyCreate, hasEmployee, selectedDay, dayIndex, timeBlocks, overlappingBlockIds, totalShiftHours, breakDurationHours, netHours, displayEmp, blockValidationMap, absenceStartDay, absenceEndDay, DAY_LABELS, shiftActionStatus, shift]);
 
   const hardErrorCount = validationMessages.filter((m) => m.type === "error").length;
   const warningCount = validationMessages.filter((m) => m.type === "warning").length;
   const hasHardErrors = hardErrorCount > 0;
-  // Block-level errors (overlap, missing unit) also prevent save
-  const blockHasErrors = Object.values(blockValidationMap).some((v) => v.severity === "error");
-  const blockErrorCount = Object.values(blockValidationMap).filter((v) => v.severity === "error").length;
-  const isBlocked = hasHardErrors || blockHasErrors;
-
-  // Smart summary rule:
-  // - 1 local error only → shown inline, no summary section
-  // - multiple errors or cross-section issues → show "Перевірка"
-  // - 0 errors → no success block
-  const totalErrorSurfaces = hardErrorCount + blockErrorCount;
-  const showValidationSummary = validationMessages.length > 0 && (
-    validationMessages.length > 1 || // multiple cross-form messages
-    totalErrorSurfaces > 1 || // errors from different places
-    (hardErrorCount > 0 && blockErrorCount > 0) // cross-section: block + form-level
-  );
+  const isBlocked = hasHardErrors;
 
   // ── Time block handlers ─────────────────────────────────────────────
   const addBlock = useCallback(() => {
@@ -1350,7 +1347,7 @@ export function PlanningDrawer({
   // ═══════════════════════════════════════════════════════════════════
 
   // ── Breadcrumb context ──────────────────────────────────────────────
-  const WEEK_START = new Date(2026, 2, 3); // Mon Mar 3
+  const WEEK_START = new Date(2026, 2, 2); // Mon Mar 2
   const UA_MONTHS = ["січ", "лют", "бер", "квіт", "трав", "черв", "лип", "серп", "вер", "жовт", "лист", "груд"];
   const contextDayIdx = isAnyCreate ? selectedDay : (dayIndex ?? 0);
   const contextDate = new Date(WEEK_START);
@@ -1375,223 +1372,178 @@ export function PlanningDrawer({
         </button>
       </div>
 
-      {/* ── Sticky context bar — always visible during scroll ── */}
-      {isShiftOrCreate && typeMode === "shift" && (
-        <div
-          className="flex-shrink-0 flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: "1px solid var(--border)", backgroundColor: "var(--muted)" }}
-        >
-          <div className="flex items-center gap-2">
-            <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>
-              {DAY_LABELS[contextDayIdx]}, {contextDate.getDate()} {UA_MONTHS[contextDate.getMonth()]}
-            </span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>·</span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
-              {(isAnyCreate ? activeDept : department).name}
-            </span>
-          </div>
-          {(() => {
-            const validBlocks = timeBlocks.filter((b) => b.start && b.end);
-            if (validBlocks.length === 0) return (
-              <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>час не задано</span>
-            );
-            const s = validBlocks[0].start;
-            const e = validBlocks[validBlocks.length - 1].end;
-            return (
-              <div className="flex items-center gap-1.5">
-                <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>
-                  {s}–{e}
-                </span>
-                <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
-                  · {fmtDuration(totalShiftHours)}
-                </span>
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
       {/* Body */}
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-5">
-
-        {/* ═══ Status / Context Card — edit mode only ═══════════════ */}
-        {isShiftMode && typeMode === "shift" && (() => {
-          // Determine current shift status context
-          let statusIcon: React.ReactNode;
-          let statusTitle: string;
-          let statusDesc: string;
-          let statusAccent: string;
-
-          if (editingExchangeShift) {
-            statusIcon = <ArrowRightLeft size={15} />;
-            statusTitle = "Зміна біржі";
-            statusDesc = "Опублікована на біржі змін";
-            statusAccent = "var(--chart-5)";
-          } else if (shift?.proposalStatus === "pending") {
-            statusIcon = <Send size={15} />;
-            statusTitle = "Пропозиція";
-            statusDesc = displayEmp?.name
-              ? `Чекає підтвердження від ${displayEmp.name}`
-              : "Чекає підтвердження від працівника";
-            statusAccent = "var(--chart-3)";
-          } else if (editingOpenShift) {
-            statusIcon = <UserPlus size={15} />;
-            statusTitle = "Відкрита зміна";
-            statusDesc = "Без виконавця, доступна для призначення";
-            statusAccent = "var(--chart-3)";
-          } else {
-            statusIcon = <User size={15} />;
-            statusTitle = "Призначена зміна";
-            statusDesc = displayEmp?.name ? `Закріплена за ${displayEmp.name}` : "Закріплена за працівником";
-            statusAccent = "var(--primary)";
-          }
-
-          return (
-            <div
-              className="flex items-start gap-3 px-3 py-2.5 rounded-[var(--radius)]"
-              style={{
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--muted)",
-              }}
-            >
-              <div
-                className="flex-shrink-0 flex items-center justify-center rounded-[var(--radius-sm)] mt-0.5"
-                style={{
-                  width: 28,
-                  height: 28,
-                  position: "relative",
-                }}
-              >
-                <div style={{ position: "absolute", inset: 0, borderRadius: "var(--radius-sm)", backgroundColor: statusAccent, opacity: 0.12 }} />
-                <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center", color: statusAccent }}>
-                  {statusIcon}
-                </div>
-              </div>
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <span style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: "var(--font-weight-semibold)" as any,
-                  color: "var(--foreground)",
-                  lineHeight: 1.35,
-                }}>
-                  {statusTitle}
-                </span>
-                <span style={{
-                  fontSize: "var(--text-xs)",
-                  fontWeight: "var(--font-weight-normal)" as any,
-                  color: "var(--muted-foreground)",
-                  lineHeight: 1.4,
-                }}>
-                  {statusDesc}
-                </span>
-              </div>
-            </div>
-          );
-        })()}
 
         {/* ═══ Type Switch (Shift / Absence) ═══════════════════════ */}
         {isShiftOrCreate && (
           <TypeSwitch value={typeMode} onChange={setTypeMode} />
         )}
 
+        {/* ═══ Shift Status Summary Card ═══════════════════════════ */}
+        {isShiftOrCreate && typeMode === "shift" && (() => {
+          const isExchange = shiftActionStatus === "marketplace" || editingExchangeShift;
+          const isProposalCard = shiftActionStatus === "proposal";
+          const isOpen = !isExchange && !isProposalCard && !hasEmployee;
+          const bg = isExchange ? "var(--purple-alpha-5)" : isProposalCard ? "var(--primary-alpha-5)" : isOpen ? "var(--muted)" : "var(--success-alpha-5)";
+          const iconColor = isExchange ? "var(--chart-5)" : isProposalCard ? "var(--primary)" : isOpen ? "var(--muted-foreground)" : "var(--chart-2)";
+          const StatusIcon = isExchange ? ArrowRightLeft : isProposalCard ? Send : isOpen ? UserPlus : User;
+          const title = isExchange ? "Зміна біржі" : isProposalCard ? "Персональна пропозиція" : isOpen ? "Відкрита зміна" : "Призначена працівнику";
+          const desc = isExchange
+            ? "Видима всім відповідним працівникам на біржі."
+            : isProposalCard
+              ? `Пропозиція надіслана: ${displayEmp.name}`
+              : isOpen
+                ? "Без призначеного працівника, доступна для призначення."
+                : `${displayEmp.name} · ${displayEmp.position}`;
+          const cardDept = isAnyCreate ? activeDept : department;
+          const validBlocks = timeBlocks.filter((b) => b.start && b.end);
+          const shiftStart = validBlocks.length > 0 ? validBlocks[0].start : (shift?.timeRange?.split("–")[0]?.trim() ?? "");
+          const shiftEnd = validBlocks.length > 0 ? validBlocks[validBlocks.length - 1].end : (shift?.timeRange?.split("–")[1]?.trim() ?? "");
+          const hasTime = !!(shiftStart && shiftEnd);
+          return (
+            <div className="rounded-[var(--radius)] overflow-hidden flex-shrink-0" style={{ backgroundColor: bg }}>
+              <div className="flex items-center gap-2 px-3 pt-3 pb-2">
+                <StatusIcon size={15} style={{ color: iconColor, flexShrink: 0 }} />
+                <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{title}</span>
+              </div>
+              <div className="px-3 pb-3">
+                <span style={{ fontSize: "var(--text-xs)", lineHeight: 1.4, color: "var(--muted-foreground)" }}>{desc}</span>
+              </div>
+              <div className="px-3 py-2 flex items-center justify-between" style={{ borderTop: "1px solid color-mix(in srgb, var(--border) 60%, transparent)" }}>
+                <div className="flex flex-col gap-0.5">
+                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)", lineHeight: 1.3 }}>
+                    {DAY_LABELS[contextDayIdx]}, {contextDate.getDate()} {UA_MONTHS[contextDate.getMonth()]}
+                  </span>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", lineHeight: 1.3 }}>{cardDept.name}</span>
+                </div>
+                {hasTime && (
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)", lineHeight: 1.3 }}>
+                      {shiftStart}–{shiftEnd}
+                    </span>
+                    <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)", lineHeight: 1.3 }}>{fmtDuration(totalShiftHours)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
+
         {/* ═══ Create/Edit Mode – shared selectors ═══════════════════ */}
         {isShiftOrCreate && (
           <div className="contents">
+            <SectionDivider />
             <div className="flex flex-col gap-3">
+              <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
+                {typeMode === "absence" ? "Деталі відсутності" : "Деталі зміни"}
+              </label>
 
-              {/* ── Shift type selector — 4 mutually exclusive options ── */}
-              {typeMode === "shift" && (() => {
-                const uniqueUnitsCount = new Set(timeBlocks.map((b) => b.unit).filter(Boolean)).size;
-                const tooManyForExchange = uniqueUnitsCount > 2;
-                return (
-                  <div className="flex flex-col gap-1.5">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--muted-foreground)", textTransform: "uppercase" as any, letterSpacing: "0.04em" }}>Тип зміни</span>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {/* Row 1: Main — direct assignment */}
-                      <ShiftTypeOption
-                        selected={shiftType === "standard"}
-                        icon={<User size={13} />}
-                        title="Призначена"
-                        description="Напряму конкретному працівнику"
-                        onSelect={() => setShiftType("standard")}
-                      />
-                      <ShiftTypeOption
-                        selected={shiftType === "open"}
-                        icon={<UserPlus size={13} />}
-                        title="Відкрита"
-                        description="Без виконавця, для призначення"
-                        onSelect={() => { setShiftType("open"); setSelectedEmpId(""); }}
-                      />
-                      {/* Separator — spans both columns */}
-                      <div
-                        style={{ gridColumn: "span 2", marginTop: "4px", marginBottom: "4px" }}
-                        className="flex items-center gap-2"
-                      >
-                        <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
-                        <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                          через біржу
-                        </span>
-                        <div className="flex-1 h-px" style={{ backgroundColor: "var(--border)" }} />
-                      </div>
-                      {/* Row 2: Via exchange */}
-                      <ShiftTypeOption
-                        selected={shiftType === "marketplace"}
-                        icon={<ArrowRightLeft size={13} />}
-                        title="На біржі"
-                        description="Видима всім, хто перший — того"
-                        onSelect={() => { setShiftType("marketplace"); setSelectedEmpId(""); }}
-                        disabled={tooManyForExchange}
-                        disabledHint={`Біржа: до 2 дільниць (зараз ${uniqueUnitsCount})`}
-                      />
-                      <ShiftTypeOption
-                        selected={shiftType === "proposal"}
-                        icon={<Send size={13} />}
-                        title="Пропозиція"
-                        description="Адресно одному працівнику"
-                        onSelect={() => setShiftType("proposal")}
+              {/* Employee selector — primary control for shift type */}
+              <div className="flex flex-col gap-1">
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Працівник</span>
+                <div className="relative">
+                  <select
+                    value={selectedEmpId}
+                    onChange={(e) => {
+                      setSelectedEmpId(e.target.value);
+                      if (!e.target.value) { setShiftActionStatus("standard"); }
+                    }}
+                    className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                    style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                  >
+                    <option value="">
+                      {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
+                    </option>
+                    {allEmpList.map((e) => (
+                      <option key={e.id} value={e.id}>{e.name} — {e.position}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                </div>
+                {typeMode === "shift" && (() => {
+                  if (shiftActionStatus === "proposal" && hasEmployee) return (
+                    <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--chart-5)" }}>
+                      Зміна буде надіслана як персональна пропозиція цьому працівнику
+                    </span>
+                  );
+                  if (shiftActionStatus === "marketplace") return (
+                    <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--chart-5)" }}>
+                      Зміна буде створена як відкрита на біржі
+                    </span>
+                  );
+                  if (hasEmployee) return (
+                    <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--chart-2)" }}>
+                      Зміна буде призначена працівнику
+                    </span>
+                  );
+                  return (
+                    <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>
+                      Зміна буде створена як відкрита
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {/* ── Unified action cards (same pattern for Create & Edit) ── */}
+              {isShiftOrCreate && typeMode === "shift" && (() => {
+                // Determine which cards to show based on context
+                const isEditingMarketplace = isShiftMode && editingExchangeShift;
+
+                // Case: editing an open marketplace shift → show only "Зняти з біржі"
+                if (isEditingMarketplace && shiftActionStatus === "marketplace") {
+                  return (
+                    <div className="flex flex-col gap-1.5">
+                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}>Дії <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", opacity: 0.6 }}>(опціонально)</span></span>
+                      <ActionCard
+                        selected={true}
+                        icon={<ArrowRightLeft size={15} />}
+                        title="Зняти з біржі"
+                        description="Зміна стане звичайною відкритою зміною"
+                        onClick={() => setShiftActionStatus("standard")}
+                        color="var(--chart-5)"
+                        bgColor="var(--purple-alpha-5)"
                       />
                     </div>
+                  );
+                }
+
+                // Standard case: show marketplace card + proposal card (if employee selected)
+                return (
+                  <div className="flex flex-col gap-1.5">
+                    <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}>Дії <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", opacity: 0.6 }}>(опціонально)</span></span>
+                    {(() => {
+                      const uniqueUnitsCount = new Set(timeBlocks.map((b) => b.unit).filter(Boolean)).size;
+                      const tooManyUnits = uniqueUnitsCount > 2;
+                      return (
+                        <ActionCard
+                          selected={shiftActionStatus === "marketplace"}
+                          icon={<ArrowRightLeft size={15} />}
+                          title="Розмістити на біржі"
+                          description="Зміна буде доступна будь-якому працівнику на біржі"
+                          onClick={() => setShiftActionStatus(shiftActionStatus === "marketplace" ? "standard" : "marketplace")}
+                          color="var(--chart-5)"
+                          bgColor="var(--purple-alpha-5)"
+                          disabled={tooManyUnits}
+                          disabledHint={`Біржа підтримує зміни з 1–2 дільницями. Зараз ${uniqueUnitsCount} — зменшіть кількість сегментів`}
+                        />
+                      );
+                    })()}
+                    {hasEmployee && (
+                      <ActionCard
+                        selected={shiftActionStatus === "proposal"}
+                        icon={<Send size={15} />}
+                        title="Запропонувати працівнику"
+                        description="Персональна пропозиція тільки цьому працівнику через біржу"
+                        onClick={() => setShiftActionStatus(shiftActionStatus === "proposal" ? "standard" : "proposal")}
+                        color="var(--primary)"
+                        bgColor="var(--primary-alpha-8)"
+                      />
+                    )}
                   </div>
                 );
               })()}
-
-              {/* ── Context helper — explains state-dependent rules for selected type ── */}
-              {typeMode === "shift" && (() => {
-                const hints: Record<string, string | null> = {
-                  standard: null,
-                  open: "Зміна з'явиться у рядку відкритих змін і буде доступна для перетягування на працівника.",
-                  marketplace: "Зміна потрапить на біржу. Працівники з відповідними дільницями побачать її в додатку.",
-                  proposal: "Пропозиція обходить ліміт годин і потребує підтвердження працівника.",
-                };
-                const hint = hints[shiftType];
-                return hint ? (
-                  <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: -2 }}>
-                    {hint}
-                  </p>
-                ) : null;
-              })()}
-
-              {/* ── Employee selector — visible only for types that need a specific employee ── */}
-              {(typeMode === "absence" || needsEmployee) && (
-                <div className="flex flex-col gap-1">
-                  <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Працівник</span>
-                  <div className="relative">
-                    <select
-                      value={selectedEmpId}
-                      onChange={(e) => setSelectedEmpId(e.target.value)}
-                      className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                      style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                    >
-                      <option value="">Оберіть працівника...</option>
-                      {allEmpList.map((e) => (
-                        <option key={e.id} value={e.id}>{e.name} — {e.position}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                  </div>
-                </div>
-              )}
-
 
               {/* ── Absence-specific fields ─────────────────────────── */}
               {typeMode === "absence" && (
@@ -1870,16 +1822,6 @@ export function PlanningDrawer({
             {/* ── Shift Parts ── */}
             <div className="flex flex-col gap-2 p-3">
               <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Частини зміни</label>
-              {/* Local empty-state error — shown inline, not duplicated in Перевірка */}
-              {isAnyCreate && typeMode === "shift" && timeBlocks.length === 0 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-[var(--radius-sm)]"
-                  style={{ backgroundColor: "var(--destructive-alpha-6)" }}>
-                  <AlertCircle size={12} style={{ color: "var(--destructive)", flexShrink: 0 }} />
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--destructive)" }}>
-                    Додайте щонайменше одну частину зміни
-                  </span>
-                </div>
-              )}
               {timeBlocks.map((block, idx) => {
                 const dur = calcDuration(block.start, block.end);
                 const bv = blockValidationMap[block.id];
@@ -2042,16 +1984,6 @@ export function PlanningDrawer({
                   <Plus size={13} /> 60 хв
                 </button>
               </div>
-              {/* Local break warning — shown inline, anchored to the section where it's fixed */}
-              {breakDurationHours < 0.5 && totalShiftHours >= 6 && (
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius-sm)]"
-                  style={{ backgroundColor: "var(--warning-alpha-8)" }}>
-                  <AlertTriangle size={12} style={{ color: "var(--chart-3)", flexShrink: 0 }} />
-                  <span style={{ fontSize: "var(--text-xs)", color: "var(--chart-3)" }}>
-                    Перерва щонайменше 30 хв потрібна для змін ≥ 6г
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* ── Timeline (visual preview) ── */}
@@ -2069,8 +2001,8 @@ export function PlanningDrawer({
           </div>
         )}
 
-        {/* ═══ Validation — only cross-form issues not shown inline ════ */}
-        {isShiftOrCreate && showValidationSummary && (
+        {/* ═══ Validation (both shift and absence) ═══════════════════ */}
+        {isShiftOrCreate && (
           <div className="contents">
             <SectionDivider />
             <div className="flex flex-col gap-2">
@@ -2095,59 +2027,60 @@ export function PlanningDrawer({
         )}
       </div>
 
-      {/* Bottom zone — delete row (edit only) + CTA footer */}
+      {/* Footer — only two buttons: Скасувати / Створити */}
       {isShiftOrCreate && (
-        <div style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}>
-
-          {/* ── Delete row — only in edit flow, separated from CTA ── */}
+        <div className="px-4 py-3" style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}>
           {isShiftMode && !isAnyCreate && onDeleteShift && shift && (
-            <div className="px-4 pt-3 pb-1">
-              <button
-                onClick={() => {
-                  onDeleteShift({
-                    deptId: selectedDeptId,
-                    employeeId: selectedEmpId,
-                    dayIndex: dayIndex ?? 0,
-                    shiftId: shift.id,
-                  });
-                  onClose();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2 rounded-[var(--radius-sm)] transition-colors"
-                style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: "var(--font-weight-medium)" as any,
-                  color: "var(--destructive)",
-                  backgroundColor: "transparent",
-                  border: "1px solid var(--destructive-alpha-10)",
-                  cursor: "pointer",
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = "var(--destructive-alpha-8)"; e.currentTarget.style.borderColor = "var(--destructive-alpha-15)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = "transparent"; e.currentTarget.style.borderColor = "var(--destructive-alpha-10)"; }}
-              >
+            <button
+              onClick={() => {
+                onDeleteShift({
+                  deptId: selectedDeptId,
+                  employeeId: selectedEmpId,
+                  dayIndex: dayIndex ?? 0,
+                  shiftId: shift.id,
+                });
+                onClose();
+              }}
+              className="w-full py-2 rounded-[var(--radius)] transition-colors"
+              style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: "var(--font-weight-medium)" as any,
+                color: "var(--destructive)",
+                backgroundColor: "transparent",
+                border: "1px solid var(--destructive)",
+                cursor: "pointer",
+                marginBottom: 8,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--destructive-alpha-10)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+              }}
+            >
+              <span className="inline-flex items-center gap-1.5 justify-center">
                 <Trash2 size={14} />
                 Видалити зміну
-              </button>
-            </div>
-          )}
-
-          {/* ── CTA: Cancel + primary Save ── */}
-          <div className="flex items-center gap-2 px-4 py-3">
-            <button onClick={onClose}
-              className="px-4 py-2 rounded-[var(--radius)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-              style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", cursor: "pointer", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)", whiteSpace: "nowrap" }}
-            >
-              Скасувати
+              </span>
             </button>
-            <button
-              disabled={isBlocked}
-              onClick={() => {
+          )}
+        <div className="flex items-center gap-2">
+          <button onClick={onClose}
+            className="px-4 py-2 rounded-[var(--radius)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", cursor: "pointer", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+          >
+            Скасувати
+          </button>
+          <button
+            disabled={isBlocked}
+            onClick={() => {
               if (isBlocked) return;
               // Determine effective status for save
               // Spec: marketplace card on assigned shift → becomes open marketplace shift
               // Spec: proposal → stays on employee, gets proposalStatus: 'pending', shows Send icon
-              const effectiveIsOpen = shiftType === "open" || shiftType === "marketplace";
-              const effectiveExchange = shiftType === "marketplace" || shiftType === "proposal" ? "on-exchange" : undefined;
-              const effectiveProposalStatus = shiftType === "proposal" ? "pending" as const : undefined;
+              const effectiveIsOpen = shiftActionStatus === "marketplace" || (!hasEmployee && shiftActionStatus !== "proposal");
+              const effectiveExchange = shiftActionStatus === "marketplace" || shiftActionStatus === "proposal" ? "on-exchange" : undefined;
+              const effectiveProposalStatus = shiftActionStatus === "proposal" ? "pending" as const : undefined;
 
               if (isAnyCreate && typeMode === "shift" && onCreateShift && timeBlocks.length > 0) {
                 const timeRange = `${timeBlocks[0].start}–${timeBlocks[timeBlocks.length - 1].end}`;
@@ -2164,10 +2097,10 @@ export function PlanningDrawer({
                 };
                 onCreateShift({
                   deptId: selectedDeptId,
-                  employeeId: shiftType === "marketplace" ? "" : selectedEmpId,
+                  employeeId: shiftActionStatus === "marketplace" ? "" : selectedEmpId,
                   dayIndex: selectedDay,
                   shift: newShift,
-                  shiftType: shiftType === "marketplace" ? "exchange" : shiftType === "proposal" ? "proposal" : "standard",
+                  shiftType: shiftActionStatus === "marketplace" ? "exchange" : shiftActionStatus === "proposal" ? "proposal" : "standard",
                 });
                 onClose();
                 return;
@@ -2192,13 +2125,13 @@ export function PlanningDrawer({
                 };
                 onSaveShift({
                   deptId: selectedDeptId,
-                  employeeId: shiftType === "marketplace" ? "" : selectedEmpId,
+                  employeeId: shiftActionStatus === "marketplace" ? "" : selectedEmpId,
                   dayIndex: dayIndex ?? 0,
                   shift: updatedShift,
                   originalShiftId: shift.id,
                   isOpenShift: effectiveIsOpen,
-                  isMarketplace: shiftType === "marketplace",
-                  isProposal: shiftType === "proposal",
+                  isMarketplace: shiftActionStatus === "marketplace",
+                  isProposal: shiftActionStatus === "proposal",
                 });
                 onClose();
                 return;
@@ -2213,9 +2146,9 @@ export function PlanningDrawer({
                 ? "var(--muted-foreground)"
                 : typeMode === "absence"
                   ? ABSENCE_TYPE_CONFIG[absenceType].color
-                  : shiftType === "marketplace"
+                  : shiftActionStatus === "marketplace"
                     ? "var(--chart-5)"
-                    : shiftType === "proposal"
+                    : shiftActionStatus === "proposal"
                       ? "var(--primary)"
                       : "var(--primary)",
               opacity: isBlocked ? 0.5 : 1,
