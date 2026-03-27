@@ -885,7 +885,7 @@ interface ResourceSummaryRowProps {
 function rscDayCoverageColor(scheduled: number, forecast: number): string {
   if (forecast <= 0) return "var(--muted-foreground)";
   const ratio = scheduled / forecast;
-  if (ratio >= 1) return "var(--chart-2)";
+  if (ratio >= 1) return "var(--muted-foreground)";
   if (ratio >= 0.75) return "var(--chart-3)";
   return "var(--destructive)";
 }
