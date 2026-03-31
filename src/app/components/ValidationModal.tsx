@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@fzwp/ui-kit/modal';
 import { Button } from '@fzwp/ui-kit/button';
-import { Badge } from '@fzwp/ui-kit/badge';
+
 import { Divider } from '@fzwp/ui-kit/divider';
 import { Tooltip } from '@fzwp/ui-kit/tooltip';
 import type { ValidationProblem } from "./Header";
@@ -176,12 +176,15 @@ export function ValidationModal({
               className="px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-3"
               style={{ backgroundColor: "var(--destructive-alpha-6)" }}
             >
-              <Badge
+              <span
                 style={{
                   fontSize: "var(--text-sm)",
                   fontWeight: "var(--font-weight-semibold)",
                   color: "var(--destructive)",
                   backgroundColor: "transparent",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  lineHeight: 1,
                 }}
               >
                 {errorProblems.length}{" "}
@@ -190,7 +193,7 @@ export function ValidationModal({
                   : errorProblems.length < 5
                   ? "критичні помилки"
                   : "критичних помилок"}
-              </Badge>
+              </span>
               {hasWarnings && (
                 <span
                   style={{
@@ -240,17 +243,20 @@ export function ValidationModal({
                     >
                       {name}
                     </span>
-                    <Badge
+                    <span
                       className="ml-auto"
                       style={{
                         fontSize: "var(--text-2xs)",
                         fontWeight: "var(--font-weight-medium)",
                         color: "var(--destructive)",
                         backgroundColor: "transparent",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        lineHeight: 1,
                       }}
                     >
                       {items.length}
-                    </Badge>
+                    </span>
                   </div>
                   {items.map((p) => (
                     <Button
@@ -321,17 +327,23 @@ export function ValidationModal({
                   >
                     Попередження
                   </span>
-                  <Badge
+                  <span
                     className="ml-1"
                     style={{
                       fontSize: "var(--text-2xs)",
                       fontWeight: "var(--font-weight-medium)",
                       color: "var(--chart-3)",
                       backgroundColor: "var(--warning-alpha-8)",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      lineHeight: 1,
+                      paddingLeft: 6,
+                      paddingRight: 6,
+                      borderRadius: 9999,
                     }}
                   >
                     {warningProblems.length}
-                  </Badge>
+                  </span>
                 </Button>
                 {warningsSectionExpanded && (
                   <WarningGroupList
@@ -440,17 +452,20 @@ export function ValidationModal({
             className="px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-2"
             style={{ backgroundColor: "var(--warning-alpha-5)" }}
           >
-            <Badge
+            <span
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-medium)",
                 color: "var(--chart-3)",
                 backgroundColor: "transparent",
+                display: "inline-flex",
+                alignItems: "center",
+                lineHeight: 1,
               }}
             >
               {warningProblems.length}{" "}
               {warningProblems.length === 1 ? "попередження" : "попереджень"}
-            </Badge>
+            </span>
           </div>
 
           {/* ── Warning groups ── */}
@@ -566,16 +581,22 @@ function WarningGroupList({
                 >
                   {group.label}
                 </span>
-                <Badge
+                <span
                   style={{
                     fontSize: "var(--text-2xs)",
                     fontWeight: "var(--font-weight-medium)",
                     color: "var(--chart-3)",
                     backgroundColor: "var(--warning-alpha-8)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    lineHeight: 1,
+                    paddingLeft: 6,
+                    paddingRight: 6,
+                    borderRadius: 9999,
                   }}
                 >
                   {pluralCount(group.items.length)}
-                </Badge>
+                </span>
               </div>
             </Button>
 

@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { User, AlertTriangle } from "lucide-react";
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
 import { Divider } from "@fzwp/ui-kit/divider";
-import { Badge } from "@fzwp/ui-kit/badge";
+
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import type { ShiftData } from "./ShiftCard";
 import { ShiftTooltip } from "./ShiftCard";
@@ -234,11 +234,8 @@ function MinorBadge() {
 
   return (
     <span className="inline-flex items-center flex-shrink-0">
-      <Badge
+      <span
         ref={triggerRef}
-        size="sm"
-        variant="flat"
-        color="warning"
         onMouseEnter={handleEnter}
         onMouseLeave={() => setShow(false)}
         className="inline-flex items-center justify-center cursor-help select-none"
@@ -248,10 +245,16 @@ function MinorBadge() {
           fontWeight: "var(--font-weight-semibold)" as any,
           color: "var(--chart-3)",
           backgroundColor: "var(--warning-alpha-8)",
+          display: "inline-flex",
+          alignItems: "center",
+          lineHeight: 1,
+          paddingLeft: 5,
+          paddingRight: 5,
+          borderRadius: 9999,
         }}
       >
         &lt;18
-      </Badge>
+      </span>
       {show && pos && createPortal(
         <div className="fixed pointer-events-none" style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}>
           <div

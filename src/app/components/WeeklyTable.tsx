@@ -34,7 +34,7 @@ import {
 
 import { Button } from '@fzwp/ui-kit/button';
 import { Tooltip } from '@fzwp/ui-kit/tooltip';
-import { Badge } from '@fzwp/ui-kit/badge';
+
 import { Progress } from '@fzwp/ui-kit/progress';
 import { Divider } from '@fzwp/ui-kit/divider';
 
@@ -742,7 +742,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
   };
   // Shared badge style (no dot — consistent for both sections)
   const badgeEl = (color: string, bg: string, text: string) => (
-    <Badge
+    <span
       style={{
         fontSize: "var(--text-2xs)",
         fontWeight: "var(--font-weight-semibold)" as any,
@@ -750,11 +750,14 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
         backgroundColor: bg,
         paddingLeft: 6,
         paddingRight: 6,
-        borderRadius: "var(--radius-full, 9999px)",
+        borderRadius: 9999,
+        display: "inline-flex",
+        alignItems: "center",
+        lineHeight: 1,
       }}
     >
       {text}
-    </Badge>
+    </span>
   );
 
   return (
@@ -1328,7 +1331,7 @@ export function WeeklyTable({
                       {dept.name}
                     </span>
                     <Tooltip content={`Працівників у відділі: ${dept.employees.length}`}>
-                      <Badge
+                      <span
                         style={{
                           fontSize: "var(--text-2xs)",
                           fontWeight: "var(--font-weight-medium)",
@@ -1336,12 +1339,15 @@ export function WeeklyTable({
                           backgroundColor: "var(--border)",
                           paddingLeft: 6,
                           paddingRight: 6,
-                          borderRadius: "var(--radius-full, 9999px)",
+                          borderRadius: 9999,
                           flexShrink: 0,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          lineHeight: 1,
                         }}
                       >
                         {dept.employees.length}
-                      </Badge>
+                      </span>
                     </Tooltip>
                     {deptIssueCount > 0 && (
                       <Tooltip
@@ -1352,7 +1358,7 @@ export function WeeklyTable({
                           </div>
                         }
                       >
-                        <Badge
+                        <span
                           style={{
                             fontSize: "var(--text-2xs)",
                             fontWeight: "var(--font-weight-semibold)",
@@ -1360,16 +1366,17 @@ export function WeeklyTable({
                             backgroundColor: "var(--destructive-alpha-10)",
                             paddingLeft: 6,
                             paddingRight: 6,
-                            borderRadius: "var(--radius-full, 9999px)",
+                            borderRadius: 9999,
                             flexShrink: 0,
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 2,
+                            lineHeight: 1,
                           }}
                         >
                           <AlertTriangle size={10} />
                           {deptIssueCount}
-                        </Badge>
+                        </span>
                       </Tooltip>
                     )}
                     {exchangeCount > 0 && (
@@ -1381,7 +1388,7 @@ export function WeeklyTable({
                           </div>
                         }
                       >
-                        <Badge
+                        <span
                           style={{
                             fontSize: "var(--text-2xs)",
                             fontWeight: "var(--font-weight-semibold)",
@@ -1389,16 +1396,17 @@ export function WeeklyTable({
                             backgroundColor: "var(--purple-alpha-12)",
                             paddingLeft: 6,
                             paddingRight: 6,
-                            borderRadius: "var(--radius-full, 9999px)",
+                            borderRadius: 9999,
                             flexShrink: 0,
                             display: "inline-flex",
                             alignItems: "center",
                             gap: 2,
+                            lineHeight: 1,
                           }}
                         >
                           <ArrowRightLeft size={10} />
                           {exchangeCount}
-                        </Badge>
+                        </span>
                       </Tooltip>
                     )}
                   </div>
@@ -1650,7 +1658,7 @@ export function WeeklyTable({
                               />
                             </span>
                           </Tooltip>
-                          <Badge
+                          <span
                             style={{
                               fontSize: "var(--text-xs)",
                               fontWeight: "var(--font-weight-medium)" as any,
@@ -1660,7 +1668,7 @@ export function WeeklyTable({
                               minWidth: 16,
                               paddingLeft: 6,
                               paddingRight: 6,
-                              borderRadius: "var(--radius-full, 9999px)",
+                              borderRadius: 9999,
                               display: "inline-flex",
                               alignItems: "center",
                               justifyContent: "center",
@@ -1668,7 +1676,7 @@ export function WeeklyTable({
                             }}
                           >
                             {tempEmps.length}
-                          </Badge>
+                          </span>
                         </div>
                       </td>
                     </tr>

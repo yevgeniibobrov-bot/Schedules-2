@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@fzwp/ui-kit/button";
-import { Badge } from "@fzwp/ui-kit/badge";
+
 import type { Department } from "./WeeklyTable";
 import { JUMP_RANGES } from "./DayViewComponents";
 
@@ -609,9 +609,7 @@ export function EfficiencyTable({
           </span>
         </div>
         {/* Badge affordance — secondary, present in both states */}
-        <Badge
-          size="sm"
-          variant="flat"
+        <span
           className="flex-shrink-0"
           style={{
             fontSize: "var(--text-xs)",
@@ -619,10 +617,18 @@ export function EfficiencyTable({
             color: expanded ? "var(--muted-foreground)" : "var(--primary)",
             whiteSpace: "nowrap",
             backgroundColor: expanded ? "var(--muted)" : "var(--primary-alpha-8)",
+            display: "inline-flex",
+            alignItems: "center",
+            lineHeight: 1,
+            paddingLeft: 8,
+            paddingRight: 8,
+            paddingTop: 4,
+            paddingBottom: 4,
+            borderRadius: 9999,
           }}
         >
           {expanded ? "Згорнути" : "Розгорнути"}
-        </Badge>
+        </span>
       </Button>
 
       {/* ── Content ── */}

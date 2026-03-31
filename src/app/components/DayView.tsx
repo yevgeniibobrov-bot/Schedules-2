@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@fzwp/ui-kit/button";
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
-import { Badge } from "@fzwp/ui-kit/badge";
+
 import type { ShiftData } from "./ShiftCard";
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import {
@@ -207,36 +207,29 @@ export function DayView({
           >
             {dept.name}
           </span>
-          <Badge
-            size="sm"
-            variant="flat"
+          <span
             className="shrink-0"
-            style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)" }}
+            style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
           >
             {dept.employees.length}
-          </Badge>
+          </span>
           {deptIssueCount > 0 && (
-            <Badge
-              size="sm"
-              variant="flat"
-              color="danger"
+            <span
               className="inline-flex items-center gap-0.5 shrink-0"
-              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)" }}
+              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
             >
               <AlertTriangle size={10} />
               {deptIssueCount}
-            </Badge>
+            </span>
           )}
           {exchangeCount > 0 && (
-            <Badge
-              size="sm"
-              variant="flat"
+            <span
               className="inline-flex items-center gap-0.5 shrink-0"
-              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
+              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
             >
               <ArrowRightLeft size={10} />
               {exchangeCount}
-            </Badge>
+            </span>
           )}
         </div>
       </div>

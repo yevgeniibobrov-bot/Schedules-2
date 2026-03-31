@@ -30,7 +30,7 @@ import { Input } from "@fzwp/ui-kit/input";
 import { Select, SelectItem } from "@fzwp/ui-kit/select";
 import { Textarea } from "@fzwp/ui-kit/textarea";
 import { Divider } from "@fzwp/ui-kit/divider";
-import { Badge } from "@fzwp/ui-kit/badge";
+
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -329,13 +329,11 @@ function ValidationRow({
 
 function SubUnitPill({ name, color }: { name: string; color: string }) {
   return (
-    <Badge
-      size="sm"
-      variant="flat"
-      style={{ color, backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)` }}
+    <span
+      style={{ color, backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999, fontSize: "var(--text-xs)" }}
     >
       {name}
-    </Badge>
+    </span>
   );
 }
 
@@ -1999,14 +1997,14 @@ export function PlanningDrawer({
               <div className="flex items-center gap-2">
                 <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Перевірка</label>
                 {hardErrorCount > 0 && (
-                  <Badge size="sm" variant="solid" style={{ backgroundColor: "var(--destructive)", color: "var(--destructive-foreground)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" }}>
+                  <span style={{ backgroundColor: "var(--destructive)", color: "var(--destructive-foreground)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999 }}>
                     {hardErrorCount}
-                  </Badge>
+                  </span>
                 )}
                 {warningCount > 0 && hardErrorCount === 0 && (
-                  <Badge size="sm" variant="solid" style={{ backgroundColor: "var(--chart-3)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" }}>
+                  <span style={{ backgroundColor: "var(--chart-3)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999 }}>
                     {warningCount}
-                  </Badge>
+                  </span>
                 )}
               </div>
               {validationMessages.map((msg, i) => <ValidationRow key={i} type={msg.type} text={msg.text} />)}
