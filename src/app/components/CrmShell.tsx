@@ -171,57 +171,54 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
             <div className="flex flex-col items-center w-full" style={{ flex: "1 0 0", minHeight: 1, minWidth: 1, gap: 16 }}>
               <div className="flex flex-col items-start w-full" style={{ flex: "1 0 0", minHeight: 1, minWidth: 1, gap: 2 }}>
                 {/* Home */}
-                <Tooltip content={navItems[0].name} placement="right">
-                  <Button
-                    isIconOnly
-                    variant={activeNav === "home" ? "solid" : "light"}
-                    onPress={() => setActiveNav("home")}
-                  >
-                    <NavIcon item={navItems[0]} />
-                  </Button>
-                </Tooltip>
+                <NavButton
+                  icon={<NavIcon item={navItems[0]} />}
+                  isActive={activeNav === "home"}
+                  onClick={() => setActiveNav("home")}
+                />
 
                 {/* Divider after home */}
-                <Divider />
+                <div className="w-full" style={{ height: 32, minHeight: 32 }}>
+                  <div className="flex flex-row items-center size-full">
+                    <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
+                      <Divider />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Schedule (active) */}
-                <Tooltip content={navItems[1].name} placement="right">
-                  <Button
-                    isIconOnly
-                    variant={activeNav === "schedule" ? "solid" : "light"}
-                    onPress={() => setActiveNav("schedule")}
-                  >
-                    <NavIcon item={navItems[1]} />
-                  </Button>
-                </Tooltip>
+                <NavButton
+                  icon={<NavIcon item={navItems[1]} />}
+                  isActive={activeNav === "schedule"}
+                  onClick={() => setActiveNav("schedule")}
+                />
 
                 {/* Rest of nav items */}
                 {navItems.slice(2).map((item) => (
-                  <Tooltip key={item.id} content={item.name} placement="right">
-                    <Button
-                      isIconOnly
-                      variant={activeNav === item.id ? "solid" : "light"}
-                      onPress={() => setActiveNav(item.id)}
-                    >
-                      <NavIcon item={item} />
-                    </Button>
-                  </Tooltip>
+                  <NavButton
+                    key={item.id}
+                    icon={<NavIcon item={item} />}
+                    isActive={activeNav === item.id}
+                    onClick={() => setActiveNav(item.id)}
+                  />
                 ))}
               </div>
             </div>
 
             {/* Bottom section */}
             <div className="flex flex-col items-center justify-end shrink-0 w-full" style={{ backgroundColor: "var(--sidebar)" }}>
-              <Divider />
-              <Tooltip content="Підтримка" placement="right">
-                <Button
-                  isIconOnly
-                  variant="light"
-                  onPress={() => {}}
-                >
-                  <HeadphonesIcon />
-                </Button>
-              </Tooltip>
+              <div className="w-full" style={{ height: 32, minHeight: 32 }}>
+                <div className="flex flex-row items-center size-full">
+                  <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
+                    <Divider />
+                  </div>
+                </div>
+              </div>
+              <NavButton
+                icon={<HeadphonesIcon />}
+                isActive={false}
+                onClick={() => {}}
+              />
             </div>
 
             {/* Collapse button */}
@@ -323,6 +320,39 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
           }}
         >
           {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Nav button helper ───────────────────────────────────────────────
+
+interface NavButtonProps {
+  icon: React.ReactNode;
+  isActive: boolean;
+  onClick: () => void;
+}
+
+function NavButton({ icon, isActive, onClick }: NavButtonProps) {
+  return (
+    <div
+      className="shrink-0 w-full cursor-pointer"
+      style={{ height: 32, minHeight: 32, overflow: "clip" }}
+      onClick={onClick}
+    >
+      <div
+        className="flex flex-row items-center justify-center size-full"
+        style={{
+          borderRadius: "var(--radius)",
+          backgroundColor: isActive ? "var(--background)" : "transparent",
+          minHeight: "inherit",
+          overflow: "clip",
+          transition: "background-color 0.15s",
+        }}
+      >
+        <div className="flex items-center justify-center size-full" style={{ padding: "0 12px", minHeight: "inherit" }}>
+          {icon}
         </div>
       </div>
     </div>
