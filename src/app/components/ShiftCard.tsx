@@ -13,6 +13,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
+import { Divider } from "@fzwp/ui-kit/divider";
 import { getSubUnitColor } from "./subUnitColors";
 
 export const SHIFT_DND_TYPE = "SHIFT_CARD";
@@ -388,7 +389,7 @@ function ShiftTooltip({ shift, children, validationLevel, validationMessage }: S
                 {/* Validation block — only if there is a problem */}
                 {validationLevel && validationMessage && (
                   <>
-                    <div style={{ height: 1, backgroundColor: "rgba(0,0,0,0.08)", margin: "4px 0 2px" }} />
+                    <Divider className="my-1" />
                     <div style={{
                       fontSize: "12px",
                       color: validationLevel === "error" ? "var(--destructive)" : "#F97316",
