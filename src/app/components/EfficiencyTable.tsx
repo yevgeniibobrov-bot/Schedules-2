@@ -560,8 +560,9 @@ export function EfficiencyTable({
       }}
     >
       {/* ── Collapse toggle ── */}
-      <button
-        onClick={() => setExpanded((p) => !p)}
+      <Button
+        variant="light"
+        onPress={() => setExpanded((p) => !p)}
         className="flex items-center gap-2.5 w-full px-4 cursor-pointer transition-colors"
         style={{
           minHeight: 44,
@@ -622,7 +623,7 @@ export function EfficiencyTable({
         >
           {expanded ? "Згорнути" : "Розгорнути"}
         </Badge>
-      </button>
+      </Button>
 
       {/* ── Content ── */}
       {expanded && (
