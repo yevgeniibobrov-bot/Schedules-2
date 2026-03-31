@@ -1,4 +1,5 @@
 @import 'tailwindcss' source(none);
 @source '../**/*.{js,ts,jsx,tsx}';
+@source '../../node_modules/@fzwp/ui-kit/dist/**/*.{js,jsx,ts,tsx}';
 
 @import 'tw-animate-css';

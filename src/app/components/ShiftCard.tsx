@@ -12,6 +12,7 @@ import {
   Send,
   AlertTriangle,
 } from "lucide-react";
+import { Tooltip } from "@fzwp/ui-kit/tooltip";
 import { getSubUnitColor } from "./subUnitColors";
 
 export const SHIFT_DND_TYPE = "SHIFT_CARD";
@@ -127,15 +128,16 @@ const STATUS_CONFIG: Record<
 function MarketplaceIndicator({ shift }: { shift: ShiftData }) {
   const isPendingProposal = shift.proposalStatus === "pending";
   return (
-    <span
-      title={isPendingProposal ? "Пропозиція надіслана" : "Зміна з біржі"}
-      className="inline-flex items-center flex-shrink-0 cursor-default"
-    >
-      {isPendingProposal
-        ? <Send size={12} style={{ color: "var(--primary)" }} />
-        : <ArrowRightLeft size={12} style={{ color: "var(--muted-foreground)" }} />
-      }
-    </span>
+    <Tooltip content={isPendingProposal ? "Пропозиція надіслана" : "Зміна з біржі"}>
+      <span
+        className="inline-flex items-center flex-shrink-0 cursor-default"
+      >
+        {isPendingProposal
+          ? <Send size={12} style={{ color: "var(--primary)" }} />
+          : <ArrowRightLeft size={12} style={{ color: "var(--muted-foreground)" }} />
+        }
+      </span>
+    </Tooltip>
   );
 }
 
@@ -161,23 +163,24 @@ function SubUnitRow({ subUnits }: { subUnits: { time: string; unit: string }[] }
 
   return (
     <div className="flex items-baseline gap-1 min-w-0">
-      <span
-        title={primary}
-        style={{
-          fontSize: "var(--text-xs)",
-          fontWeight: "var(--font-weight-normal)" as any,
-          color: "var(--muted-foreground)",
-          lineHeight: 1.35,
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          minWidth: 0,
-          maxWidth: "100%",
-          display: "block",
-        }}
-      >
-        {truncateUnitName(primary)}
-      </span>
+      <Tooltip content={primary}>
+        <span
+          style={{
+            fontSize: "var(--text-xs)",
+            fontWeight: "var(--font-weight-normal)" as any,
+            color: "var(--muted-foreground)",
+            lineHeight: 1.35,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            minWidth: 0,
+            maxWidth: "100%",
+            display: "block",
+          }}
+        >
+          {truncateUnitName(primary)}
+        </span>
+      </Tooltip>
       {extra > 0 && (
         <span
           className="inline-flex items-center px-1 py-px rounded-[var(--radius-sm)] flex-shrink-0"
@@ -1063,11 +1066,13 @@ function ShiftTimelineBar({ shift, height = 4 }: ShiftTimelineBarProps) {
   const totalH = shiftEnd - shiftStart;
   if (totalH <= 0) return null;
 
+  const timelineTitle = segments.map((s) => `${fmtTime(s.start)}–${fmtTime(s.end)} ${s.label}`).join(" → ");
+
   return (
+    <Tooltip content={timelineTitle}>
     <div
       className="flex rounded-full overflow-hidden"
       style={{ width: 96, height }}
-      title={segments.map((s) => `${fmtTime(s.start)}–${fmtTime(s.end)} ${s.label}`).join(" → ")}
     >
       {segments.map((seg, i) => (
         <div
@@ -1085,6 +1090,7 @@ function ShiftTimelineBar({ shift, height = 4 }: ShiftTimelineBarProps) {
         />
       ))}
     </div>
+    </Tooltip>
   );
 }
 

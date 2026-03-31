@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { ChevronRight, ChevronDown } from "lucide-react";
+import { Button } from "@fzwp/ui-kit/button";
+import { Badge } from "@fzwp/ui-kit/badge";
 import type { Department } from "./WeeklyTable";
 import { JUMP_RANGES } from "./DayViewComponents";
 
@@ -606,20 +608,20 @@ export function EfficiencyTable({
           </span>
         </div>
         {/* Badge affordance — secondary, present in both states */}
-        <span
+        <Badge
+          size="sm"
+          variant="flat"
           className="flex-shrink-0"
           style={{
             fontSize: "var(--text-xs)",
             fontWeight: "var(--font-weight-medium)" as any,
             color: expanded ? "var(--muted-foreground)" : "var(--primary)",
             whiteSpace: "nowrap",
-            padding: "2px 8px",
-            borderRadius: "var(--radius)",
             backgroundColor: expanded ? "var(--muted)" : "var(--primary-alpha-8)",
           }}
         >
           {expanded ? "Згорнути" : "Розгорнути"}
-        </span>
+        </Badge>
       </button>
 
       {/* ── Content ── */}
@@ -647,9 +649,11 @@ export function EfficiencyTable({
                 {(["week", "day"] as const).map((tab) => {
                   const active = activeTab === tab;
                   return (
-                    <button
+                    <Button
                       key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      variant={active ? "solid" : "light"}
+                      size="sm"
+                      onPress={() => setActiveTab(tab)}
                       style={{
                         fontSize: "var(--text-2xs)",
                         fontWeight: active
@@ -657,16 +661,13 @@ export function EfficiencyTable({
                           : ("var(--font-weight-normal)" as any),
                         color: active ? "var(--foreground)" : "var(--muted-foreground)",
                         backgroundColor: active ? "var(--background)" : "transparent",
-                        border: "none",
                         borderRadius: "var(--radius-sm)",
                         padding: "2px 10px",
-                        cursor: "pointer",
-                        transition: "all 100ms",
                         boxShadow: active ? "var(--elevation-sm)" : "none",
                       }}
                     >
                       {tab === "week" ? "Тиждень" : "День"}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

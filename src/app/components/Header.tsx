@@ -22,6 +22,12 @@ import {
   Target,
 } from "lucide-react";
 
+import { Button } from '@fzwp/ui-kit/button';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@fzwp/ui-kit/modal';
+import { Divider } from '@fzwp/ui-kit/divider';
+import { Tooltip } from '@fzwp/ui-kit/tooltip';
+import { Badge } from '@fzwp/ui-kit/badge';
+
 import type { Department } from "./WeeklyTable";
 import { ValidationModal } from "./ValidationModal";
 
@@ -250,9 +256,12 @@ export function Header({
       >
       {/* 1. Department dropdown */}
       <div className="relative" ref={deptDropdownRef}>
-        <button
-          onClick={() => setDeptDropdownOpen(!deptDropdownOpen)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+        <Button
+          variant="bordered"
+          size="sm"
+          onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+          className="gap-1.5"
         >
           <span style={{
             fontSize: "var(--text-sm)",
@@ -264,8 +273,7 @@ export function Header({
               ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
               : "Всі відділи"}
           </span>
-          <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
 
         {/* Dropdown menu */}
         {deptDropdownOpen && (
@@ -278,12 +286,13 @@ export function Header({
           >
             <div className="max-h-[280px] overflow-y-auto">
               {/* "Всі відділи" option */}
-              <button
-                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
+              <Button
+                variant="light"
+                className="w-full justify-start gap-2 px-3 py-2"
                 style={{
                   backgroundColor: !focusedDeptId ? "var(--primary-alpha-6)" : undefined,
                 }}
-                onClick={() => {
+                onPress={() => {
                   onFocusedDeptChange?.(null);
                   setDeptDropdownOpen(false);
                 }}
@@ -299,19 +308,20 @@ export function Header({
                   Всі відділи
                 </span>
                 {!focusedDeptId && <Check size={14} style={{ color: "var(--primary)" }} />}
-              </button>
+              </Button>
 
               {/* Individual departments */}
               {departments.map((dept) => {
                 const isActive = focusedDeptId === dept.id;
                 return (
-                  <button
+                  <Button
                     key={dept.id}
-                    className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
+                    variant="light"
+                    className="w-full justify-start gap-2 px-3 py-2"
                     style={{
                       backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
                     }}
-                    onClick={() => {
+                    onPress={() => {
                       onFocusedDeptChange?.(isActive ? null : dept.id);
                       setDeptDropdownOpen(false);
                     }}
@@ -327,7 +337,7 @@ export function Header({
                       {dept.name}
                     </span>
                     {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -338,27 +348,17 @@ export function Header({
       {/* 2. Sub-units focus dropdown — immediately after department */}
       {onFocusedSubUnitChange && subUnitNames.length > 0 && (
         <div className="relative" ref={subUnitDropdownRef}>
-          <button
-            onClick={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border transition-colors"
+          <Button
+            variant="bordered"
+            size="sm"
+            onPress={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
+            className="gap-1.5"
             style={{
               borderColor: focusedSubUnit ? "var(--primary)" : "var(--border)",
               backgroundColor: focusedSubUnit ? "var(--primary-alpha-8)" : "var(--input-background)",
             }}
-          >
-            <Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: focusedSubUnit ? "var(--primary)" : "var(--foreground)",
-              maxWidth: 160,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}>
-              {focusedSubUnit || "Дільниці"}
-            </span>
-            {focusedSubUnit ? (
+            startContent={<Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />}
+            endContent={focusedSubUnit ? (
               <X
                 size={14}
                 style={{ color: "var(--primary)" }}
@@ -371,7 +371,19 @@ export function Header({
             ) : (
               <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
             )}
-          </button>
+          >
+            <span style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-medium)",
+              color: focusedSubUnit ? "var(--primary)" : "var(--foreground)",
+              maxWidth: 160,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {focusedSubUnit || "Дільниці"}
+            </span>
+          </Button>
 
           {/* Dropdown menu */}
           {subUnitDropdownOpen && (
@@ -384,9 +396,10 @@ export function Header({
             >
               {/* Clear selection */}
               {focusedSubUnit && (
-                <button
-                  className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors border-b border-[var(--border)]"
-                  onClick={() => {
+                <Button
+                  variant="light"
+                  className="w-full justify-start gap-2 px-3 py-2 border-b border-[var(--border)]"
+                  onPress={() => {
                     onFocusedSubUnitChange(null);
                     setSubUnitDropdownOpen(false);
                   }}
@@ -395,7 +408,7 @@ export function Header({
                   <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>
                     Скинути вибір
                   </span>
-                </button>
+                </Button>
               )}
 
               {/* Header label */}
@@ -410,13 +423,14 @@ export function Header({
                 {subUnitNames.map((name) => {
                   const isActive = focusedSubUnit === name;
                   return (
-                    <button
+                    <Button
                       key={name}
-                      className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
+                      variant="light"
+                      className="w-full justify-start gap-2 px-3 py-2"
                       style={{
                         backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
                       }}
-                      onClick={() => {
+                      onPress={() => {
                         onFocusedSubUnitChange(isActive ? null : name);
                         setSubUnitDropdownOpen(false);
                       }}
@@ -433,7 +447,7 @@ export function Header({
                         {name}
                       </span>
                       {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -443,12 +457,14 @@ export function Header({
       )}
 
       {/* Divider */}
-      <div className="w-px h-6 bg-[var(--border)]" />
+      <Divider orientation="vertical" className="h-6" />
 
       {/* 3. Today button — highlighted when navigated away from current week */}
-      <button
-        onClick={onToday}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border transition-colors"
+      <Button
+        variant="bordered"
+        size="sm"
+        onPress={onToday}
+        className="gap-1.5"
         style={{
           borderColor: isCurrentWeek ? "var(--border)" : "var(--primary)",
           backgroundColor: isCurrentWeek ? "var(--input-background)" : "var(--primary-alpha-8)",
@@ -461,47 +477,52 @@ export function Header({
         }}>
           Сьогодні
         </span>
-      </button>
+      </Button>
 
       {/* Week navigation */}
       <div className="flex items-center gap-1">
-        <button
-          onClick={onPrevWeek}
-          disabled={!canGoPrev}
-          className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={onPrevWeek}
+          isDisabled={!canGoPrev}
         >
           <ChevronLeft size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
         <span
           className="min-w-[180px] text-center select-none"
           style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}
         >
           {weekLabel}
         </span>
-        <button
-          onClick={onNextWeek}
-          disabled={!canGoNext}
-          className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={onNextWeek}
+          isDisabled={!canGoNext}
         >
           <ChevronRight size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
       </div>
 
       {/* Divider */}
-      <div className="w-px h-6 bg-[var(--border)]" />
+      <Divider orientation="vertical" className="h-6" />
 
       {/* 4. View dropdown (replaces segmented Week/Day switch) */}
       <div className="relative" ref={viewDropdownRef}>
-        <button
-          onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+        <Button
+          variant="bordered"
+          size="sm"
+          onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
+          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+          className="gap-1.5"
         >
-          
           <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
             {viewMode === "week" ? "Тиждень" : "День"}
           </span>
-          <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
 
         {viewDropdownOpen && (
           <div
@@ -514,13 +535,14 @@ export function Header({
             {(["week", "day"] as const).map((mode) => {
               const isActive = viewMode === mode;
               return (
-                <button
+                <Button
                   key={mode}
-                  className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
+                  variant="light"
+                  className="w-full justify-start gap-2 px-3 py-2"
                   style={{
                     backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
                   }}
-                  onClick={() => {
+                  onPress={() => {
                     onViewModeChange(mode);
                     setViewDropdownOpen(false);
                   }}
@@ -536,7 +558,7 @@ export function Header({
                     {mode === "week" ? "Тиждень" : "День"}
                   </span>
                   {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -546,10 +568,12 @@ export function Header({
       {/* 5. Plan / Fact toggle */}
       <div className="flex items-center rounded-[var(--radius)] border border-[var(--border)] overflow-hidden">
         {(["plan", "fact"] as const).map((mode) => (
-          <button
+          <Button
             key={mode}
-            onClick={() => onPlanFactChange(mode)}
-            className="px-3 py-1.5 transition-colors"
+            variant={planFact === mode ? "solid" : "light"}
+            size="sm"
+            onPress={() => onPlanFactChange(mode)}
+            className="rounded-none"
             style={{
               fontSize: "var(--text-sm)",
               fontWeight: "var(--font-weight-medium)",
@@ -558,7 +582,7 @@ export function Header({
             }}
           >
             {mode === "plan" ? "План" : "Факт"}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -566,41 +590,44 @@ export function Header({
       <div className="flex-1" />
 
       {/* 7. Schedule status indicator */}
-      <div
-        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius)]"
-        style={{ backgroundColor: statusCfg.bg }}
-        title={statusCfg.desc}
-      >
-        <StatusIcon size={14} style={{ color: statusCfg.color }} />
-        <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: statusCfg.color }}>
-          {statusCfg.label}
-        </span>
-      </div>
+      <Tooltip content={statusCfg.desc}>
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius)]"
+          style={{ backgroundColor: statusCfg.bg }}
+        >
+          <StatusIcon size={14} style={{ color: statusCfg.color }} />
+          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: statusCfg.color }}>
+            {statusCfg.label}
+          </span>
+        </div>
+      </Tooltip>
 
       {/* 8. Lifecycle action buttons */}
       {status === "draft" && (
-        <button
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-[var(--radius)] hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: "var(--foreground)" }}
-          onClick={handlePublishClick}
+        <Button
+          color="primary"
+          onPress={handlePublishClick}
+          startContent={<Send size={14} />}
+          className="gap-1.5"
+          style={{ backgroundColor: "var(--foreground)", color: "var(--background)" }}
         >
-          <Send size={14} style={{ color: "var(--background)" }} />
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--background)" }}>
+          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any }}>
             Відправити
           </span>
-        </button>
+        </Button>
       )}
 
       {status === "published" && (
-        <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-          onClick={handleReturnToDraft}
+        <Button
+          variant="bordered"
+          onPress={handleReturnToDraft}
+          startContent={<RotateCcw size={14} style={{ color: "var(--muted-foreground)" }} />}
+          className="gap-1.5"
         >
-          <RotateCcw size={14} style={{ color: "var(--muted-foreground)" }} />
           <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
             Повернути до чернетки
           </span>
-        </button>
+        </Button>
       )}
       </div>
 
@@ -663,178 +690,145 @@ export function Header({
 
         {/* Error badge — click opens validation modal */}
         {errorCount > 0 ? (
-          <div className="flex items-center gap-0">
-            <button
-              className="flex items-center gap-1.5 px-2.5 py-1.5 transition-all"
+          <Tooltip content="Перевірка графіку — помилки правил розкладу">
+            <div className="flex items-center gap-0">
+              <Button
+                variant="light"
+                size="sm"
+                className="gap-1.5 px-2.5 py-1.5"
+                style={{
+                  backgroundColor: issuesFilterActive ? "var(--destructive)" : "var(--destructive-alpha-10)",
+                  borderRadius: issuesFilterActive ? "var(--radius) 0 0 var(--radius)" : "var(--radius)",
+                }}
+                onPress={() => setShowValidationModal(true)}
+              >
+                <AlertCircle size={14} style={{ color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)" }} />
+                <span style={{
+                  fontSize: "var(--text-xs)",
+                  fontWeight: "var(--font-weight-medium)",
+                  color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
+                }}>
+                  Помилки
+                </span>
+                <span style={{
+                  fontSize: "var(--text-sm)",
+                  fontWeight: "var(--font-weight-semibold)",
+                  color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
+                  minWidth: 16,
+                  textAlign: "center",
+                }}>
+                  {errorCount}
+                </span>
+              </Button>
+              {issuesFilterActive && (
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  className="self-stretch px-1.5"
+                  style={{
+                    backgroundColor: "var(--destructive)",
+                    borderRadius: "0 var(--radius) var(--radius) 0",
+                    borderLeft: "1px solid rgba(255,255,255,0.2)",
+                  }}
+                  onPress={() => onIssuesFilterToggle?.()}
+                  title="Вимкнути фільтр помилок"
+                >
+                  <X size={13} style={{ color: "var(--destructive-foreground)" }} />
+                </Button>
+              )}
+            </div>
+          </Tooltip>
+        ) : (
+          <Tooltip content="Усі правила дотримано">
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius)]"
               style={{
-                backgroundColor: issuesFilterActive ? "var(--destructive)" : "var(--destructive-alpha-10)",
-                cursor: "pointer",
-                borderRadius: issuesFilterActive ? "var(--radius) 0 0 var(--radius)" : "var(--radius)",
+                backgroundColor: "var(--muted)",
+                cursor: "default",
+                opacity: 0.6,
               }}
-              onClick={() => setShowValidationModal(true)}
-              title="Перевірка графіку — помилки правил розкладу"
             >
-              <AlertCircle size={14} style={{ color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)" }} />
+              <CheckCircle2 size={14} style={{ color: "var(--muted-foreground)" }} />
               <span style={{
                 fontSize: "var(--text-xs)",
                 fontWeight: "var(--font-weight-medium)",
-                color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
+                color: "var(--muted-foreground)",
               }}>
                 Помилки
               </span>
               <span style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-semibold)",
-                color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
-                minWidth: 16,
-                textAlign: "center",
+                color: "var(--muted-foreground)",
               }}>
-                {errorCount}
+                0
               </span>
-            </button>
-            {issuesFilterActive && (
-              <button
-                className="flex items-center self-stretch px-1.5 transition-colors hover:opacity-80"
-                style={{
-                  backgroundColor: "var(--destructive)",
-                  borderRadius: "0 var(--radius) var(--radius) 0",
-                  borderLeft: "1px solid rgba(255,255,255,0.2)",
-                }}
-                onClick={(e) => { e.stopPropagation(); onIssuesFilterToggle?.(); }}
-                title="Вимкнути фільтр помилок"
-              >
-                <X size={13} style={{ color: "var(--destructive-foreground)" }} />
-              </button>
-            )}
-          </div>
-        ) : (
-          <div
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-[var(--radius)]"
-            style={{
-              backgroundColor: "var(--muted)",
-              cursor: "default",
-              opacity: 0.6,
-            }}
-            title="Усі правила дотримано"
-          >
-            <CheckCircle2 size={14} style={{ color: "var(--muted-foreground)" }} />
-            <span style={{
-              fontSize: "var(--text-xs)",
-              fontWeight: "var(--font-weight-medium)",
-              color: "var(--muted-foreground)",
-            }}>
-              Помилки
-            </span>
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-semibold)",
-              color: "var(--muted-foreground)",
-            }}>
-              0
-            </span>
-          </div>
+            </div>
+          </Tooltip>
         )}
 
         {/* 6. Print — icon only */}
-        <button
-          className="flex items-center justify-center p-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-          title="Друк"
-        >
-          <Printer size={16} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        <Tooltip content="Друк">
+          <Button
+            isIconOnly
+            variant="bordered"
+            size="sm"
+          >
+            <Printer size={16} style={{ color: "var(--muted-foreground)" }} />
+          </Button>
+        </Tooltip>
 
         {/* Focus mode toggle */}
         {onFocusModeToggle && (
-          <button
-            onClick={onFocusModeToggle}
-            className="flex items-center justify-center p-1.5 rounded-[var(--radius)] transition-colors"
-            style={{
-              backgroundColor: isFocusMode ? "var(--primary-alpha-10)" : "transparent",
-              border: isFocusMode ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
-            }}
-            title={isFocusMode ? "Вийти з режиму фокусу (Esc)" : "Режим фокусу — приховати навігацію"}
-          >
-            {isFocusMode ? (
-              <Minimize2 size={16} style={{ color: "var(--primary)" }} />
-            ) : (
-              <Maximize2 size={16} style={{ color: "var(--muted-foreground)" }} />
-            )}
-          </button>
+          <Tooltip content={isFocusMode ? "Вийти з режиму фокусу (Esc)" : "Режим фокусу — приховати навігацію"}>
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onPress={onFocusModeToggle}
+              style={{
+                backgroundColor: isFocusMode ? "var(--primary-alpha-10)" : "transparent",
+                border: isFocusMode ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
+              }}
+            >
+              {isFocusMode ? (
+                <Minimize2 size={16} style={{ color: "var(--primary)" }} />
+              ) : (
+                <Maximize2 size={16} style={{ color: "var(--muted-foreground)" }} />
+              )}
+            </Button>
+          </Tooltip>
         )}
       </div>
     </header>
 
     {/* ── Publish Confirmation Modal ── */}
-    {showPublishModal && (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center"
-        style={{ backgroundColor: "var(--overlay)" }}
-        onClick={() => setShowPublishModal(false)}
-      >
-        <div
-          className="w-full max-w-[400px] mx-4 rounded-[var(--radius)] border border-[var(--border)]"
-          style={{
-            backgroundColor: "var(--card)",
-            boxShadow: "var(--elevation-lg)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Modal header */}
-          <div className="px-5 pt-5 pb-1">
-            <span
-              style={{
-                fontSize: "var(--text-lg)",
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--foreground)",
-              }}
-            >
-              Відправити розклад?
-            </span>
-          </div>
-
-          {/* Modal body */}
-          <div className="px-5 py-3">
-            <span
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-normal)",
-                color: "var(--muted-foreground)",
-                lineHeight: 1.5,
-              }}
-            >
-              Це зробить розклад видимим для працівників.
-            </span>
-          </div>
-
-          {/* Modal actions */}
-          <div className="flex items-center justify-end gap-2 px-5 pb-5 pt-2">
-            <button
-              className="px-4 py-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-medium)",
-                color: "var(--foreground)",
-              }}
-              onClick={() => setShowPublishModal(false)}
-            >
-              Скасувати
-            </button>
-            <button
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius)] bg-[var(--primary)] hover:opacity-90 transition-opacity"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--primary-foreground)",
-              }}
-              onClick={handlePublishConfirm}
-            >
-              <Send size={14} style={{ color: "var(--primary-foreground)" }} />
-              Відправити
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)}>
+      <ModalContent>
+        <ModalHeader>Відправити розклад?</ModalHeader>
+        <ModalBody>
+          <span
+            style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-normal)",
+              color: "var(--muted-foreground)",
+              lineHeight: 1.5,
+            }}
+          >
+            Це зробить розклад видимим для працівників.
+          </span>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="bordered" onPress={() => setShowPublishModal(false)}>
+            Скасувати
+          </Button>
+          <Button color="primary" onPress={handlePublishConfirm} startContent={<Send size={14} />}>
+            Відправити
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
 
     {/* ── Validation Modal ── */}
     {showValidationModal && (
@@ -880,12 +874,15 @@ export function Header({
         >
           {snackbarText}
         </span>
-        <button
-          className="ml-1 p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0"
-          onClick={() => setShowSnackbar(false)}
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          className="ml-1 flex-shrink-0"
+          onPress={() => setShowSnackbar(false)}
         >
           <X size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
       </div>
     )}
     </div>

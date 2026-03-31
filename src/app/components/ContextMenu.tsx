@@ -10,6 +10,9 @@ import {
   ArrowLeftRight,
   Undo2,
 } from "lucide-react";
+import { Card } from "@fzwp/ui-kit/card";
+import { Button } from "@fzwp/ui-kit/button";
+import { Divider } from "@fzwp/ui-kit/divider";
 
 export interface ContextMenuAction {
   id: string;
@@ -158,49 +161,43 @@ export function ShiftContextMenu({
   }, [x, y]);
 
   return (
-    <div
+    <Card
       ref={ref}
-      className="fixed z-50 min-w-[220px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+      className="fixed z-50 min-w-[220px] overflow-hidden p-0"
       style={{
         left: x,
         top: y,
-        backgroundColor: "var(--popover)",
-        boxShadow: "var(--elevation-md)",
       }}
     >
       {actions.map((action) => (
         <div key={action.id}>
-          {action.dividerBefore && (
-            <div
-              className="h-px"
-              style={{ backgroundColor: "var(--border)" }}
-            />
-          )}
-          <button
-            onClick={() => {
+          {action.dividerBefore && <Divider />}
+          <Button
+            variant="light"
+            size="sm"
+            className="w-full justify-start"
+            isDisabled={action.disabled}
+            onPress={() => {
               if (action.disabled) return;
               onAction(action.id);
               onClose();
             }}
-            disabled={action.disabled}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] disabled:opacity-35 disabled:pointer-events-none"
-            style={{ minHeight: 0 }}
+            startContent={
+              <span
+                className="flex-shrink-0"
+                style={{
+                  color: action.danger
+                    ? "var(--destructive)"
+                    : "var(--muted-foreground)",
+                }}
+              >
+                {action.icon}
+              </span>
+            }
           >
             <span
-              className="flex-shrink-0"
+              className="flex-1 text-left"
               style={{
-                color: action.danger
-                  ? "var(--destructive)"
-                  : "var(--muted-foreground)",
-              }}
-            >
-              {action.icon}
-            </span>
-            <span
-              className="flex-1"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-medium)",
                 color: action.danger
                   ? "var(--destructive)"
                   : "var(--foreground)",
@@ -219,9 +216,9 @@ export function ShiftContextMenu({
                 {action.shortcut}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       ))}
-    </div>
+    </Card>
   );
 }

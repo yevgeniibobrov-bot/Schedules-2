@@ -4,6 +4,9 @@ import {
   Clipboard,
   Copy,
 } from "lucide-react";
+import { Card } from "@fzwp/ui-kit/card";
+import { Button } from "@fzwp/ui-kit/button";
+import { Divider } from "@fzwp/ui-kit/divider";
 
 interface EmptyCellContextMenuProps {
   x: number;
@@ -64,42 +67,34 @@ export function EmptyCellContextMenu({
   }, [x, y]);
 
   return (
-    <div
+    <Card
       ref={ref}
-      className="fixed z-50 min-w-[200px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+      className="fixed z-50 min-w-[200px] overflow-hidden p-0"
       style={{
         left: x,
         top: y,
-        backgroundColor: "var(--popover)",
-        boxShadow: "var(--elevation-md)",
       }}
     >
       {actions.map((action) => (
         <div key={action.id}>
-          {action.dividerBefore && (
-            <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
-          )}
-          <button
-            onClick={() => {
+          {action.dividerBefore && <Divider />}
+          <Button
+            variant="light"
+            size="sm"
+            className="w-full justify-start"
+            isDisabled={action.disabled}
+            onPress={() => {
               if (action.disabled) return;
               onAction(action.id);
               onClose();
             }}
-            disabled={action.disabled}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] disabled:opacity-35 disabled:pointer-events-none"
-            style={{ minHeight: 0 }}
+            startContent={
+              <span className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>
+                {action.icon}
+              </span>
+            }
           >
-            <span className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>
-              {action.icon}
-            </span>
-            <span
-              className="flex-1"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-medium)",
-                color: "var(--foreground)",
-              }}
-            >
+            <span className="flex-1 text-left">
               {action.label}
             </span>
             {action.shortcut && (
@@ -107,9 +102,9 @@ export function EmptyCellContextMenu({
                 {action.shortcut}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       ))}
-    </div>
+    </Card>
   );
 }

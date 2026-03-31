@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import {
-  X,
   AlertCircle,
   AlertTriangle,
   Filter,
@@ -9,7 +8,13 @@ import {
   ChevronRight,
   User,
   Layers,
+  X,
 } from "lucide-react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@fzwp/ui-kit/modal';
+import { Button } from '@fzwp/ui-kit/button';
+import { Badge } from '@fzwp/ui-kit/badge';
+import { Divider } from '@fzwp/ui-kit/divider';
+import { Tooltip } from '@fzwp/ui-kit/tooltip';
 import type { ValidationProblem } from "./Header";
 
 // ── Warning type detection ────────────────────────────────────────────
@@ -113,23 +118,14 @@ export function ValidationModal({
 
   if (hasErrors) {
     return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center"
-        style={{ backgroundColor: "var(--overlay)" }}
-        onClick={onClose}
-      >
-        <div
-          className="w-full max-w-[560px] mx-4 rounded-[var(--radius)] flex flex-col"
+      <Modal isOpen={true} onClose={onClose} size="2xl">
+        <ModalContent
           style={{
-            backgroundColor: "var(--card)",
-            boxShadow: "var(--elevation-lg)",
-            maxHeight: "80vh",
             border: "1px solid var(--destructive-alpha-15)",
           }}
-          onClick={(e) => e.stopPropagation()}
         >
           {/* ── Header ── */}
-          <div className="flex items-start justify-between px-5 pt-5 pb-3">
+          <ModalHeader className="flex items-start justify-between px-5 pt-5 pb-3">
             <div className="flex items-start gap-3">
               <div
                 className="flex items-center justify-center rounded-full flex-shrink-0"
@@ -162,50 +158,54 @@ export function ValidationModal({
                 </span>
               </div>
             </div>
-            <button
-              className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0"
-              onClick={onClose}
-              style={{ border: "none", backgroundColor: "transparent", cursor: "pointer" }}
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              onPress={onClose}
+              className="flex-shrink-0"
             >
               <X size={16} style={{ color: "var(--muted-foreground)" }} />
-            </button>
-          </div>
+            </Button>
+          </ModalHeader>
 
-          {/* ── Summary bar ── */}
-          <div
-            className="mx-5 mb-3 px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-3"
-            style={{ backgroundColor: "var(--destructive-alpha-6)" }}
-          >
-            <span
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--destructive)",
-              }}
+          {/* ── Body ── */}
+          <ModalBody className="px-5 pb-3 flex flex-col gap-4">
+            {/* ── Summary bar ── */}
+            <div
+              className="px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-3"
+              style={{ backgroundColor: "var(--destructive-alpha-6)" }}
             >
-              {errorProblems.length}{" "}
-              {errorProblems.length === 1
-                ? "критична помилка"
-                : errorProblems.length < 5
-                ? "критичні помилки"
-                : "критичних помилок"}
-            </span>
-            {hasWarnings && (
-              <span
+              <Badge
                 style={{
                   fontSize: "var(--text-sm)",
-                  fontWeight: "var(--font-weight-normal)",
-                  color: "var(--muted-foreground)",
+                  fontWeight: "var(--font-weight-semibold)",
+                  color: "var(--destructive)",
+                  backgroundColor: "transparent",
                 }}
               >
-                та {warningProblems.length}{" "}
-                {warningProblems.length === 1 ? "попередження" : "попереджень"}
-              </span>
-            )}
-          </div>
+                {errorProblems.length}{" "}
+                {errorProblems.length === 1
+                  ? "критична помилка"
+                  : errorProblems.length < 5
+                  ? "критичні помилки"
+                  : "критичних помилок"}
+              </Badge>
+              {hasWarnings && (
+                <span
+                  style={{
+                    fontSize: "var(--text-sm)",
+                    fontWeight: "var(--font-weight-normal)",
+                    color: "var(--muted-foreground)",
+                  }}
+                >
+                  та {warningProblems.length}{" "}
+                  {warningProblems.length === 1 ? "попередження" : "попереджень"}
+                </span>
+              )}
+            </div>
 
-          {/* ── Problem list ── */}
-          <div className="flex-1 overflow-y-auto px-5 pb-3 flex flex-col gap-4" style={{ minHeight: 0 }}>
+            {/* ── Problem list ── */}
             {/* Errors section — always expanded */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5 py-0.5">
@@ -240,38 +240,37 @@ export function ValidationModal({
                     >
                       {name}
                     </span>
-                    <span
+                    <Badge
                       className="ml-auto"
                       style={{
                         fontSize: "var(--text-2xs)",
                         fontWeight: "var(--font-weight-medium)",
                         color: "var(--destructive)",
+                        backgroundColor: "transparent",
                       }}
                     >
                       {items.length}
-                    </span>
+                    </Badge>
                   </div>
                   {items.map((p) => (
-                    <button
+                    <Button
                       key={p.id}
-                      className="flex items-start gap-2 w-full text-left px-3 py-2 hover:bg-[var(--destructive-alpha-4)] transition-colors"
+                      variant="light"
+                      className="flex items-start gap-2 w-full justify-start px-3 py-2 hover:bg-[var(--destructive-alpha-4)] transition-colors"
                       style={{
                         borderTop: "1px solid var(--border)",
-                        border: "none",
-                        borderTopWidth: 1,
-                        borderTopStyle: "solid",
-                        borderTopColor: "var(--border)",
-                        backgroundColor: "transparent",
-                        cursor: "pointer",
+                        borderRadius: 0,
+                        height: "auto",
+                        minHeight: "unset",
                       }}
-                      onClick={() => onProblemClick(p)}
+                      onPress={() => onProblemClick(p)}
                     >
                       <AlertCircle
                         size={12}
                         className="mt-0.5 flex-shrink-0"
                         style={{ color: "var(--destructive)" }}
                       />
-                      <div className="flex flex-col min-w-0">
+                      <div className="flex flex-col min-w-0 text-left">
                         <span
                           style={{
                             fontSize: "var(--text-2xs)",
@@ -292,7 +291,7 @@ export function ValidationModal({
                           {p.description}
                         </span>
                       </div>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               ))}
@@ -301,14 +300,11 @@ export function ValidationModal({
             {/* Warnings section — collapsed by default when errors present */}
             {hasWarnings && (
               <div className="flex flex-col gap-1.5">
-                <button
-                  className="flex items-center gap-1.5 py-1 w-full text-left"
-                  onClick={() => setWarningsSectionExpanded((v) => !v)}
-                  style={{
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                  }}
+                <Button
+                  variant="light"
+                  className="w-full justify-start"
+                  size="sm"
+                  onPress={() => setWarningsSectionExpanded((v) => !v)}
                 >
                   {warningsSectionExpanded ? (
                     <ChevronDown size={13} style={{ color: "var(--chart-3)" }} />
@@ -325,8 +321,8 @@ export function ValidationModal({
                   >
                     Попередження
                   </span>
-                  <span
-                    className="ml-1 px-1.5 py-px rounded-full"
+                  <Badge
+                    className="ml-1"
                     style={{
                       fontSize: "var(--text-2xs)",
                       fontWeight: "var(--font-weight-medium)",
@@ -335,8 +331,8 @@ export function ValidationModal({
                     }}
                   >
                     {warningProblems.length}
-                  </span>
-                </button>
+                  </Badge>
+                </Button>
                 {warningsSectionExpanded && (
                   <WarningGroupList
                     groups={warningGroups}
@@ -347,45 +343,37 @@ export function ValidationModal({
                 )}
               </div>
             )}
-          </div>
+          </ModalBody>
 
           {/* ── Footer — no "Відправити все одно" when errors exist ── */}
-          <div
-            className="flex items-center justify-between px-5 pb-4 pt-3"
-            style={{ borderTop: "1px solid var(--border)" }}
-          >
-            <button
-              className="px-3 py-2 rounded-[var(--radius)] hover:bg-[var(--muted)] transition-colors"
+          <Divider />
+          <ModalFooter className="flex items-center justify-between px-5 pb-4 pt-3">
+            <Button
+              variant="light"
+              onPress={onClose}
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-medium)",
                 color: "var(--muted-foreground)",
-                border: "none",
-                backgroundColor: "transparent",
-                cursor: "pointer",
               }}
-              onClick={onClose}
             >
               Закрити
-            </button>
-            <button
-              className="flex items-center gap-2 px-4 py-2 rounded-[var(--radius)] transition-opacity hover:opacity-90"
+            </Button>
+            <Button
+              color="danger"
+              onPress={onShowOnSchedule}
+              className="flex items-center gap-2"
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-semibold)",
-                color: "var(--primary-foreground)",
-                backgroundColor: "var(--destructive)",
-                border: "none",
-                cursor: "pointer",
               }}
-              onClick={onShowOnSchedule}
             >
               <Filter size={14} style={{ color: "var(--primary-foreground)" }} />
               Показати проблеми на графіку
-            </button>
-          </div>
-        </div>
-      </div>
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     );
   }
 
@@ -394,23 +382,14 @@ export function ValidationModal({
   // ══════════════════════════════════════════════════════════════════════
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
-      style={{ backgroundColor: "var(--overlay)" }}
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-[520px] mx-4 rounded-[var(--radius)] flex flex-col"
+    <Modal isOpen={true} onClose={onClose} size="2xl">
+      <ModalContent
         style={{
-          backgroundColor: "var(--card)",
-          boxShadow: "var(--elevation-lg)",
-          maxHeight: "80vh",
           border: "1px solid var(--border)",
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header — calm styling ── */}
-        <div className="flex items-start justify-between px-5 pt-5 pb-3">
+        <ModalHeader className="flex items-start justify-between px-5 pt-5 pb-3">
           <div className="flex items-start gap-3">
             <div
               className="flex items-center justify-center rounded-full flex-shrink-0"
@@ -443,96 +422,91 @@ export function ValidationModal({
               </span>
             </div>
           </div>
-          <button
-            className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0"
-            onClick={onClose}
-            style={{ border: "none", backgroundColor: "transparent", cursor: "pointer" }}
+          <Button
+            isIconOnly
+            variant="light"
+            size="sm"
+            onPress={onClose}
+            className="flex-shrink-0"
           >
             <X size={16} style={{ color: "var(--muted-foreground)" }} />
-          </button>
-        </div>
+          </Button>
+        </ModalHeader>
 
-        {/* ── Informational summary ── */}
-        <div
-          className="mx-5 mb-3 px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-2"
-          style={{ backgroundColor: "var(--warning-alpha-5)" }}
-        >
-          <span
-            style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: "var(--chart-3)",
-            }}
+        {/* ── Body ── */}
+        <ModalBody className="px-5 pb-3 flex flex-col gap-2">
+          {/* ── Informational summary ── */}
+          <div
+            className="px-3 py-2.5 rounded-[var(--radius)] flex items-center gap-2"
+            style={{ backgroundColor: "var(--warning-alpha-5)" }}
           >
-            {warningProblems.length}{" "}
-            {warningProblems.length === 1 ? "попередження" : "попереджень"}
-          </span>
-        </div>
+            <Badge
+              style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: "var(--font-weight-medium)",
+                color: "var(--chart-3)",
+                backgroundColor: "transparent",
+              }}
+            >
+              {warningProblems.length}{" "}
+              {warningProblems.length === 1 ? "попередження" : "попереджень"}
+            </Badge>
+          </div>
 
-        {/* ── Warning groups ── */}
-        <div className="flex-1 overflow-y-auto px-5 pb-3 flex flex-col gap-2" style={{ minHeight: 0 }}>
+          {/* ── Warning groups ── */}
           <WarningGroupList
             groups={warningGroups}
             expandedGroups={expandedWarningGroups}
             onToggleGroup={toggleWarningGroup}
             onProblemClick={onProblemClick}
           />
-        </div>
+        </ModalBody>
 
         {/* ── Footer — publish available ── */}
-        <div
-          className="flex items-center justify-between px-5 pb-4 pt-3"
-          style={{ borderTop: "1px solid var(--border)" }}
-        >
-          <button
-            className="px-3 py-2 rounded-[var(--radius)] hover:bg-[var(--muted)] transition-colors"
+        <Divider />
+        <ModalFooter className="flex items-center justify-between px-5 pb-4 pt-3">
+          <Button
+            variant="light"
+            onPress={onClose}
             style={{
               fontSize: "var(--text-sm)",
               fontWeight: "var(--font-weight-medium)",
               color: "var(--muted-foreground)",
-              border: "none",
-              backgroundColor: "transparent",
-              cursor: "pointer",
             }}
-            onClick={onClose}
           >
             Закрити
-          </button>
+          </Button>
           <div className="flex items-center gap-2">
-            <button
-              className="flex items-center gap-1.5 px-3 py-2 rounded-[var(--radius)] transition-colors hover:bg-[var(--muted)]"
+            <Button
+              variant="bordered"
+              onPress={onShowOnSchedule}
+              className="flex items-center gap-1.5"
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-medium)",
                 color: "var(--primary)",
-                border: "1px solid var(--primary-alpha-25)",
-                backgroundColor: "transparent",
-                cursor: "pointer",
+                borderColor: "var(--primary-alpha-25)",
               }}
-              onClick={onShowOnSchedule}
             >
               <Filter size={13} style={{ color: "var(--primary)" }} />
               Показати на графіку
-            </button>
-            <button
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius)] transition-opacity hover:opacity-90"
+            </Button>
+            <Button
+              color="primary"
+              onPress={onPublishAnyway}
+              className="flex items-center gap-1.5"
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-semibold)",
-                color: "var(--primary-foreground)",
-                backgroundColor: "var(--primary)",
-                border: "none",
-                cursor: "pointer",
               }}
-              onClick={onPublishAnyway}
             >
               <Send size={14} style={{ color: "var(--primary-foreground)" }} />
               Відправити все одно
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
   );
 }
 
@@ -564,112 +538,115 @@ function WarningGroupList({
             style={{ border: "1px solid var(--border)" }}
           >
             {/* Group header — clickable toggle */}
-            <button
-              className="flex items-center gap-2 px-3 py-2 w-full text-left hover:bg-[var(--warning-alpha-4)] transition-colors"
+            <Button
+              variant="light"
+              className="w-full justify-start"
+              size="sm"
+              onPress={() => onToggleGroup(group.type)}
               style={{
                 backgroundColor: "var(--warning-alpha-4)",
-                border: "none",
-                cursor: "pointer",
+                borderRadius: 0,
               }}
-              onClick={() => onToggleGroup(group.type)}
             >
-              {isExpanded ? (
-                <ChevronDown size={12} style={{ color: "var(--muted-foreground)" }} />
-              ) : (
-                <ChevronRight size={12} style={{ color: "var(--muted-foreground)" }} />
-              )}
-              {group.icon}
-              <span
-                style={{
-                  fontSize: "var(--text-sm)",
-                  fontWeight: "var(--font-weight-medium)",
-                  color: "var(--foreground)",
-                  flex: 1,
-                }}
-              >
-                {group.label}
-              </span>
-              <span
-                className="px-1.5 py-px rounded-full"
-                style={{
-                  fontSize: "var(--text-2xs)",
-                  fontWeight: "var(--font-weight-medium)",
-                  color: "var(--chart-3)",
-                  backgroundColor: "var(--warning-alpha-8)",
-                }}
-              >
-                {pluralCount(group.items.length)}
-              </span>
-            </button>
+              <div className="flex items-center gap-2 w-full">
+                {isExpanded ? (
+                  <ChevronDown size={12} style={{ color: "var(--muted-foreground)" }} />
+                ) : (
+                  <ChevronRight size={12} style={{ color: "var(--muted-foreground)" }} />
+                )}
+                {group.icon}
+                <span
+                  style={{
+                    fontSize: "var(--text-sm)",
+                    fontWeight: "var(--font-weight-medium)",
+                    color: "var(--foreground)",
+                    flex: 1,
+                    textAlign: "left",
+                  }}
+                >
+                  {group.label}
+                </span>
+                <Badge
+                  style={{
+                    fontSize: "var(--text-2xs)",
+                    fontWeight: "var(--font-weight-medium)",
+                    color: "var(--chart-3)",
+                    backgroundColor: "var(--warning-alpha-8)",
+                  }}
+                >
+                  {pluralCount(group.items.length)}
+                </Badge>
+              </div>
+            </Button>
 
             {/* Expanded detail rows */}
             {isExpanded &&
               group.items.map((p) => (
-                <button
+                <Button
                   key={p.id}
-                  className="flex items-start gap-2 w-full text-left px-3 py-2 hover:bg-[var(--warning-alpha-4)] transition-colors"
+                  variant="light"
+                  className="w-full justify-start px-3 py-2 hover:bg-[var(--warning-alpha-4)] transition-colors"
                   style={{
                     borderTop: "1px solid var(--border)",
-                    backgroundColor: "transparent",
-                    border: "none",
-                    borderTopWidth: 1,
-                    borderTopStyle: "solid",
-                    borderTopColor: "var(--border)",
-                    cursor: "pointer",
+                    borderRadius: 0,
+                    height: "auto",
+                    minHeight: "unset",
                   }}
-                  onClick={() => onProblemClick(p)}
+                  onPress={() => onProblemClick(p)}
                 >
-                  <AlertTriangle
-                    size={11}
-                    className="mt-0.5 flex-shrink-0"
-                    style={{ color: "var(--chart-3)" }}
-                  />
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2 w-full text-left">
+                    <AlertTriangle
+                      size={11}
+                      className="mt-0.5 flex-shrink-0"
+                      style={{ color: "var(--chart-3)" }}
+                    />
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          style={{
+                            fontSize: "var(--text-2xs)",
+                            fontWeight: "var(--font-weight-medium)",
+                            color: "var(--muted-foreground)",
+                          }}
+                        >
+                          {p.day}
+                        </span>
+                        {p.employeeName && p.employeeId !== "__open__" && !p.employeeId.startsWith("__dept") && (
+                          <span
+                            style={{
+                              fontSize: "var(--text-2xs)",
+                              fontWeight: "var(--font-weight-normal)",
+                              color: "var(--muted-foreground)",
+                            }}
+                          >
+                            · {p.employeeName}
+                          </span>
+                        )}
+                        {p.employeeName && (p.employeeId === "__open__" || p.employeeId.startsWith("__dept")) && (
+                          <span
+                            style={{
+                              fontSize: "var(--text-2xs)",
+                              fontWeight: "var(--font-weight-normal)",
+                              color: "var(--muted-foreground)",
+                            }}
+                          >
+                            · {p.employeeName}
+                          </span>
+                        )}
+                      </div>
                       <span
                         style={{
-                          fontSize: "var(--text-2xs)",
-                          fontWeight: "var(--font-weight-medium)",
-                          color: "var(--muted-foreground)",
+                          fontSize: "var(--text-sm)",
+                          fontWeight: "var(--font-weight-normal)",
+                          color: "var(--foreground)",
+                          lineHeight: 1.4,
                         }}
                       >
-                        {p.day}
+                        {p.description}
                       </span>
-                      {p.employeeName && p.employeeId !== "__open__" && !p.employeeId.startsWith("__dept") && (
-                        <span
-                          style={{
-                            fontSize: "var(--text-2xs)",
-                            fontWeight: "var(--font-weight-normal)",
-                            color: "var(--muted-foreground)",
-                          }}
-                        >
-                          · {p.employeeName}
-                        </span>
-                      )}
-                      {p.employeeName && (p.employeeId === "__open__" || p.employeeId.startsWith("__dept")) && (
-                        <span
-                          style={{
-                            fontSize: "var(--text-2xs)",
-                            fontWeight: "var(--font-weight-normal)",
-                            color: "var(--muted-foreground)",
-                          }}
-                        >
-                          · {p.employeeName}
-                        </span>
-                      )}
                     </div>
-                    <span
-                      style={{
-                        fontSize: "var(--text-sm)",
-                        fontWeight: "var(--font-weight-normal)",
-                        color: "var(--foreground)",
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      {p.description}
-                    </span>
                   </div>
-                </button>
+                </Button>
               ))}
           </div>
         );

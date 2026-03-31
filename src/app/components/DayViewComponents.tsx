@@ -1,6 +1,9 @@
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { User, AlertTriangle } from "lucide-react";
+import { Tooltip } from "@fzwp/ui-kit/tooltip";
+import { Divider } from "@fzwp/ui-kit/divider";
+import { Badge } from "@fzwp/ui-kit/badge";
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import type { ShiftData } from "./ShiftCard";
 import { ShiftTooltip } from "./ShiftCard";
@@ -231,14 +234,16 @@ function MinorBadge() {
 
   return (
     <span className="inline-flex items-center flex-shrink-0">
-      <span
+      <Badge
         ref={triggerRef}
+        size="sm"
+        variant="flat"
+        color="warning"
         onMouseEnter={handleEnter}
         onMouseLeave={() => setShow(false)}
-        className="inline-flex items-center justify-center rounded-[var(--radius-sm)] cursor-help select-none"
+        className="inline-flex items-center justify-center cursor-help select-none"
         style={{
           height: 18,
-          paddingLeft: 5, paddingRight: 5,
           fontSize: "var(--text-2xs)",
           fontWeight: "var(--font-weight-semibold)" as any,
           color: "var(--chart-3)",
@@ -246,7 +251,7 @@ function MinorBadge() {
         }}
       >
         &lt;18
-      </span>
+      </Badge>
       {show && pos && createPortal(
         <div className="fixed pointer-events-none" style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}>
           <div
@@ -360,7 +365,7 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
                       <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
                     </div>
                   )}
-                  <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
+                  <Divider />
                   <div className="flex items-center justify-between">
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
@@ -386,7 +391,7 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
                       <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
                     </div>
                   )}
-                  <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
+                  <Divider />
                   <div className="flex items-center justify-between">
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
                     <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
@@ -470,13 +475,23 @@ export function DayEmployeeCell({ emp, onEmployeeClick }: DayEmployeeCellProps) 
       </div>
       <div className="flex flex-col min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span
-            className="truncate"
-            title={originTooltip}
-            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: originTooltip ? "help" : undefined }}
-          >
-            {emp.name}
-          </span>
+          {originTooltip ? (
+            <Tooltip content={originTooltip}>
+              <span
+                className="truncate"
+                style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: "help" }}
+              >
+                {emp.name}
+              </span>
+            </Tooltip>
+          ) : (
+            <span
+              className="truncate"
+              style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33 }}
+            >
+              {emp.name}
+            </span>
+          )}
           {emp.isMinor && <MinorBadge />}
         </div>
         <span className="truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
