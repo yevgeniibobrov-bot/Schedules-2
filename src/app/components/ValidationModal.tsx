@@ -118,7 +118,7 @@ export function ValidationModal({
 
   if (hasErrors) {
     return (
-      <Modal isOpen={true} onClose={onClose} size="2xl">
+      <Modal isOpen={true} onClose={onClose} size="2xl" hideCloseButton>
         <ModalContent
           style={{
             border: "1px solid var(--destructive-alpha-15)",

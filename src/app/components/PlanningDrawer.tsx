@@ -1356,7 +1356,8 @@ export function PlanningDrawer({
   contextDate.setDate(WEEK_START.getDate() + contextDayIdx);
 
   return (
-    <Drawer isOpen={true} onClose={onClose} placement="right" size="sm">
+    <Drawer opened={true} onClose={onClose} placement="right" size="sm" showCloseBtn={false} title="" showFooter={false}>
+      <Drawer.Content>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}>
         <div className="flex items-center gap-2">
@@ -2142,6 +2143,7 @@ export function PlanningDrawer({
         </div>
         </div>
       )}
+      </Drawer.Content>
     </Drawer>
   );
 }

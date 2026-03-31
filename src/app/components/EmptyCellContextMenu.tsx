@@ -4,7 +4,6 @@ import {
   Clipboard,
   Copy,
 } from "lucide-react";
-import { Card } from "@fzwp/ui-kit/card";
 import { Button } from "@fzwp/ui-kit/button";
 import { Divider } from "@fzwp/ui-kit/divider";
 
@@ -67,12 +66,17 @@ export function EmptyCellContextMenu({
   }, [x, y]);
 
   return (
-    <Card
+    <div
       ref={ref}
-      className="fixed z-50 min-w-[200px] overflow-hidden p-0"
+      className="fixed z-50 min-w-[200px] overflow-hidden"
       style={{
         left: x,
         top: y,
+        backgroundColor: "var(--popover)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--radius)",
+        boxShadow: "var(--elevation-md)",
+        padding: "4px 0",
       }}
     >
       {actions.map((action) => (
@@ -105,6 +109,6 @@ export function EmptyCellContextMenu({
           </Button>
         </div>
       ))}
-    </Card>
+    </div>
   );
 }

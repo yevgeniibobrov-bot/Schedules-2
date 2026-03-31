@@ -804,7 +804,7 @@ export function Header({
     </header>
 
     {/* ── Publish Confirmation Modal ── */}
-    <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)}>
+    <Modal isOpen={showPublishModal} onClose={() => setShowPublishModal(false)} hideCloseButton>
       <ModalContent>
         <ModalHeader>Відправити розклад?</ModalHeader>
         <ModalBody>
