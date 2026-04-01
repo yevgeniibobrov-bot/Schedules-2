@@ -25,7 +25,6 @@ import type { Employee, Department } from "./WeeklyTable";
 
 import { Drawer } from "@fzwp/ui-kit/drawer";
 import { Button } from "@fzwp/ui-kit/button";
-import { Input } from "@fzwp/ui-kit/input";
 import { Select, SelectItem } from "@fzwp/ui-kit/select";
 import { Textarea } from "@fzwp/ui-kit/textarea";
 import { Divider } from "@fzwp/ui-kit/divider";
