@@ -1225,16 +1225,18 @@ export function WeeklyTable({
               <div className="flex items-center justify-between gap-2">
                 <span>Працівник</span>
                 <Tooltip content={allCollapsed ? "Розгорнути всі відділи" : "Згорнути всі відділи"}>
-                  <Button
-                    variant="light"
-                    size="sm"
-                    onPress={toggleAll}
-                    className="inline-flex items-center gap-1 px-1.5 py-1"
-                    style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}
-                  >
-                    {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
-                    <span>{allCollapsed ? "Усі" : "Усі"}</span>
-                  </Button>
+                  <div className="inline-flex">
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onPress={toggleAll}
+                      className="inline-flex items-center gap-1 px-1.5 py-1"
+                      style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}
+                    >
+                      {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
+                      <span>{allCollapsed ? "Усі" : "Усі"}</span>
+                    </Button>
+                  </div>
                 </Tooltip>
               </div>
             </th>

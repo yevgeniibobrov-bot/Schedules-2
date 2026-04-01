@@ -372,7 +372,7 @@ function ShiftTooltip({ shift, children, validationLevel, validationMessage }: S
         content: "px-3 py-2.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--popover)]",
       }}
     >
-      <div className="contents">
+      <div className="w-full">
         {children}
       </div>
     </Tooltip>

@@ -1405,7 +1405,7 @@ export function PlanningDrawer({
 
         {/* ═══ Create/Edit Mode – shared selectors ═══════════════════ */}
         {isShiftOrCreate && (
-          <div className="contents">
+          <>
             <SectionDivider />
             <div className="flex flex-col gap-3">
               <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
@@ -1515,7 +1515,7 @@ export function PlanningDrawer({
 
               {/* ── Absence-specific fields ─────────────────────────── */}
               {typeMode === "absence" && (
-                <div className="contents">
+                <>
                   {/* Absence Type */}
                   <div className="flex flex-col gap-1">
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Тип відсутності</span>
@@ -1581,12 +1581,12 @@ export function PlanningDrawer({
                       {absenceEndDay - absenceStartDay + 1} дн.
                     </span>
                   </div>
-                </div>
+                </>
               )}
 
               {/* ── Shift-specific selectors ───────────────────────── */}
               {typeMode === "shift" && (
-                <div className="contents">
+                <>
                   {/* Department selector — hidden when opened from a specific department row (dayIndex provided) */}
                   {allDepartments && allDepartments.length > 1 && dayIndex == null && (
                     <div className="flex flex-col gap-1">
@@ -1603,10 +1603,10 @@ export function PlanningDrawer({
                   )}
 
 
-                </div>
+                </>
               )}
             </div>
-          </div>
+          </>
         )}
 
         {/* ═══ Employee-only: A) Profile → B) Monthly Balance → C) Total Workload → D) This Week ═══ */}
@@ -1624,7 +1624,7 @@ export function PlanningDrawer({
           }, 0);
 
           return (
-          <div className="contents">
+          <>
             {/* ── A. Employee Profile ──────────────────────────── */}
             <div className="rounded-[var(--radius)] overflow-hidden" style={{ backgroundColor: "var(--muted)" }}>
               <div className="flex items-center gap-3 px-3 py-3">
@@ -1766,13 +1766,13 @@ export function PlanningDrawer({
                 </div>
               </div>
             </div>
-          </div>
+          </>
           );
         })()}
 
         {/* ═══ Shift Mode – Combined Parts / Breaks / Timeline block ═══ */}
         {isShiftOrCreate && typeMode === "shift" && (
-          <div className="contents">
+          <>
             <SectionDivider />
 
             {/* Single cohesive block for shift configuration */}
@@ -1951,22 +1951,22 @@ export function PlanningDrawer({
 
             {/* ── Timeline (visual preview) ── */}
             {timeBlocks.length > 0 && (
-              <div className="contents">
+              <>
                 <Divider />
                 <div className="p-3">
                   <ShiftTimeline timeBlocks={timeBlocks} breakState={breakState} colorMap={shiftColorMap} breakEntries={breakEntries} />
                 </div>
-              </div>
+              </>
             )}
 
             </div>{/* end cohesive block */}
 
-          </div>
+          </>
         )}
 
         {/* ═══ Validation (both shift and absence) ═══════════════════ */}
         {isShiftOrCreate && (
-          <div className="contents">
+          <>
             <SectionDivider />
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
@@ -1984,7 +1984,7 @@ export function PlanningDrawer({
               </div>
               {validationMessages.map((msg, i) => <ValidationRow key={i} type={msg.type} text={msg.text} />)}
             </div>
-          </div>
+          </>
         )}
       </div>
 

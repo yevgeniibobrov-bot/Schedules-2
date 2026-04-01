@@ -215,7 +215,7 @@ export function Header({
   })();
 
   return (
-    <div className="contents">
+    <>
     <header
       className="flex flex-col bg-[var(--card)]"
       style={{ borderBottom: "1px solid var(--border)" }}
@@ -228,24 +228,26 @@ export function Header({
       {/* 1. Department dropdown */}
       <Popover open={deptDropdownOpen} onOpenChange={setDeptDropdownOpen} placement="bottom-start">
         <PopoverTrigger asChild>
-          <Button
-            variant="bordered"
-            size="sm"
-            onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
-            endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
-            className="gap-1.5"
-          >
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: "var(--foreground)",
-              whiteSpace: "nowrap",
-            }}>
-              {focusedDeptId
-                ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
-                : "Всі відділи"}
-            </span>
-          </Button>
+          <div className="inline-flex">
+            <Button
+              variant="bordered"
+              size="sm"
+              onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+              endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+              className="gap-1.5"
+            >
+              <span style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: "var(--font-weight-medium)",
+                color: "var(--foreground)",
+                whiteSpace: "nowrap",
+              }}>
+                {focusedDeptId
+                  ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
+                  : "Всі відділи"}
+              </span>
+            </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="z-50 w-[220px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
           <PopoverLayout>
@@ -314,6 +316,7 @@ export function Header({
       {onFocusedSubUnitChange && subUnitNames.length > 0 && (
         <Popover open={subUnitDropdownOpen} onOpenChange={setSubUnitDropdownOpen} placement="bottom-start">
           <PopoverTrigger asChild>
+            <div className="inline-flex">
             <Button
               variant="bordered"
               size="sm"
@@ -325,15 +328,21 @@ export function Header({
               }}
               startContent={<Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />}
               endContent={focusedSubUnit ? (
-                <X
-                  size={14}
-                  style={{ color: "var(--primary)" }}
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     onFocusedSubUnitChange(null);
                     setSubUnitDropdownOpen(false);
                   }}
-                />
+                >
+                  <X size={14} style={{ color: "var(--primary)" }} />
+                </span>
               ) : (
                 <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
               )}
@@ -350,6 +359,7 @@ export function Header({
                 {focusedSubUnit || "Дільниці"}
               </span>
             </Button>
+            </div>
           </PopoverTrigger>
           <PopoverContent className="z-50 w-[320px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
             <PopoverLayout>
@@ -472,17 +482,19 @@ export function Header({
       {/* 4. View dropdown (replaces segmented Week/Day switch) */}
       <Popover open={viewDropdownOpen} onOpenChange={setViewDropdownOpen} placement="bottom-start">
         <PopoverTrigger asChild>
-          <Button
-            variant="bordered"
-            size="sm"
-            onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
-            endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
-            className="gap-1.5"
-          >
-            <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
-              {viewMode === "week" ? "Тиждень" : "День"}
-            </span>
-          </Button>
+          <div className="inline-flex">
+            <Button
+              variant="bordered"
+              size="sm"
+              onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
+              endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+              className="gap-1.5"
+            >
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
+                {viewMode === "week" ? "Тиждень" : "День"}
+              </span>
+            </Button>
+          </div>
         </PopoverTrigger>
         <PopoverContent className="z-50 w-[140px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
           <PopoverLayout>
@@ -520,7 +532,7 @@ export function Header({
       </Popover>
 
       {/* 5. Plan / Fact toggle */}
-      <div className="flex items-center rounded-[var(--radius)] border border-[var(--border)] overflow-hidden">
+      <div className="flex items-center shrink-0 rounded-[var(--radius)] border border-[var(--border)] overflow-hidden">
         {(["plan", "fact"] as const).map((mode) => (
           <Button
             key={mode}
@@ -728,34 +740,38 @@ export function Header({
 
         {/* 6. Print — icon only */}
         <Tooltip content="Друк">
-          <Button
-            isIconOnly
-            variant="bordered"
-            size="sm"
-          >
-            <Printer size={16} style={{ color: "var(--muted-foreground)" }} />
-          </Button>
+          <div className="inline-flex">
+            <Button
+              isIconOnly
+              variant="bordered"
+              size="sm"
+            >
+              <Printer size={16} style={{ color: "var(--muted-foreground)" }} />
+            </Button>
+          </div>
         </Tooltip>
 
         {/* Focus mode toggle */}
         {onFocusModeToggle && (
           <Tooltip content={isFocusMode ? "Вийти з режиму фокусу (Esc)" : "Режим фокусу — приховати навігацію"}>
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onPress={onFocusModeToggle}
-              style={{
-                backgroundColor: isFocusMode ? "var(--primary-alpha-10)" : "transparent",
-                border: isFocusMode ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
-              }}
-            >
-              {isFocusMode ? (
-                <Minimize2 size={16} style={{ color: "var(--primary)" }} />
-              ) : (
-                <Maximize2 size={16} style={{ color: "var(--muted-foreground)" }} />
-              )}
-            </Button>
+            <div className="inline-flex">
+              <Button
+                isIconOnly
+                variant="light"
+                size="sm"
+                onPress={onFocusModeToggle}
+                style={{
+                  backgroundColor: isFocusMode ? "var(--primary-alpha-10)" : "transparent",
+                  border: isFocusMode ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
+                }}
+              >
+                {isFocusMode ? (
+                  <Minimize2 size={16} style={{ color: "var(--primary)" }} />
+                ) : (
+                  <Maximize2 size={16} style={{ color: "var(--muted-foreground)" }} />
+                )}
+              </Button>
+            </div>
           </Tooltip>
         )}
       </div>
@@ -807,6 +823,6 @@ export function Header({
     )}
 
     {/* Toast notifications handled by ToastContextProvider */}
-    </div>
+    </>
   );
 }
