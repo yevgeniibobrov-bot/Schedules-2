@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -26,7 +26,9 @@ import { Button } from '@fzwp/ui-kit/button';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@fzwp/ui-kit/modal';
 import { Divider } from '@fzwp/ui-kit/divider';
 import { Tooltip } from '@fzwp/ui-kit/tooltip';
-import { Badge } from '@fzwp/ui-kit/badge';
+import { Popover, PopoverTrigger, PopoverContent } from '@fzwp/ui-kit/popover';
+import { PopoverLayout } from '@fzwp/ui-kit/popover';
+import { useToast } from '@fzwp/ui-kit/toast';
 
 import type { Department } from "./WeeklyTable";
 import { ValidationModal } from "./ValidationModal";
@@ -122,46 +124,18 @@ export function Header({
   isFact = false,
 }: HeaderProps) {
   const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
-  const deptDropdownRef = useRef<HTMLDivElement>(null);
   const [subUnitDropdownOpen, setSubUnitDropdownOpen] = useState(false);
-  const subUnitDropdownRef = useRef<HTMLDivElement>(null);
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
-  const viewDropdownRef = useRef<HTMLDivElement>(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const [snackbarText, setSnackbarText] = useState("Розклад успішно опубліковано.");
+  const toast = useToast();
 
-  useEffect(() => {
-    function handleOutside(e: MouseEvent) {
-      if (deptDropdownRef.current && !deptDropdownRef.current.contains(e.target as Node)) {
-        setDeptDropdownOpen(false);
-      }
-      if (subUnitDropdownRef.current && !subUnitDropdownRef.current.contains(e.target as Node)) {
-        setSubUnitDropdownOpen(false);
-      }
-      if (viewDropdownRef.current && !viewDropdownRef.current.contains(e.target as Node)) {
-        setViewDropdownOpen(false);
-      }
-    }
-    if (deptDropdownOpen || subUnitDropdownOpen || viewDropdownOpen) {
-      document.addEventListener("mousedown", handleOutside);
-      return () => document.removeEventListener("mousedown", handleOutside);
-    }
-  }, [deptDropdownOpen, subUnitDropdownOpen, viewDropdownOpen]);
-
-  // Auto-dismiss snackbar after 3.5 seconds
-  useEffect(() => {
-    if (!showSnackbar) return;
-    const timer = setTimeout(() => setShowSnackbar(false), 3500);
-    return () => clearTimeout(timer);
-  }, [showSnackbar]);
+  // Click-outside and dismiss handled by Popover component automatically
 
   const handlePublishConfirm = () => {
     setShowPublishModal(false);
     onScheduleStatusChange?.("published");
-    setSnackbarText("Графік опубліковано.");
-    setShowSnackbar(true);
+    toast.success({ title: "Графік опубліковано." });
   };
 
   // Lifecycle-aware publish click
@@ -179,8 +153,7 @@ export function Header({
         setShowValidationModal(true);
       } else {
         onScheduleStatusChange?.("published");
-        setSnackbarText("Графік опубліковано.");
-        setShowSnackbar(true);
+        toast.success({ title: "Графік опубліковано." });
       }
     }
   };
@@ -188,14 +161,12 @@ export function Header({
   const handleValidationPublish = () => {
     setShowValidationModal(false);
     onScheduleStatusChange?.("published");
-    setSnackbarText("Графік опубліковано (з попередженнями).");
-    setShowSnackbar(true);
+    toast.warning({ title: "Графік опубліковано (з попередженнями)." });
   };
 
   const handleReturnToDraft = () => {
     onScheduleStatusChange?.("draft");
-    setSnackbarText("Графік повернуто до чернетки.");
-    setShowSnackbar(true);
+    toast.default({ title: "Графік повернуто до чернетки." });
   };
 
   // Group problems by employee
@@ -255,35 +226,29 @@ export function Header({
         style={{ minHeight: 44, paddingTop: 8, paddingBottom: 8 }}
       >
       {/* 1. Department dropdown */}
-      <div className="relative" ref={deptDropdownRef}>
-        <Button
-          variant="bordered"
-          size="sm"
-          onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
-          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
-          className="gap-1.5"
-        >
-          <span style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: "var(--font-weight-medium)",
-            color: "var(--foreground)",
-            whiteSpace: "nowrap",
-          }}>
-            {focusedDeptId
-              ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
-              : "Всі відділи"}
-          </span>
-        </Button>
-
-        {/* Dropdown menu */}
-        {deptDropdownOpen && (
-          <div
-            className="absolute top-full left-0 mt-1 z-50 w-[220px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
-            style={{
-              backgroundColor: "var(--popover)",
-              boxShadow: "var(--elevation-md)",
-            }}
+      <Popover open={deptDropdownOpen} onOpenChange={setDeptDropdownOpen} placement="bottom-start">
+        <PopoverTrigger asChild>
+          <Button
+            variant="bordered"
+            size="sm"
+            onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+            endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+            className="gap-1.5"
           >
+            <span style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-medium)",
+              color: "var(--foreground)",
+              whiteSpace: "nowrap",
+            }}>
+              {focusedDeptId
+                ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
+                : "Всі відділи"}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="z-50 w-[220px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
+          <PopoverLayout>
             <div className="max-h-[280px] overflow-y-auto">
               {/* "Всі відділи" option */}
               <Button
@@ -341,59 +306,53 @@ export function Header({
                 );
               })}
             </div>
-          </div>
-        )}
-      </div>
+          </PopoverLayout>
+        </PopoverContent>
+      </Popover>
 
       {/* 2. Sub-units focus dropdown — immediately after department */}
       {onFocusedSubUnitChange && subUnitNames.length > 0 && (
-        <div className="relative" ref={subUnitDropdownRef}>
-          <Button
-            variant="bordered"
-            size="sm"
-            onPress={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
-            className="gap-1.5"
-            style={{
-              borderColor: focusedSubUnit ? "var(--primary)" : "var(--border)",
-              backgroundColor: focusedSubUnit ? "var(--primary-alpha-8)" : "var(--input-background)",
-            }}
-            startContent={<Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />}
-            endContent={focusedSubUnit ? (
-              <X
-                size={14}
-                style={{ color: "var(--primary)" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFocusedSubUnitChange(null);
-                  setSubUnitDropdownOpen(false);
-                }}
-              />
-            ) : (
-              <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
-            )}
-          >
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: focusedSubUnit ? "var(--primary)" : "var(--foreground)",
-              maxWidth: 160,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}>
-              {focusedSubUnit || "Дільниці"}
-            </span>
-          </Button>
-
-          {/* Dropdown menu */}
-          {subUnitDropdownOpen && (
-            <div
-              className="absolute top-full left-0 mt-1 z-50 w-[320px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+        <Popover open={subUnitDropdownOpen} onOpenChange={setSubUnitDropdownOpen} placement="bottom-start">
+          <PopoverTrigger asChild>
+            <Button
+              variant="bordered"
+              size="sm"
+              onPress={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
+              className="gap-1.5"
               style={{
-                backgroundColor: "var(--popover)",
-                boxShadow: "var(--elevation-md)",
+                borderColor: focusedSubUnit ? "var(--primary)" : "var(--border)",
+                backgroundColor: focusedSubUnit ? "var(--primary-alpha-8)" : "var(--input-background)",
               }}
+              startContent={<Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />}
+              endContent={focusedSubUnit ? (
+                <X
+                  size={14}
+                  style={{ color: "var(--primary)" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFocusedSubUnitChange(null);
+                    setSubUnitDropdownOpen(false);
+                  }}
+                />
+              ) : (
+                <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
+              )}
             >
+              <span style={{
+                fontSize: "var(--text-sm)",
+                fontWeight: "var(--font-weight-medium)",
+                color: focusedSubUnit ? "var(--primary)" : "var(--foreground)",
+                maxWidth: 160,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}>
+                {focusedSubUnit || "Дільниці"}
+              </span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="z-50 w-[320px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
+            <PopoverLayout>
               {/* Clear selection */}
               {focusedSubUnit && (
                 <Button
@@ -451,9 +410,9 @@ export function Header({
                   );
                 })}
               </div>
-            </div>
-          )}
-        </div>
+            </PopoverLayout>
+          </PopoverContent>
+        </Popover>
       )}
 
       {/* Divider */}
@@ -511,27 +470,22 @@ export function Header({
       <Divider orientation="vertical" className="h-6" />
 
       {/* 4. View dropdown (replaces segmented Week/Day switch) */}
-      <div className="relative" ref={viewDropdownRef}>
-        <Button
-          variant="bordered"
-          size="sm"
-          onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
-          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
-          className="gap-1.5"
-        >
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
-            {viewMode === "week" ? "Тиждень" : "День"}
-          </span>
-        </Button>
-
-        {viewDropdownOpen && (
-          <div
-            className="absolute top-full left-0 mt-1 z-50 w-[140px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
-            style={{
-              backgroundColor: "var(--popover)",
-              boxShadow: "var(--elevation-md)",
-            }}
+      <Popover open={viewDropdownOpen} onOpenChange={setViewDropdownOpen} placement="bottom-start">
+        <PopoverTrigger asChild>
+          <Button
+            variant="bordered"
+            size="sm"
+            onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
+            endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
+            className="gap-1.5"
           >
+            <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
+              {viewMode === "week" ? "Тиждень" : "День"}
+            </span>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="z-50 w-[140px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden" style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}>
+          <PopoverLayout>
             {(["week", "day"] as const).map((mode) => {
               const isActive = viewMode === mode;
               return (
@@ -561,9 +515,9 @@ export function Header({
                 </Button>
               );
             })}
-          </div>
-        )}
-      </div>
+          </PopoverLayout>
+        </PopoverContent>
+      </Popover>
 
       {/* 5. Plan / Fact toggle */}
       <div className="flex items-center rounded-[var(--radius)] border border-[var(--border)] overflow-hidden">
@@ -852,43 +806,7 @@ export function Header({
       />
     )}
 
-    {/* ── Snackbar notification ── */}
-    {showSnackbar && (
-      <div
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2.5 px-4 py-3 rounded-[var(--radius)] border border-[var(--border)]"
-        style={{
-          backgroundColor: "var(--card)",
-          boxShadow: "var(--elevation-md)",
-          animation: "snackbar-in 0.25s ease-out",
-        }}
-      >
-        <div
-          className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: "var(--success-alpha-12)" }}
-        >
-          <Check size={12} style={{ color: "var(--chart-2)" }} />
-        </div>
-        <span
-          style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: "var(--font-weight-medium)",
-            color: "var(--foreground)",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {snackbarText}
-        </span>
-        <Button
-          isIconOnly
-          variant="light"
-          size="sm"
-          className="ml-1 flex-shrink-0"
-          onPress={() => setShowSnackbar(false)}
-        >
-          <X size={14} style={{ color: "var(--muted-foreground)" }} />
-        </Button>
-      </div>
-    )}
+    {/* Toast notifications handled by ToastContextProvider */}
     </div>
   );
 }
