@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
+import React, { useMemo, useRef } from "react";
+import { Tooltip } from "@fzwp/ui-kit/tooltip";
 import type { Department, ResourceControl, Employee } from "./WeeklyTable";
 import type { ShiftData } from "./ShiftCard";
 import { RESOURCE_ROW_H, gridWidthPx, type TimeRange } from "./DayViewComponents";
@@ -151,151 +151,8 @@ function computeSubUnitBreakdown(
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// CoveragePopover — unified component (desktop hover/click, tablet tap)
+// CoverageTooltipContent — content rendered inside UI Kit Tooltip
 // ══════════════════════════════════════════════════════════════════════
-
-interface CoveragePopoverProps {
-  timeLabel: string;
-  forecast: number;
-  scheduled: number;
-  breakdown: { unit: string; count: number }[];
-  anchorRect: DOMRect;
-}
-
-function CoveragePopover({ timeLabel, forecast, scheduled, breakdown, anchorRect }: CoveragePopoverProps) {
-  const diff = scheduled - forecast;
-  const diffColor = diff < 0 ? "var(--destructive)" : diff > 0 ? "var(--chart-2)" : "var(--muted-foreground)";
-
-  const top = anchorRect.top - 8;
-  const left = anchorRect.left + anchorRect.width / 2;
-
-  return createPortal(
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        pointerEvents: "none",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          bottom: `calc(100vh - ${top}px)`,
-          left: left,
-          transform: "translateX(-50%)",
-          pointerEvents: "auto",
-          backgroundColor: "var(--popover)",
-          color: "var(--popover-foreground)",
-          borderRadius: "var(--radius)",
-          boxShadow: "var(--elevation-md)",
-          border: "1px solid var(--border)",
-          padding: "8px 12px",
-          minWidth: 180,
-          maxWidth: 260,
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        {/* Time header */}
-        <div
-          style={{
-            fontSize: "var(--text-xs)",
-            fontWeight: "var(--font-weight-semibold)",
-            color: "var(--foreground)",
-            marginBottom: 6,
-            borderBottom: "1px solid var(--border)",
-            paddingBottom: 6,
-          }}
-        >
-          {timeLabel}
-        </div>
-
-        {/* Metrics rows */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-          <PopoverRow
-            dotColor="var(--primary)"
-            label="Прогноз"
-            value={`${fmtNum(forecast)} осіб`}
-          />
-          <PopoverRow
-            dotColor="var(--chart-2)"
-            label="Графік"
-            value={`${fmtNum(scheduled)} осіб`}
-          />
-          <PopoverRow
-            dotColor={diffColor}
-            label="Різниця"
-            value={`${fmtDelta(diff)} осіб`}
-            valueColor={diffColor}
-          />
-        </div>
-
-        {/* Sub-unit breakdown */}
-        {breakdown.length > 1 && (
-          <div
-            style={{
-              marginTop: 6,
-              paddingTop: 6,
-              borderTop: "1px solid var(--border)",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "var(--text-2xs)",
-                fontWeight: "var(--font-weight-medium)",
-                color: "var(--muted-foreground)",
-                marginBottom: 3,
-              }}
-            >
-              За дільницями
-            </div>
-            {breakdown.map((b) => (
-              <div
-                key={b.unit}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "1px 0",
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: "var(--text-2xs)",
-                    fontWeight: "var(--font-weight-normal)",
-                    color: "var(--foreground)",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    minWidth: 0,
-                    flex: 1,
-                  }}
-                >
-                  {b.unit}
-                </span>
-                <span
-                  style={{
-                    fontSize: "var(--text-2xs)",
-                    fontWeight: "var(--font-weight-semibold)",
-                    color: "var(--foreground)",
-                    flexShrink: 0,
-                  }}
-                >
-                  {b.count}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body
-  );
-}
 
 function PopoverRow({
   dotColor,
@@ -343,6 +200,65 @@ function PopoverRow({
   );
 }
 
+function CoverageTooltipContent({
+  timeLabel,
+  forecast,
+  scheduled,
+  breakdown,
+}: {
+  timeLabel: string;
+  forecast: number;
+  scheduled: number;
+  breakdown: { unit: string; count: number }[];
+}) {
+  const diff = scheduled - forecast;
+  const diffColor = diff < 0 ? "var(--destructive)" : diff > 0 ? "var(--chart-2)" : "var(--muted-foreground)";
+
+  return (
+    <div style={{ minWidth: 180, maxWidth: 260 }}>
+      {/* Time header */}
+      <div
+        style={{
+          fontSize: "var(--text-xs)",
+          fontWeight: "var(--font-weight-semibold)",
+          color: "var(--foreground)",
+          marginBottom: 6,
+          borderBottom: "1px solid var(--border)",
+          paddingBottom: 6,
+        }}
+      >
+        {timeLabel}
+      </div>
+
+      {/* Metrics rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <PopoverRow dotColor="var(--primary)" label="Прогноз" value={`${fmtNum(forecast)} осіб`} />
+        <PopoverRow dotColor="var(--chart-2)" label="Графік" value={`${fmtNum(scheduled)} осіб`} />
+        <PopoverRow dotColor={diffColor} label="Різниця" value={`${fmtDelta(diff)} осіб`} valueColor={diffColor} />
+      </div>
+
+      {/* Sub-unit breakdown */}
+      {breakdown.length > 1 && (
+        <div style={{ marginTop: 6, paddingTop: 6, borderTop: "1px solid var(--border)" }}>
+          <div style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", marginBottom: 3 }}>
+            За дільницями
+          </div>
+          {breakdown.map((b) => (
+            <div key={b.unit} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, padding: "1px 0" }}>
+              <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)", color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>
+                {b.unit}
+              </span>
+              <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)", flexShrink: 0 }}>
+                {b.count}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════
 // Resource Row Timeline Component
 // ══════════════════════════════════════════════════════════════════════
@@ -386,62 +302,7 @@ export function DayResourceRow({
 
   const maxVal = Math.max(1, ...forecastPerSlot, ...scheduledPerSlot);
 
-  // Popover: hover OR click to pin
-  const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [pinned, setPinned] = useState(false);
-  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const handleSlotEnter = useCallback((idx: number) => {
-    if (pinned) return;
-    if (hideTimeout.current) clearTimeout(hideTimeout.current);
-    setActiveSlot(idx);
-  }, [pinned]);
-
-  const handleSlotLeave = useCallback(() => {
-    if (pinned) return;
-    hideTimeout.current = setTimeout(() => setActiveSlot(null), 120);
-  }, [pinned]);
-
-  const handleSlotClick = useCallback((idx: number) => {
-    if (pinned && activeSlot === idx) {
-      setPinned(false);
-      setActiveSlot(null);
-    } else {
-      setActiveSlot(idx);
-      setPinned(true);
-    }
-  }, [pinned, activeSlot]);
-
-  // Close pinned popover on outside click
   const containerRef = useRef<HTMLDivElement>(null);
-  React.useEffect(() => {
-    if (!pinned) return;
-    const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setPinned(false);
-        setActiveSlot(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, [pinned]);
-
-  // Popover data
-  const popoverData = useMemo(() => {
-    if (activeSlot === null) return null;
-    const slotHour = range.start + activeSlot * 0.5;
-    const slotEnd = slotHour + 0.5;
-    const timeLabel = `${formatHour(slotHour)} – ${formatHour(slotEnd)}`;
-    const forecast = forecastPerSlot[activeSlot] ?? 0;
-    const scheduled = scheduledPerSlot[activeSlot] ?? 0;
-    const breakdown = computeSubUnitBreakdown(dept.employees, dayIndex, slotHour, slotEnd);
-    return { timeLabel, forecast, scheduled, breakdown };
-  }, [activeSlot, range, forecastPerSlot, scheduledPerSlot, dept.employees, dayIndex]);
-
-  const anchorRect = activeSlot !== null && slotRefs.current[activeSlot]
-    ? slotRefs.current[activeSlot]!.getBoundingClientRect()
-    : null;
 
   return (
     <div
@@ -460,6 +321,7 @@ export function DayResourceRow({
         {forecastPerSlot.map((forecast, i) => {
           const scheduled = scheduledPerSlot[i];
           const slotHour = range.start + i * 0.5;
+          const slotEnd = slotHour + 0.5;
           const leftPct = hourToPercent(slotHour, range);
           const widthPct = (0.5 / span) * 100;
           const barMaxH = RESOURCE_ROW_H - 10;
@@ -469,85 +331,87 @@ export function DayResourceRow({
             maxVal > 0 ? (Math.min(scheduled, forecast) / maxVal) * barMaxH : 0;
           const overH = scheduled > forecast ? ((scheduled - forecast) / maxVal) * barMaxH : 0;
           const deficit = forecast > 0 && scheduled < forecast;
-          const isActive = activeSlot === i;
+
+          const timeLabel = `${formatHour(slotHour)} – ${formatHour(slotEnd)}`;
+          const breakdown = computeSubUnitBreakdown(dept.employees, dayIndex, slotHour, slotEnd);
 
           return (
-            <div
+            <Tooltip
               key={i}
-              ref={(el) => { slotRefs.current[i] = el; }}
-              className="absolute bottom-0 flex flex-col items-center justify-end"
-              style={{
-                left: `${leftPct}%`,
-                width: `${widthPct}%`,
-                height: "100%",
-                padding: "0 1px",
-                cursor: "pointer",
+              placement="top"
+              content={
+                <CoverageTooltipContent
+                  timeLabel={timeLabel}
+                  forecast={forecast}
+                  scheduled={scheduled}
+                  breakdown={breakdown}
+                />
+              }
+              classNames={{
+                content: "px-3 py-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--popover)]",
               }}
-              onMouseEnter={() => handleSlotEnter(i)}
-              onMouseLeave={handleSlotLeave}
-              onClick={() => handleSlotClick(i)}
             >
-              {/* Forecast outline bar */}
               <div
-                className="w-full relative rounded-t-sm"
+                className="absolute bottom-0 flex flex-col items-center justify-end"
                 style={{
-                  height: Math.max(forecastH, 1),
-                  backgroundColor: isActive ? "var(--primary-alpha-12)" : "var(--primary-alpha-8)",
-                  borderLeft: "1px solid var(--primary-alpha-25)",
-                  borderRight: "1px solid var(--primary-alpha-25)",
-                  borderTop: "1px solid var(--primary-alpha-25)",
-                  transition: "background-color 0.1s",
+                  left: `${leftPct}%`,
+                  width: `${widthPct}%`,
+                  height: "100%",
+                  padding: "0 1px",
+                  cursor: "pointer",
                 }}
               >
-                {/* Scheduled fill */}
+                {/* Forecast outline bar */}
                 <div
-                  className="absolute bottom-0 left-0 right-0 rounded-t-sm"
+                  className="w-full relative rounded-t-sm"
                   style={{
-                    height: Math.min(scheduledH + overH, forecastH + overH),
-                    backgroundColor: deficit
-                      ? "var(--destructive-alpha-15)"
-                      : "var(--success-alpha-12)",
+                    height: Math.max(forecastH, 1),
+                    backgroundColor: "var(--primary-alpha-8)",
+                    borderLeft: "1px solid var(--primary-alpha-25)",
+                    borderRight: "1px solid var(--primary-alpha-25)",
+                    borderTop: "1px solid var(--primary-alpha-25)",
+                    transition: "background-color 0.1s",
                   }}
-                />
-                {/* Solid scheduled portion */}
-                <div
-                  className="absolute bottom-0 left-0 right-0"
-                  style={{
-                    height: scheduledH,
-                    backgroundColor: deficit ? "var(--destructive)" : "var(--chart-2)",
-                    opacity: isActive ? 0.8 : 0.6,
-                    borderRadius: "1px 1px 0 0",
-                    transition: "opacity 0.1s",
-                  }}
-                />
-                {/* Over-coverage */}
-                {overH > 0 && (
+                >
+                  {/* Scheduled fill */}
                   <div
-                    className="absolute left-0 right-0 rounded-t-sm"
+                    className="absolute bottom-0 left-0 right-0 rounded-t-sm"
                     style={{
-                      bottom: forecastH,
-                      height: overH,
-                      backgroundColor: "var(--chart-2)",
-                      opacity: 0.35,
+                      height: Math.min(scheduledH + overH, forecastH + overH),
+                      backgroundColor: deficit
+                        ? "var(--destructive-alpha-15)"
+                        : "var(--success-alpha-12)",
                     }}
                   />
-                )}
+                  {/* Solid scheduled portion */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0"
+                    style={{
+                      height: scheduledH,
+                      backgroundColor: deficit ? "var(--destructive)" : "var(--chart-2)",
+                      opacity: 0.6,
+                      borderRadius: "1px 1px 0 0",
+                      transition: "opacity 0.1s",
+                    }}
+                  />
+                  {/* Over-coverage */}
+                  {overH > 0 && (
+                    <div
+                      className="absolute left-0 right-0 rounded-t-sm"
+                      style={{
+                        bottom: forecastH,
+                        height: overH,
+                        backgroundColor: "var(--chart-2)",
+                        opacity: 0.35,
+                      }}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+            </Tooltip>
           );
         })}
       </div>
-
-      {/* Popover */}
-      {popoverData && anchorRect && (
-        <CoveragePopover
-          timeLabel={popoverData.timeLabel}
-          forecast={popoverData.forecast}
-          scheduled={popoverData.scheduled}
-          breakdown={popoverData.breakdown}
-          anchorRect={anchorRect}
-        />
-      )}
     </div>
   );
 }

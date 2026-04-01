@@ -336,25 +336,20 @@ interface NavButtonProps {
 
 function NavButton({ icon, isActive, onClick }: NavButtonProps) {
   return (
-    <div
-      className="shrink-0 w-full cursor-pointer"
-      style={{ height: 32, minHeight: 32, overflow: "clip" }}
-      onClick={onClick}
+    <Button
+      isIconOnly
+      variant="light"
+      onPress={onClick}
+      className="shrink-0 w-full"
+      style={{
+        height: 32,
+        minHeight: 32,
+        borderRadius: "var(--radius)",
+        backgroundColor: isActive ? "var(--background)" : "transparent",
+        transition: "background-color 0.15s",
+      }}
     >
-      <div
-        className="flex flex-row items-center justify-center size-full"
-        style={{
-          borderRadius: "var(--radius)",
-          backgroundColor: isActive ? "var(--background)" : "transparent",
-          minHeight: "inherit",
-          overflow: "clip",
-          transition: "background-color 0.15s",
-        }}
-      >
-        <div className="flex items-center justify-center size-full" style={{ padding: "0 12px", minHeight: "inherit" }}>
-          {icon}
-        </div>
-      </div>
-    </div>
+      {icon}
+    </Button>
   );
 }

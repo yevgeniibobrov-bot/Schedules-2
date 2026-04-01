@@ -1,5 +1,4 @@
-import React, { useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import React from "react";
 import { User, AlertTriangle } from "lucide-react";
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
 import { Divider } from "@fzwp/ui-kit/divider";
@@ -214,68 +213,59 @@ export function CurrentTimeIndicator({
 // ══════════════════════════════════════════════════════════════════════
 
 function MinorBadge() {
-  const [show, setShow] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const triggerRef = useRef<HTMLSpanElement>(null);
-
-  const handleEnter = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-    }
-    setShow(true);
-  };
-
   const restrictions = [
     { label: "Нічні зміни", value: "заборонено (22:00–06:00)", warn: true },
     { label: "Робочих днів/тижд.", value: "макс. 5" },
     { label: "Годин/тижд.", value: "макс. 36" },
   ];
 
+  const tooltipContent = (
+    <div style={{ minWidth: 200, maxWidth: 260 }}>
+      <div
+        className="px-3 py-1.5"
+        style={{ backgroundColor: "var(--warning-alpha-8)", borderBottom: "1px solid var(--border)" }}
+      >
+        <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-3)" }}>
+          Неповнолітній працівник
+        </span>
+      </div>
+      <div className="px-3 py-2 flex flex-col gap-1">
+        {restrictions.map((r) => (
+          <div key={r.label} className="flex items-center justify-between gap-3">
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{r.label}</span>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: r.warn ? "var(--chart-3)" : "var(--foreground)", whiteSpace: "nowrap" }}>{r.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <span className="inline-flex items-center flex-shrink-0">
-      <span
-        ref={triggerRef}
-        onMouseEnter={handleEnter}
-        onMouseLeave={() => setShow(false)}
-        className="inline-flex items-center justify-center cursor-help select-none"
-        style={{
-          height: 18,
-          fontSize: "var(--text-2xs)",
-          fontWeight: "var(--font-weight-semibold)" as any,
-          color: "var(--chart-3)",
-          backgroundColor: "var(--warning-alpha-8)",
-          display: "inline-flex",
-          alignItems: "center",
-          lineHeight: 1,
-          paddingLeft: 5,
-          paddingRight: 5,
-          borderRadius: 9999,
-        }}
+      <Tooltip
+        content={tooltipContent}
+        placement="top"
+        classNames={{ content: "p-0 rounded-[var(--radius)] overflow-hidden border border-[var(--border)] bg-[var(--popover)]" }}
       >
-        &lt;18
-      </span>
-      {show && pos && createPortal(
-        <div className="fixed pointer-events-none" style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}>
-          <div
-            className="rounded-[var(--radius)] overflow-hidden pointer-events-auto"
-            style={{ borderStyle: "solid", borderWidth: 1, borderColor: "var(--border)", backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)", minWidth: 200 }}
-          >
-            <div className="px-3 py-1.5" style={{ backgroundColor: "var(--warning-alpha-8)", borderBottom: "1px solid var(--border)" }}>
-              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-3)" }}>Неповнолітній працівник</span>
-            </div>
-            <div className="px-3 py-2 flex flex-col gap-1">
-              {restrictions.map((r) => (
-                <div key={r.label} className="flex items-center justify-between gap-3">
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{r.label}</span>
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: r.warn ? "var(--chart-3)" : "var(--foreground)", whiteSpace: "nowrap" }}>{r.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+        <span
+          className="inline-flex items-center justify-center cursor-help select-none"
+          style={{
+            height: 18,
+            fontSize: "var(--text-2xs)",
+            fontWeight: "var(--font-weight-semibold)" as any,
+            color: "var(--chart-3)",
+            backgroundColor: "var(--warning-alpha-8)",
+            display: "inline-flex",
+            alignItems: "center",
+            lineHeight: 1,
+            paddingLeft: 5,
+            paddingRight: 5,
+            borderRadius: 9999,
+          }}
+        >
+          &lt;18
+        </span>
+      </Tooltip>
     </span>
   );
 }
@@ -294,20 +284,8 @@ interface EmployeeHoursTooltipProps {
 }
 
 function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, overwork, children }: EmployeeHoursTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
   const MONTH_NAMES = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
   const currentMonth = MONTH_NAMES[2];
-
-  const handleEnter = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-    }
-    setIsOpen(true);
-  };
 
   const actualHours = Math.round(emp.workedHours * 0.79);
   const mktHours = emp.marketplaceHours || 0;
@@ -327,101 +305,99 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
   const absenceEntries = Object.entries(absenceSummary);
   const totalAbsenceDays = absenceEntries.reduce((s, [, v]) => s + v, 0);
 
-  return (
-    <div ref={triggerRef} onMouseEnter={handleEnter} onMouseLeave={() => setIsOpen(false)} onClick={(e) => e.stopPropagation()}>
-      {children}
-      {isOpen && pos && createPortal(
-        <div className="fixed pointer-events-none" style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}>
-          <div
-            className="rounded-[var(--radius)] overflow-hidden pointer-events-auto"
-            style={{
-              borderStyle: "solid", borderWidth: 1,
-              borderColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)",
-              minWidth: 220, maxWidth: 300,
-            }}
-          >
-            <div className="px-3 py-1.5" style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottom: "1px solid var(--border)" }}>
-              {overwork ? (
-                <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
-                </div>
-              ) : (
-                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
-              )}
+  const tooltipContent = (
+    <div style={{ minWidth: 220, maxWidth: 300 }}>
+      <div className="px-3 py-1.5" style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottom: "1px solid var(--border)" }}>
+        {overwork ? (
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
+          </div>
+        ) : (
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
+        )}
+      </div>
+      <div className="px-3 py-2 flex flex-col gap-1">
+        {overwork ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
             </div>
-            <div className="px-3 py-2 flex flex-col gap-1">
-              {overwork ? (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  {mktHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
-                    </div>
-                  )}
-                  <Divider />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
-                  </div>
-                  {mktHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
-                    </div>
-                  )}
-                  <Divider />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
             </div>
-            {totalAbsenceDays > 0 && (
-              <div className="px-3 py-1.5 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
-                {absenceEntries.map(([label, count]) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
-                    </div>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
-                      {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
-                    </span>
-                  </div>
-                ))}
+            {mktHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
               </div>
             )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
+            </div>
           </div>
-        </div>,
-        document.body
+        ) : (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
+            </div>
+            {mktHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{mktHours}г</span>
+              </div>
+            )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
+            </div>
+          </div>
+        )}
+      </div>
+      {totalAbsenceDays > 0 && (
+        <div className="px-3 py-1.5 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
+          {absenceEntries.map(([label, count]) => (
+            <div key={label} className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
+              </div>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
+                {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
+  );
+
+  return (
+    <Tooltip
+      content={tooltipContent}
+      placement="top"
+      classNames={{
+        content: `p-0 rounded-[var(--radius)] overflow-hidden bg-[var(--popover)] ${overwork ? "border border-[var(--destructive-alpha-15)]" : "border border-[var(--border)]"}`,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </Tooltip>
   );
 }
 

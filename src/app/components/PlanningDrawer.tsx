@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { createPortal } from "react-dom";
 import {
   X,
   Clock,
@@ -32,6 +31,8 @@ import { Textarea } from "@fzwp/ui-kit/textarea";
 import { Divider } from "@fzwp/ui-kit/divider";
 
 import { Tooltip } from "@fzwp/ui-kit/tooltip";
+import { Popover, PopoverTrigger, PopoverContent } from "@fzwp/ui-kit/popover";
+import { PopoverLayout } from "@fzwp/ui-kit/popover";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -631,7 +632,6 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
   const [draft, setDraft] = React.useState(value);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => { setDraft(value); }, [value]);
 
   // Scroll to the selected/matching item when dropdown opens
@@ -668,98 +668,74 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
     return TIME_OPTIONS.filter((t) => t.startsWith(cleaned) || t.includes(cleaned));
   }, [draft, value]);
 
-  // Close dropdown on outside click (check both container and portal dropdown)
-  React.useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        containerRef.current && !containerRef.current.contains(target) &&
-        listRef.current && !listRef.current.contains(target)
-      ) {
-        commit();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, commit]);
-
-  // Compute dropdown position based on input element
-  const [dropdownPos, setDropdownPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
-  React.useEffect(() => {
-    if (open && inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-    }
-  }, [open]);
-
   return (
-    <div ref={containerRef} className="relative" style={{ width: 82 }}>
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); if (!open) setOpen(true); }}
-          onFocus={() => { setOpen(true); setTimeout(() => inputRef.current?.select(), 0); }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { commit(); inputRef.current?.blur(); }
-            if (e.key === "Escape") { setDraft(value); setOpen(false); inputRef.current?.blur(); }
-            if (e.key === "ArrowDown" && !open) setOpen(true);
-          }}
-          className="w-full appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-          style={{
-            fontSize: "var(--text-sm)", color: "var(--foreground)",
-            borderStyle: "solid", borderWidth: 1,
-            borderColor: open ? "var(--ring)" : "var(--border)",
-            textAlign: "center",
-          }}
-          placeholder="ЧЧ:ХХ"
-          maxLength={5}
-        />
-        <ChevronDown
-          size={12}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
-        />
-      </div>
-      {open && dropdownPos && createPortal(
-        <div
-          ref={listRef}
-          className="fixed rounded-[var(--radius)] border border-[var(--border)] overflow-auto"
-          style={{
-            top: dropdownPos.top,
-            left: dropdownPos.left,
-            width: dropdownPos.width,
-            backgroundColor: "var(--popover)",
-            boxShadow: "var(--elevation-md)",
-            maxHeight: 200,
-            zIndex: 9999,
-          }}
-        >
-          {filtered.length > 0 ? filtered.map((t) => (
-            <div
-              key={t}
-              className="px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-[var(--muted)]"
-              style={{
-                fontSize: "var(--text-sm)",
-                color: t === value ? "var(--primary)" : "var(--foreground)",
-                fontWeight: (t === value ? "var(--font-weight-semibold)" : "var(--font-weight-normal)") as any,
-                backgroundColor: t === value ? "var(--primary-alpha-6)" : undefined,
-              }}
-              onMouseDown={(e) => { e.preventDefault(); handleSelect(t); }}
-            >
-              {t}
-            </div>
-          )) : (
-            <div className="px-2.5 py-2 text-center" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
-              Не знайдено
-            </div>
-          )}
-        </div>,
-        document.body
-      )}
-    </div>
+    <Popover
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) commit();
+        setOpen(isOpen);
+      }}
+      placement="bottom-start"
+    >
+      <PopoverTrigger asChild>
+        <div className="relative" style={{ width: 82 }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={draft}
+            onChange={(e) => { setDraft(e.target.value); if (!open) setOpen(true); }}
+            onFocus={() => { setOpen(true); setTimeout(() => inputRef.current?.select(), 0); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { commit(); inputRef.current?.blur(); }
+              if (e.key === "Escape") { setDraft(value); setOpen(false); inputRef.current?.blur(); }
+              if (e.key === "ArrowDown" && !open) setOpen(true);
+            }}
+            className="w-full appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
+            style={{
+              fontSize: "var(--text-sm)", color: "var(--foreground)",
+              borderStyle: "solid", borderWidth: 1,
+              borderColor: open ? "var(--ring)" : "var(--border)",
+              textAlign: "center",
+            }}
+            placeholder="ЧЧ:ХХ"
+            maxLength={5}
+          />
+          <ChevronDown
+            size={12}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
+          />
+        </div>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[82px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+        style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)", padding: 0 }}
+      >
+        <PopoverLayout>
+          <div ref={listRef} className="max-h-[200px] overflow-auto">
+            {filtered.length > 0 ? filtered.map((t) => (
+              <div
+                key={t}
+                className="px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-[var(--muted)]"
+                style={{
+                  fontSize: "var(--text-sm)",
+                  color: t === value ? "var(--primary)" : "var(--foreground)",
+                  fontWeight: (t === value ? "var(--font-weight-semibold)" : "var(--font-weight-normal)") as any,
+                  backgroundColor: t === value ? "var(--primary-alpha-6)" : undefined,
+                }}
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(t); }}
+              >
+                {t}
+              </div>
+            )) : (
+              <div className="px-2.5 py-2 text-center" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
+                Не знайдено
+              </div>
+            )}
+          </div>
+        </PopoverLayout>
+      </PopoverContent>
+    </Popover>
   );
 }
 

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
 import {
@@ -314,98 +313,69 @@ interface ShiftTooltipProps {
 }
 
 function ShiftTooltip({ shift, children, validationLevel, validationMessage }: ShiftTooltipProps) {
-  const [show, setShow] = useState(false);
-  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  const handleEnter = (e: React.MouseEvent) => {
-    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-    const el = (e.currentTarget.firstElementChild || e.currentTarget) as HTMLElement;
-    const rect = el.getBoundingClientRect();
-    setPos({ x: rect.left + rect.width / 2, y: rect.top - 4 });
-    enterTimerRef.current = setTimeout(() => setShow(true), 500);
-  };
-  const handleLeave = () => {
-    if (enterTimerRef.current) clearTimeout(enterTimerRef.current);
-    leaveTimerRef.current = setTimeout(() => setShow(false), 150);
-  };
-
-  useEffect(() => () => {
-    if (enterTimerRef.current) clearTimeout(enterTimerRef.current);
-    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
-  }, []);
-
   const segments = useMemo(() => buildTooltipSegments(shift), [shift]);
 
-  return (
-    <div ref={wrapRef} onMouseEnter={handleEnter} onMouseLeave={handleLeave} className="contents">
-      {children}
-      {show && typeof document !== "undefined" &&
-        (() => {
-          const tooltip = (
-            <div
-              className="fixed z-[9999] px-3 py-2.5 rounded-[var(--radius)] border border-[var(--border)] pointer-events-none"
-              style={{
-                top: pos.y,
-                left: pos.x,
-                transform: "translate(-50%, -100%)",
-                backgroundColor: "var(--popover)",
-                boxShadow: "var(--elevation-md)",
-                maxWidth: 300,
-              }}
-            >
-              <div className="flex flex-col gap-1">
-                {segments.map((seg, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    {seg.isBreak ? (
-                      <span
-                        className="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: "var(--border)" }}
-                      />
-                    ) : (
-                      <span
-                        className="inline-block w-2 h-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: seg.color || "var(--primary)" }}
-                      />
-                    )}
-                    <span style={{
-                      fontSize: "var(--text-xs)",
-                      fontWeight: (seg.isBreak ? "var(--font-weight-normal)" : "var(--font-weight-medium)") as any,
-                      color: seg.isBreak ? "var(--muted-foreground)" : "var(--foreground)",
-                    }}>
-                      {fmtTime(seg.start)}–{fmtTime(seg.end % 24 === 0 && seg.end >= 24 ? 24 : seg.end)}
-                    </span>
-                    <span style={{
-                      fontSize: "var(--text-xs)",
-                      fontWeight: "var(--font-weight-normal)" as any,
-                      color: seg.isBreak ? "var(--muted-foreground)" : "var(--muted-foreground)",
-                    }}>
-                      {seg.label}
-                    </span>
-                  </div>
-                ))}
-                {/* Validation block — only if there is a problem */}
-                {validationLevel && validationMessage && (
-                  <>
-                    <Divider className="my-1" />
-                    <div style={{
-                      fontSize: "12px",
-                      color: validationLevel === "error" ? "var(--destructive)" : "#F97316",
-                      fontWeight: "var(--font-weight-medium)" as any,
-                      lineHeight: 1.4,
-                    }}>
-                      {validationMessage}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          );
-          return createPortal(tooltip, document.body);
-        })()}
+  const tooltipContent = (
+    <div className="flex flex-col gap-1">
+      {segments.map((seg, i) => (
+        <div key={i} className="flex items-center gap-2">
+          {seg.isBreak ? (
+            <span
+              className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: "var(--border)" }}
+            />
+          ) : (
+            <span
+              className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: seg.color || "var(--primary)" }}
+            />
+          )}
+          <span style={{
+            fontSize: "var(--text-xs)",
+            fontWeight: (seg.isBreak ? "var(--font-weight-normal)" : "var(--font-weight-medium)") as any,
+            color: seg.isBreak ? "var(--muted-foreground)" : "var(--foreground)",
+          }}>
+            {fmtTime(seg.start)}–{fmtTime(seg.end % 24 === 0 && seg.end >= 24 ? 24 : seg.end)}
+          </span>
+          <span style={{
+            fontSize: "var(--text-xs)",
+            fontWeight: "var(--font-weight-normal)" as any,
+            color: "var(--muted-foreground)",
+          }}>
+            {seg.label}
+          </span>
+        </div>
+      ))}
+      {validationLevel && validationMessage && (
+        <>
+          <Divider className="my-1" />
+          <div style={{
+            fontSize: "12px",
+            color: validationLevel === "error" ? "var(--destructive)" : "var(--chart-3)",
+            fontWeight: "var(--font-weight-medium)" as any,
+            lineHeight: 1.4,
+          }}>
+            {validationMessage}
+          </div>
+        </>
+      )}
     </div>
+  );
+
+  return (
+    <Tooltip
+      content={tooltipContent}
+      placement="top"
+      delay={500}
+      closeDelay={150}
+      classNames={{
+        content: "px-3 py-2.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--popover)]",
+      }}
+    >
+      <div className="contents">
+        {children}
+      </div>
+    </Tooltip>
   );
 }
 

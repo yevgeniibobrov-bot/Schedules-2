@@ -1900,29 +1900,16 @@ interface EmployeeHoursTooltipProps {
 }
 
 function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, overwork, children }: EmployeeHoursTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
   const MONTH_NAMES = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
   const currentMonth = MONTH_NAMES[2]; // March 2026
 
-  // Multi-month check
   const weekStart = new Date(2026, 2, 2);
   const weekEnd = new Date(2026, 2, 8);
   const isCrossMonth = weekStart.getMonth() !== weekEnd.getMonth();
 
-  const handleEnter = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-    }
-    setIsOpen(true);
-  };
-
   const actualHours = Math.round(emp.workedHours * 0.79);
+  const mktHours = emp.marketplaceHours || 0;
 
-  // ── Compute absences + marketplace ──
   const ABSENCE_LABELS: Record<string, string> = {
     leave: "Відпустка",
     sick: "Лікарняний",
@@ -1940,152 +1927,129 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
   }
   const absenceEntries = Object.entries(absenceSummary);
   const totalAbsenceDays = absenceEntries.reduce((s, [, v]) => s + v, 0);
-  const mktHours = emp.marketplaceHours || 0;
 
-  return (
-    <div
-      ref={triggerRef}
-      onMouseEnter={handleEnter}
-      onMouseLeave={() => setIsOpen(false)}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {children}
-      {isOpen && pos && createPortal(
-        <div
-          className="fixed pointer-events-none"
-          style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}
-        >
-          <div
-            className="rounded-[var(--radius)] overflow-hidden pointer-events-auto"
-            style={{
-              borderStyle: "solid", borderWidth: 1,
-              borderTopColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderRightColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderBottomColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderLeftColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)",
-              minWidth: 220, maxWidth: 300,
-            }}
-          >
-            {/* Header */}
-            <div
-              className="px-3 py-1.5"
-              style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}
-            >
-              {overwork ? (
-                <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
-                </div>
-              ) : (
-                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
-              )}
+  const tooltipContent = (
+    <div style={{ minWidth: 220, maxWidth: 300 }}>
+      <div className="px-3 py-1.5" style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottom: "1px solid var(--border)" }}>
+        {overwork ? (
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
+          </div>
+        ) : (
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
+        )}
+      </div>
+      <div className="px-3 py-2 flex flex-col gap-1">
+        {overwork ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
             </div>
-            {/* Content */}
-            <div className="px-3 py-2 flex flex-col gap-1">
-              {overwork ? (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
-                    </div>
-                  )}
-                  <Divider />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
-                  </div>
-                  {!emp.isMinor && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
-                      <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
-                    </div>
-                  )}
-                </div>
-              ) : isCrossMonth ? (
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekStart.getMonth()]}</span>
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.6)} / {emp.monthlyNorm}г</span>
-                    </div>
-                  </div>
-                  <Divider />
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekEnd.getMonth()]}</span>
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.4)} / {emp.monthlyNorm}г</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
-                  </div>
-                  {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
-                    </div>
-                  )}
-                  <Divider />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
-                  </div>
-                  {!emp.isMinor && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
-                      <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
             </div>
-            {/* ── Absences ── */}
-            {totalAbsenceDays > 0 && (
-              <div
-                className="px-3 py-1.5 flex flex-col gap-0.5"
-                style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}
-              >
-                {absenceEntries.map(([label, count]) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
-                    </div>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
-                      {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
-                    </span>
-                  </div>
-                ))}
+            {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
+              </div>
+            )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
+            </div>
+            {!emp.isMinor && (
+              <div className="flex items-center justify-between gap-2">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
+                <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
               </div>
             )}
           </div>
-        </div>,
-        document.body
+        ) : isCrossMonth ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekStart.getMonth()]}</span>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.6)} / {emp.monthlyNorm}г</span>
+              </div>
+            </div>
+            <Divider />
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekEnd.getMonth()]}</span>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.4)} / {emp.monthlyNorm}г</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
+            </div>
+            {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
+              </div>
+            )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
+            </div>
+            {!emp.isMinor && (
+              <div className="flex items-center justify-between gap-2">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
+                <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {totalAbsenceDays > 0 && (
+        <div className="px-3 py-1.5 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
+          {absenceEntries.map(([label, count]) => (
+            <div key={label} className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
+              </div>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
+                {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
+  );
+
+  return (
+    <Tooltip
+      content={tooltipContent}
+      placement="top"
+      classNames={{
+        content: `p-0 rounded-[var(--radius)] overflow-hidden bg-[var(--popover)] ${overwork ? "border border-[var(--destructive-alpha-15)]" : "border border-[var(--border)]"}`,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </Tooltip>
   );
 }
