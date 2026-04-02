@@ -1,9 +1,6 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Drawer } from "@fzwp/ui-kit/drawer";
-import { Button } from "@fzwp/ui-kit/button";
-import { Input } from "@fzwp/ui-kit/input";
-import { Select, SelectItem } from "@fzwp/ui-kit/select";
+import { Thermometer } from "lucide-react";
 import {
   CloseMD,
   Clock,
@@ -23,8 +20,7 @@ import {
   PaperPlane,
   Star,
 } from "@fzwp/ui-kit/icons";
-// Keep Thermometer from lucide-react (no exact match in ui-kit)
-import { Thermometer } from "lucide-react";
+import { Button } from "@fzwp/ui-kit/button";
 import type { ShiftData } from "./ShiftCard";
 import { hasBlockingShift } from "./ShiftCard";
 import type { Employee, Department } from "./WeeklyTable";
@@ -702,7 +698,7 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
   return (
     <div ref={containerRef} className="relative" style={{ width: 82 }}>
       <div className="relative">
-        <Input
+        <input
           ref={inputRef}
           type="text"
           value={draft}
@@ -713,8 +709,13 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
             if (e.key === "Escape") { setDraft(value); setOpen(false); inputRef.current?.blur(); }
             if (e.key === "ArrowDown" && !open) setOpen(true);
           }}
-          className="w-full px-2 py-1 pr-6"
-          size="sm"
+          className="w-full appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
+          style={{
+            fontSize: "var(--text-sm)", color: "var(--foreground)",
+            borderStyle: "solid", borderWidth: 1,
+            borderColor: open ? "var(--ring)" : "var(--border)",
+            textAlign: "center",
+          }}
           placeholder="ЧЧ:ХХ"
           maxLength={5}
         />
@@ -799,8 +800,8 @@ function TypeSwitch({ value, onChange }: { value: TypeMode; onChange: (v: TypeMo
         return (
           <Button
             key={t}
+            variant="light"
             onPress={() => onChange(t)}
-            variant={active ? "solid" : "light"}
             className="flex-1 py-1.5 px-3 rounded-[var(--radius-sm)] transition-all"
             style={{
               fontSize: "var(--text-sm)",
@@ -858,15 +859,18 @@ function ActionCard({
   return (
     <Button
       variant="light"
+      fullWidth
       isDisabled={disabled}
       onPress={disabled ? undefined : onClick}
-      className="flex items-start gap-2.5 w-full px-3 py-2.5 rounded-[var(--radius)] transition-all text-left justify-start h-auto"
+      className="flex items-start gap-2.5 px-3 py-2.5 rounded-[var(--radius)] transition-all text-left justify-start"
       style={{
         backgroundColor: disabled ? "var(--muted)" : selected ? bgColor : "transparent",
         borderStyle: "solid",
         borderWidth: selected ? 1.5 : 1,
         borderColor: disabled ? "var(--border)" : selected ? color : "var(--border)",
         opacity: disabled ? 0.6 : 1,
+        height: "auto",
+        minWidth: 0,
       }}
     >
       <span className="mt-0.5 flex-shrink-0" style={{ color: disabled ? "var(--muted-foreground)" : color }}>{icon}</span>
@@ -941,6 +945,55 @@ export function PlanningDrawer({
   const [absenceType, setAbsenceType] = useState<AbsenceType>("vacation");
   const [absenceStartDay, setAbsenceStartDay] = useState(dayIndex ?? 0);
   const [absenceEndDay, setAbsenceEndDay] = useState(dayIndex ?? 0);
+
+  // ── Dropdown states (replacing native <select> elements) ───────────
+  const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
+  const deptDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [openUnitDropdownId, setOpenUnitDropdownId] = useState<string | null>(null);
+  const [openBreakDurationId, setOpenBreakDurationId] = useState<string | null>(null);
+  const [empDropdownOpen, setEmpDropdownOpen] = useState(false);
+  const empDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absTypeDropdownOpen, setAbsTypeDropdownOpen] = useState(false);
+  const absTypeDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absStartDropdownOpen, setAbsStartDropdownOpen] = useState(false);
+  const absStartDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absEndDropdownOpen, setAbsEndDropdownOpen] = useState(false);
+  const absEndDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  React.useEffect(() => {
+    if (!deptDropdownOpen && !openUnitDropdownId && !openBreakDurationId && !empDropdownOpen && !absTypeDropdownOpen && !absStartDropdownOpen && !absEndDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (deptDropdownOpen && deptDropdownRef.current && !deptDropdownRef.current.contains(target)) {
+        setDeptDropdownOpen(false);
+      }
+      if (empDropdownOpen && empDropdownRef.current && !empDropdownRef.current.contains(target)) {
+        setEmpDropdownOpen(false);
+      }
+      if (absTypeDropdownOpen && absTypeDropdownRef.current && !absTypeDropdownRef.current.contains(target)) {
+        setAbsTypeDropdownOpen(false);
+      }
+      if (absStartDropdownOpen && absStartDropdownRef.current && !absStartDropdownRef.current.contains(target)) {
+        setAbsStartDropdownOpen(false);
+      }
+      if (absEndDropdownOpen && absEndDropdownRef.current && !absEndDropdownRef.current.contains(target)) {
+        setAbsEndDropdownOpen(false);
+      }
+      // Unit and break duration dropdowns close if click is outside their containers
+      // (handled via data attributes on the containers)
+      if (openUnitDropdownId) {
+        const unitContainer = document.querySelector(`[data-unit-dropdown="${openUnitDropdownId}"]`);
+        if (unitContainer && !unitContainer.contains(target)) setOpenUnitDropdownId(null);
+      }
+      if (openBreakDurationId) {
+        const breakContainer = document.querySelector(`[data-break-dropdown="${openBreakDurationId}"]`);
+        if (breakContainer && !breakContainer.contains(target)) setOpenBreakDurationId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [deptDropdownOpen, openUnitDropdownId, openBreakDurationId, empDropdownOpen, absTypeDropdownOpen, absStartDropdownOpen, absEndDropdownOpen]);
 
   // Resolve current selections
   const activeDept = (allDepartments ?? [department]).find((d) => d.id === selectedDeptId) ?? department;
@@ -1323,7 +1376,7 @@ export function PlanningDrawer({
     }
     return "Огляд працівника";
   })();
-  const HeaderIcon = typeMode === "absence" ? CalendarDays : isShiftOrCreate ? Clock : User01;
+  const HeaderIcon = typeMode === "absence" ? CalendarDays : isShiftOrCreate ? Clock : User;
 
   // ── Button labels ───────────────────────────────────────────────────
   const primaryButtonLabel = (() => {
@@ -1354,8 +1407,11 @@ export function PlanningDrawer({
   contextDate.setDate(WEEK_START.getDate() + contextDayIdx);
 
   const drawerContent = (
-    <Drawer opened={true} onOpenChange={(open) => !open && onClose()} placement="right" size="sm">
-      <div className="flex flex-col h-full bg-[var(--card)]">
+    <>
+      {/* Overlay */}
+      <div className="fixed inset-0 z-39 bg-black/45" onClick={onClose} />
+
+      <div className="fixed top-0 right-0 bottom-0 z-40 w-[380px] bg-[var(--card)] flex flex-col" style={{ borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: "var(--border)", boxShadow: "var(--elevation-lg)" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}>
         <div className="flex items-center gap-2">
@@ -1364,7 +1420,7 @@ export function PlanningDrawer({
             {headerTitle}
           </span>
         </div>
-        <Button isIconOnly variant="light" size="sm" onPress={onClose} className="flex-shrink-0">
+        <Button isIconOnly variant="light" size="sm" onPress={onClose} className="p-1 rounded-[var(--radius-sm)] flex-shrink-0">
           <CloseMD size={18} style={{ color: "var(--muted-foreground)" }} />
         </Button>
       </div>
@@ -1384,7 +1440,7 @@ export function PlanningDrawer({
           const isOpen = !isExchange && !isProposalCard && !hasEmployee;
           const bg = isExchange ? "var(--purple-alpha-5)" : isProposalCard ? "var(--primary-alpha-5)" : isOpen ? "var(--muted)" : "var(--success-alpha-5)";
           const iconColor = isExchange ? "var(--chart-5)" : isProposalCard ? "var(--primary)" : isOpen ? "var(--muted-foreground)" : "var(--chart-2)";
-          const StatusIcon = isExchange ? ArrowLeftRight : isProposalCard ? PaperPlane : isOpen ? UserAdd : User01;
+          const StatusIcon = isExchange ? ArrowRightLeft : isProposalCard ? PaperPlane : isOpen ? UserAdd : User01;
           const title = isExchange ? "Зміна біржі" : isProposalCard ? "Персональна пропозиція" : isOpen ? "Відкрита зміна" : "Призначена працівнику";
           const desc = isExchange
             ? "Видима всім відповідним працівникам на біржі."
@@ -1440,24 +1496,62 @@ export function PlanningDrawer({
               {/* Employee selector — primary control for shift type */}
               <div className="flex flex-col gap-1">
                 <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Працівник</span>
-                <Select
-                  selectedKey={selectedEmpId}
-                  onSelectionChange={(key) => {
-                    const val = String(key);
-                    setSelectedEmpId(val);
-                    if (!val) { setShiftActionStatus("standard"); }
-                  }}
-                  placeholder={typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
-                  className="w-full"
-                  size="sm"
-                >
-                  <SelectItem key="">
-                    {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
-                  </SelectItem>
-                  {allEmpList.map((e) => (
-                    <SelectItem key={e.id}>{e.name} — {e.position}</SelectItem>
-                  ))}
-                </Select>
+                <div className="relative" ref={empDropdownRef}>
+                  <Button
+                    variant="bordered"
+                    size="sm"
+                    fullWidth
+                    onPress={() => setEmpDropdownOpen(!empDropdownOpen)}
+                    endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: empDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                    className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                    style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)" }}
+                  >
+                    <span className="truncate text-left flex-1">
+                      {selectedEmpId
+                        ? (() => { const emp = allEmpList.find((e) => e.id === selectedEmpId); return emp ? `${emp.name} — ${emp.position}` : ""; })()
+                        : (typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)")}
+                    </span>
+                  </Button>
+                  {empDropdownOpen && (
+                    <div
+                      className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                      style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                    >
+                      <div className="max-h-[200px] overflow-y-auto">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          fullWidth
+                          onPress={() => { setSelectedEmpId(""); setShiftActionStatus("standard"); setEmpDropdownOpen(false); }}
+                          className="flex items-center justify-start px-3 py-2"
+                          style={{ backgroundColor: !selectedEmpId ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                        >
+                          <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: !selectedEmpId ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: !selectedEmpId ? "var(--primary)" : "var(--muted-foreground)" }}>
+                            {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
+                          </span>
+                        </Button>
+                        {allEmpList.map((e) => {
+                          const isActive = e.id === selectedEmpId;
+                          return (
+                            <Button
+                              key={e.id}
+                              variant="light"
+                              size="sm"
+                              fullWidth
+                              onPress={() => { setSelectedEmpId(e.id); setEmpDropdownOpen(false); }}
+                              className="flex items-center justify-start px-3 py-2"
+                              style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                            >
+                              <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                {e.name} — {e.position}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {typeMode === "shift" && (() => {
                   if (shiftActionStatus === "proposal" && hasEmployee) return (
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--chart-5)" }}>
@@ -1547,16 +1641,46 @@ export function PlanningDrawer({
                   {/* Absence Type */}
                   <div className="flex flex-col gap-1">
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Тип відсутності</span>
-                    <Select
-                      selectedKey={absenceType}
-                      onSelectionChange={(key) => setAbsenceType(String(key) as AbsenceType)}
-                      className="w-full"
-                      size="sm"
-                    >
-                      <SelectItem key="vacation">Відпустка</SelectItem>
-                      <SelectItem key="sick">Лікарняний</SelectItem>
-                      <SelectItem key="other">Інше</SelectItem>
-                    </Select>
+                    <div className="relative" ref={absTypeDropdownRef}>
+                      <Button
+                        variant="bordered"
+                        size="sm"
+                        fullWidth
+                        onPress={() => setAbsTypeDropdownOpen(!absTypeDropdownOpen)}
+                        endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absTypeDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                        className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                        style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
+                      >
+                        <span className="truncate text-left flex-1">{ABSENCE_TYPE_CONFIG[absenceType].label}</span>
+                      </Button>
+                      {absTypeDropdownOpen && (
+                        <div
+                          className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                          style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                        >
+                          <div className="max-h-[200px] overflow-y-auto">
+                            {(["vacation", "sick", "other"] as AbsenceType[]).map((t) => {
+                              const isActive = t === absenceType;
+                              return (
+                                <Button
+                                  key={t}
+                                  variant="light"
+                                  size="sm"
+                                  fullWidth
+                                  onPress={() => { setAbsenceType(t); setAbsTypeDropdownOpen(false); }}
+                                  className="flex items-center justify-start px-3 py-2"
+                                  style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                >
+                                  <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                    {ABSENCE_TYPE_CONFIG[t].label}
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Absence type preview chip */}
@@ -1574,30 +1698,92 @@ export function PlanningDrawer({
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Початок</span>
-                      <Select
-                        selectedKey={String(absenceStartDay)}
-                        onSelectionChange={(key) => {
-                          const v = Number(key);
-                          setAbsenceStartDay(v);
-                          if (absenceEndDay < v) setAbsenceEndDay(v);
-                        }}
-                        className="w-full"
-                        size="sm"
-                      >
-                        {DAY_LABELS.map((d, i) => <SelectItem key={String(i)}>{d}</SelectItem>)}
-                      </Select>
+                      <div className="relative" ref={absStartDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setAbsStartDropdownOpen(!absStartDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absStartDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
+                        >
+                          <span className="truncate text-left flex-1">{DAY_LABELS[absenceStartDay]}</span>
+                        </Button>
+                        {absStartDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {DAY_LABELS.map((d, i) => {
+                                const isActive = i === absenceStartDay;
+                                return (
+                                  <Button
+                                    key={i}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { setAbsenceStartDay(i); if (absenceEndDay < i) setAbsenceEndDay(i); setAbsStartDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-foreground)", marginTop: 16 }}>до</span>
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Кінець</span>
-                      <Select
-                        selectedKey={String(absenceEndDay)}
-                        onSelectionChange={(key) => setAbsenceEndDay(Number(key))}
-                        className="w-full"
-                        size="sm"
-                      >
-                        {DAY_LABELS.map((d, i) => <SelectItem key={String(i)} isDisabled={i < absenceStartDay}>{d}</SelectItem>)}
-                      </Select>
+                      <div className="relative" ref={absEndDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setAbsEndDropdownOpen(!absEndDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absEndDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
+                        >
+                          <span className="truncate text-left flex-1">{DAY_LABELS[absenceEndDay]}</span>
+                        </Button>
+                        {absEndDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {DAY_LABELS.map((d, i) => {
+                                const isActive = i === absenceEndDay;
+                                const isDisabled = i < absenceStartDay;
+                                return (
+                                  <Button
+                                    key={i}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    isDisabled={isDisabled}
+                                    onPress={() => { setAbsenceEndDay(i); setAbsEndDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0, opacity: isDisabled ? 0.4 : 1 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -1618,14 +1804,46 @@ export function PlanningDrawer({
                   {allDepartments && allDepartments.length > 1 && dayIndex == null && (
                     <div className="flex flex-col gap-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Відділ</span>
-                      <Select
-                        selectedKey={selectedDeptId}
-                        onSelectionChange={(key) => setSelectedDeptId(String(key))}
-                        className="w-full"
-                        size="sm"
-                      >
-                        {allDepartments.map((d) => <SelectItem key={d.id}>{d.name}</SelectItem>)}
-                      </Select>
+                      <div className="relative" ref={deptDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: deptDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
+                        >
+                          <span className="truncate text-left flex-1">{allDepartments.find((d) => d.id === selectedDeptId)?.name ?? "Оберіть відділ..."}</span>
+                        </Button>
+                        {deptDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {allDepartments.map((d) => {
+                                const isActive = d.id === selectedDeptId;
+                                return (
+                                  <Button
+                                    key={d.id}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { setSelectedDeptId(d.id); setDeptDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d.name}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
 
@@ -1833,15 +2051,58 @@ export function PlanningDrawer({
                     </div>
                     <div className="px-3 py-2 flex items-center gap-2">
                       <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>Дільниця</span>
-                      <Select
-                        selectedKey={block.unit}
-                        onSelectionChange={(key) => updateBlock(block.id, "unit", String(key))}
-                        placeholder="Оберіть дільницю..."
-                        className="flex-1"
-                        size="sm"
-                      >
-                        {availableUnits.map((u) => <SelectItem key={u}>{u}</SelectItem>)}
-                      </Select>
+                      <div className="relative flex-1" data-unit-dropdown={block.id}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setOpenUnitDropdownId(openUnitDropdownId === block.id ? null : block.id)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: openUnitDropdownId === block.id ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: block.unit ? "var(--foreground)" : "var(--muted-foreground)" }}
+                        >
+                          <span className="truncate text-left flex-1">{block.unit || "Оберіть дільницю..."}</span>
+                        </Button>
+                        {openUnitDropdownId === block.id && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              <Button
+                                variant="light"
+                                size="sm"
+                                fullWidth
+                                onPress={() => { updateBlock(block.id, "unit", ""); setOpenUnitDropdownId(null); }}
+                                className="flex items-center justify-start px-3 py-2"
+                                style={{ backgroundColor: !block.unit ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                              >
+                                <span className="flex-1 text-left" style={{ fontSize: "var(--text-sm)", fontWeight: !block.unit ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: !block.unit ? "var(--primary)" : "var(--muted-foreground)" }}>
+                                  Оберіть дільницю...
+                                </span>
+                              </Button>
+                              {availableUnits.map((u) => {
+                                const isActive = block.unit === u;
+                                return (
+                                  <Button
+                                    key={u}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { updateBlock(block.id, "unit", u); setOpenUnitDropdownId(null); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {u}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     {block.unit && (unitRecommendations[block.unit] || []).length > 0 && (
@@ -1861,13 +2122,13 @@ export function PlanningDrawer({
                                   b.id === block.id ? { ...b, start: rec.start, end: rec.end } : b
                                 ));
                               }}
-                              className="px-1.5 py-0.5 rounded-[var(--radius-sm)]"
+                              className="px-1.5 py-0.5 rounded-[var(--radius-sm)] transition-colors"
                               style={{
                                 fontSize: "var(--text-2xs)",
                                 fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
+                                color: isActive ? "var(--background)" : "var(--primary)",
+                                backgroundColor: isActive ? "var(--primary)" : "var(--primary-alpha-10)",
                                 whiteSpace: "nowrap",
-                                minWidth: "auto",
-                                height: "auto",
                               }}
                             >
                               {rec.label}
@@ -1892,12 +2153,9 @@ export function PlanningDrawer({
                   </div>
                 );
               })}
-              <Button
-                variant="bordered"
-                onPress={addBlock}
-                startContent={<AddPlus size={14} />}
-                className="w-full py-2 flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)]"
-                style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", borderStyle: "dashed" }}
+              <Button variant="bordered" color="primary" fullWidth size="sm" onPress={addBlock} startContent={<AddPlus size={14} />}
+                className="justify-center"
+                style={{ borderStyle: "dashed" }}
               >
                 Додати частину
               </Button>
@@ -1928,17 +2186,43 @@ export function PlanningDrawer({
                   {breakEntries.map((brk) => (
                     <div key={brk.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)]" style={{ backgroundColor: "var(--muted)" }}>
                       {/* Duration selector */}
-                      <Select
-                        selectedKey={String(brk.durationMin)}
-                        onSelectionChange={(key) => updateBreakDuration(brk.id, Number(key))}
-                        size="sm"
-                        className="w-20"
-                      >
-                        <SelectItem key="30">30 хв</SelectItem>
-                        <SelectItem key="60">60 хв</SelectItem>
-                        <SelectItem key="90">90 хв</SelectItem>
-                        <SelectItem key="120">120 хв</SelectItem>
-                      </Select>
+                      <div className="relative" data-break-dropdown={brk.id}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          onPress={() => setOpenBreakDurationId(openBreakDurationId === brk.id ? null : brk.id)}
+                          endContent={<ChevronDown size={12} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: openBreakDurationId === brk.id ? "rotate(180deg)" : undefined }} />}
+                          className="px-2 py-1 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", width: 90 }}
+                        >
+                          {brk.durationMin} хв
+                        </Button>
+                        {openBreakDurationId === brk.id && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)", minWidth: 90 }}
+                          >
+                            {[30, 60, 90, 120].map((dur) => {
+                              const isActive = brk.durationMin === dur;
+                              return (
+                                <Button
+                                  key={dur}
+                                  variant="light"
+                                  size="sm"
+                                  fullWidth
+                                  onPress={() => { updateBreakDuration(brk.id, dur); setOpenBreakDurationId(null); }}
+                                  className="flex items-center justify-start px-3 py-1.5"
+                                  style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                >
+                                  <span style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                    {dur} хв
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
 
                       {/* Start time */}
                       <TimeInput value={brk.startTime} onChange={(v) => updateBreakStart(brk.id, v)} />
@@ -1958,21 +2242,21 @@ export function PlanningDrawer({
               <div className="flex items-center gap-2">
                 <Button
                   variant="bordered"
+                  color="primary"
                   size="sm"
                   onPress={() => addBreak(30)}
                   startContent={<AddPlus size={13} />}
-                  className="px-2.5 py-1.5 rounded-[var(--radius-sm)]"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", borderStyle: "dashed" }}
+                  style={{ borderStyle: "dashed" }}
                 >
                   30 хв
                 </Button>
                 <Button
                   variant="bordered"
+                  color="primary"
                   size="sm"
                   onPress={() => addBreak(60)}
                   startContent={<AddPlus size={13} />}
-                  className="px-2.5 py-1.5 rounded-[var(--radius-sm)]"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", borderStyle: "dashed" }}
+                  style={{ borderStyle: "dashed" }}
                 >
                   60 хв
                 </Button>
@@ -2027,6 +2311,7 @@ export function PlanningDrawer({
             <Button
               variant="bordered"
               color="danger"
+              fullWidth
               onPress={() => {
                 onDeleteShift({
                   deptId: selectedDeptId,
@@ -2036,23 +2321,20 @@ export function PlanningDrawer({
                 });
                 onClose();
               }}
+              size="md"
               startContent={<TrashFull size={13} />}
-              className="w-full h-10 rounded-[var(--radius)]"
+              className="justify-center"
               style={{ marginBottom: 8 }}
             >
               Видалити зміну
             </Button>
           )}
         <div className="flex items-center gap-2">
-          <Button
-            variant="bordered"
-            onPress={onClose}
-            className="px-4 py-2 rounded-[var(--radius)]"
-            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}
-          >
+          <Button variant="bordered" color="default" size="md" onPress={onClose}>
             Скасувати
           </Button>
           <Button
+            color="primary"
             isDisabled={isBlocked}
             onPress={() => {
               if (isBlocked) return;
@@ -2119,31 +2401,32 @@ export function PlanningDrawer({
               }
               onClose();
             }}
-            startContent={hasHardErrors ? <StopSign size={14} /> : undefined}
-            className="flex-1 py-2 rounded-[var(--radius)] transition-opacity"
+            variant="solid"
+            size="md"
+            className="flex-1"
             style={{
-              fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any,
-              color: "var(--primary-foreground)",
               backgroundColor: isBlocked
                 ? "var(--muted-foreground)"
                 : typeMode === "absence"
                   ? ABSENCE_TYPE_CONFIG[absenceType].color
                   : shiftActionStatus === "marketplace"
                     ? "var(--chart-5)"
-                    : shiftActionStatus === "proposal"
-                      ? "var(--primary)"
-                      : "var(--primary)",
-              opacity: isBlocked ? 0.5 : 1,
+                    : undefined,
             }}
           >
-            {primaryButtonLabel}
+            {hasHardErrors ? (
+              <span className="inline-flex items-center gap-1.5 justify-center"><StopSign size={14} />{primaryButtonLabel}</span>
+            ) : (
+              primaryButtonLabel
+            )}
           </Button>
         </div>
         </div>
       )}
       </div>
-    </Drawer>
+    </>
   );
 
-  return drawerContent;
+  if (typeof document === "undefined") return drawerContent;
+  return createPortal(drawerContent, document.body);
 }

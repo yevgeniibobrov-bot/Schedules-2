@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Target } from "lucide-react";
 import { ChevronLeft, ChevronRight, ChevronDown, Printer, PaperPlane, CircleWarning, Layers, CloseMD, Check, EditPencil01, CircleCheck, Undo, Expand, Shrink, ChartBarVertical, ArrowLeftRight } from "@fzwp/ui-kit/icons";
 import { Button } from "@fzwp/ui-kit/button";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@fzwp/ui-kit/modal";
 
 import type { Department } from "./WeeklyTable";
 import { ValidationModal } from "./ValidationModal";
@@ -763,69 +764,41 @@ export function Header({
     </header>
 
     {/* ── Publish Confirmation Modal ── */}
-    {showPublishModal && (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center"
-        style={{ backgroundColor: "var(--overlay)" }}
-        onClick={() => setShowPublishModal(false)}
-      >
-        <div
-          className="w-full max-w-[400px] mx-4 rounded-[var(--radius)] border border-[var(--border)]"
-          style={{
-            backgroundColor: "var(--card)",
-            boxShadow: "var(--elevation-lg)",
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Modal header */}
-          <div className="px-5 pt-5 pb-1">
-            <span
-              style={{
-                fontSize: "var(--text-lg)",
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--foreground)",
-              }}
-            >
-              Відправити розклад?
-            </span>
-          </div>
-
-          {/* Modal body */}
-          <div className="px-5 py-3">
-            <span
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-normal)",
-                color: "var(--muted-foreground)",
-                lineHeight: 1.5,
-              }}
-            >
-              Це зробить розклад видимим для працівників.
-            </span>
-          </div>
-
-          {/* Modal actions */}
-          <div className="flex items-center justify-end gap-2 px-5 pb-5 pt-2">
-            <Button
-              variant="bordered"
-              size="sm"
-              onPress={() => setShowPublishModal(false)}
-            >
-              Скасувати
-            </Button>
-            <Button
-              color="primary"
-              variant="solid"
-              size="sm"
-              onPress={handlePublishConfirm}
-              startContent={<PaperPlane size={14} />}
-            >
-              Відправити
-            </Button>
-          </div>
-        </div>
-      </div>
-    )}
+    <Modal isOpen={showPublishModal} onOpenChange={(open) => { if (!open) setShowPublishModal(false); }} size="sm">
+      <ModalContent>
+        <ModalHeader>Відправити розклад?</ModalHeader>
+        <ModalBody>
+          <span
+            style={{
+              fontSize: "var(--text-sm)",
+              fontWeight: "var(--font-weight-normal)",
+              color: "var(--muted-foreground)",
+              lineHeight: 1.5,
+            }}
+          >
+            Це зробить розклад видимим для працівників.
+          </span>
+        </ModalBody>
+        <ModalFooter className="flex items-center justify-end gap-2">
+          <Button
+            variant="bordered"
+            size="sm"
+            onPress={() => setShowPublishModal(false)}
+          >
+            Скасувати
+          </Button>
+          <Button
+            color="primary"
+            variant="solid"
+            size="sm"
+            onPress={handlePublishConfirm}
+            startContent={<PaperPlane size={14} />}
+          >
+            Відправити
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
 
     {/* ── Validation Modal ── */}
     {showValidationModal && (
