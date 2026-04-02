@@ -862,7 +862,7 @@ function ActionCard({
       fullWidth
       isDisabled={disabled}
       onPress={disabled ? undefined : onClick}
-      className="flex items-start gap-2.5 px-3 py-2.5 rounded-[var(--radius)] transition-all text-left justify-start"
+      className="flex items-start gap-2.5 px-3 py-2.5 rounded-[var(--radius)] transition-all text-left justify-start whitespace-normal min-w-0!"
       style={{
         backgroundColor: disabled ? "var(--muted)" : selected ? bgColor : "transparent",
         borderStyle: "solid",
@@ -870,7 +870,6 @@ function ActionCard({
         borderColor: disabled ? "var(--border)" : selected ? color : "var(--border)",
         opacity: disabled ? 0.6 : 1,
         height: "auto",
-        minWidth: 0,
       }}
     >
       <span className="mt-0.5 flex-shrink-0" style={{ color: disabled ? "var(--muted-foreground)" : color }}>{icon}</span>
@@ -878,7 +877,7 @@ function ActionCard({
         <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: selected ? color : "var(--foreground)" }}>
           {title}
         </span>
-        <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
+        <span className="whitespace-normal" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4, wordBreak: "break-word" }}>
           {disabled && disabledHint ? disabledHint : description}
         </span>
       </div>
