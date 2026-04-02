@@ -1,49 +1,65 @@
-# PlanningDrawer — UI Kit Migration
+# PlanningDrawer
 
-## Status
-**Migrated**
+Side drawer panel for creating and editing shifts. Supports multiple modes: editing an existing shift, viewing employee details, creating a new assigned shift, or creating an open shift. Includes time block management, break configuration, sub-unit assignment, absence type selection, and marketplace/exchange options.
 
-## UI Kit Components Used
-- `Button` from `@fzwp/ui-kit/button`
+## Props
 
-## Migration Changes
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| mode | `DrawerMode` | Yes | Drawer operation mode: `"shift"` (edit), `"employee"` (view), `"create"` (new shift), `"create-open"` (new open shift) |
+| employee | `Employee` | Yes | Target employee for the shift |
+| department | `Department` | Yes | Department context |
+| shift | `ShiftData` | No | Existing shift data (for edit mode) |
+| dayIndex | `number` | No | Day index for the shift (0=Mon, 6=Sun) |
+| onClose | `() => void` | Yes | Close the drawer |
+| allDepartments | `Department[]` | No | All departments for department selector in create mode |
+| allEmployees | `Employee[]` | No | All employees for employee selector |
+| isOpenShift | `boolean` | No | Whether the shift being edited is an open/exchange shift |
+| onCreateShift | `(params) => void` | No | Callback when a new shift is created |
+| onSaveShift | `(params) => void` | No | Callback when an existing shift is saved |
+| onDeleteShift | `(params) => void` | No | Callback when a shift is deleted |
 
-### Buttons (12 native `<button>` replaced with `<Button>`)
+## UI Kit Components
 
-- **ActionCard component** — now uses `<Button>` with `fullWidth`, `whitespace-normal`, `min-w-0!` classes to preserve layout behavior of the original block-level buttons.
-- **TypeSwitch** — uses `<Button variant="light">` for toggle-style controls.
-- **Footer actions**:
-  - "Скасувати" — `<Button variant="bordered" color="default" size="md">`
-  - "Зберегти" — `<Button variant="solid" color="primary" size="md">`
-  - "Видалити зміну" — `<Button variant="bordered" color="danger" fullWidth size="md">`
-- **Add-block / add-break buttons** — `<Button variant="bordered" color="primary">` with inline `borderStyle: "dashed"` to replicate the original dashed-border add affordance.
+| Component | Import | Role |
+|-----------|--------|------|
+| Button | `@fzwp/ui-kit/button` | Action buttons, time controls, toggles, save/delete/close |
+| Icons (CloseMD, Clock, User01, AddPlus, TrashFull, CalendarDays, Leaf, ArrowLeftRight, PaperPlane, Star, etc.) | `@fzwp/ui-kit/icons` | Close button, time/user/shift type icons, absence indicators, marketplace icons |
 
-### Selects (7 native `<select>` replaced with Button+dropdown pattern)
+## Key Features
 
-The following selects were converted to a `<Button>` trigger paired with a dropdown menu pattern:
+- Slide-in drawer from the right side of the screen
+- Type mode switch between shift and absence creation
+- Time block editor: add/remove time blocks with start/end/unit selectors
+- Break configuration with duration and start time
+- Sub-unit assignment per time block
+- Employee selector with search and department context
+- Department selector for cross-department shift creation
+- Shift type selection: standard, exchange (marketplace), proposal
+- Absence type selection: vacation, sick leave, other
+- Duration calculation displayed in real-time
+- Employee hours summary (monthly norm, worked, remaining)
+- Minor employee restrictions display
+- Blocking shift detection (prevents creation when employee has leave/sick)
+- Validation warnings for overlapping shifts and hour limits
+- Delete confirmation for existing shifts
+- Portal-based rendering for overlay positioning
 
-- Department selector
-- Employee selector
-- Unit selector
-- Absence type selector
-- Day selectors
-- Break duration selector
+## Usage
 
-This approach was chosen because `@fzwp/ui-kit` does not provide a direct `<Select>` component; the Button+dropdown combination is the established UI Kit pattern for controlled selection.
-
-### Import Added
 ```tsx
-import { Button } from "@fzwp/ui-kit/button";
+<PlanningDrawer
+  mode="create"
+  employee={selectedEmployee}
+  department={currentDept}
+  dayIndex={2}
+  onClose={() => setDrawerOpen(false)}
+  allDepartments={departments}
+  onCreateShift={handleCreateShift}
+/>
 ```
 
-## Kept As-Is (with reason)
+## Dependencies
 
-| Element | Reason |
-|---------|--------|
-| `Thermometer` icon from `lucide-react` | No equivalent icon exists in `@fzwp/ui-kit/icons`. |
-| `TimeInput` component | Complex custom combobox with portal rendering, keyboard navigation, and time parsing logic. No UI Kit equivalent provides this level of specialized behavior. Migrating would require a full rewrite with no clear benefit. |
-
-## Notes
-- This was the largest migration target in the Schedules module (12 buttons + 7 selects).
-- The `min-w-0!` important utility on ActionCard buttons prevents flex overflow issues that surfaced after switching from plain `<button>` to `<Button>`.
-- The dashed border on add-block/add-break buttons uses inline `style` because Tailwind's `border-dashed` alone does not match the original design when combined with `variant="bordered"`.
+- `./ShiftCard` -- `ShiftData` type, `hasBlockingShift` utility
+- `./WeeklyTable` -- `Employee`, `Department` types
