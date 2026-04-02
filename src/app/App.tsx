@@ -1448,7 +1448,6 @@ export default function App() {
                 issueEmployeeIds={issueEmployeeIds}
                 issueDeptIds={issueDeptIds}
                 readOnly={isReadOnly}
-                isPastWeek={weekIndex < CURRENT_WEEK_INDEX}
               />
             ) : (
               <DayView
