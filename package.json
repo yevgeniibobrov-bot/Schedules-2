@@ -8,7 +8,7 @@
     "dev": "vite"
   },
   "dependencies": {
-    "@fzwp/ui-kit": "file:../fzwp-ui-kit-fresh",
+    "@fzwp/ui-kit": "^3.29.1",
     "clsx": "2.1.1",
     "lucide-react": "0.487.0",
     "react": "18.3.1",
