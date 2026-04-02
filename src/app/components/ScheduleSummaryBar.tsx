@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertTriangle, CheckCircle2, Clock, ArrowLeftRight } from "lucide-react";
+import { TriangleWarning, CircleCheck, Clock, ArrowLeftRight } from "@fzwp/ui-kit/icons";
 import type { Department } from "./WeeklyTable";
 
 interface ScheduleSummaryBarProps {
@@ -74,7 +74,7 @@ export function ScheduleSummaryBar({
       <div className="flex items-center gap-1.5">
         {gapIsDeficit ? (
           <>
-            <AlertTriangle size={14} style={{ color: "var(--destructive)", flexShrink: 0 }} />
+            <TriangleWarning size={14} style={{ color: "var(--destructive)", flexShrink: 0 }} />
             <span style={{ ...labelStyle, color: "var(--muted-foreground)" }}>Нестача</span>
             <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)", whiteSpace: "nowrap" as const }}>
               {gapAbs}г
@@ -82,7 +82,7 @@ export function ScheduleSummaryBar({
           </>
         ) : (
           <>
-            <CheckCircle2 size={14} style={{ color: "var(--chart-2)", flexShrink: 0 }} />
+            <CircleCheck size={14} style={{ color: "var(--chart-2)", flexShrink: 0 }} />
             <span style={{ ...labelStyle, color: "var(--chart-2)" }}>
               {isOk && gap > 0 ? "Надлишок" : "Збалансовано"}
             </span>

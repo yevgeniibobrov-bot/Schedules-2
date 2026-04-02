@@ -2,16 +2,8 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import {
-  Palmtree,
-  Thermometer,
-  Building2,
-  ShieldCheck,
-  Coffee,
-  ArrowRightLeft,
-  Send,
-  AlertTriangle,
-} from "lucide-react";
+import { Thermometer } from "lucide-react";
+import { Leaf, Building02, ShieldCheck, Coffee, ArrowLeftRight, PaperPlane, TriangleWarning } from "@fzwp/ui-kit/icons";
 import { getSubUnitColor } from "./subUnitColors";
 
 export const SHIFT_DND_TYPE = "SHIFT_CARD";
@@ -94,7 +86,7 @@ const STATUS_CONFIG: Record<
   leave: {
     borderColor: "var(--chart-1)",
     bg: "var(--primary-alpha-8)",
-    icon: <Palmtree size={10} />,
+    icon: <Leaf size={10} />,
     label: "Відпустка",
   },
   sick: {
@@ -106,7 +98,7 @@ const STATUS_CONFIG: Record<
   "temp-assignment": {
     borderColor: "var(--chart-3)",
     bg: "var(--warning-alpha-8)",
-    icon: <Building2 size={10} />,
+    icon: <Building02 size={10} />,
     label: "Тимч. призначення",
   },
   reserved: {
@@ -132,8 +124,8 @@ function MarketplaceIndicator({ shift }: { shift: ShiftData }) {
       className="inline-flex items-center flex-shrink-0 cursor-default"
     >
       {isPendingProposal
-        ? <Send size={12} style={{ color: "var(--primary)" }} />
-        : <ArrowRightLeft size={12} style={{ color: "var(--muted-foreground)" }} />
+        ? <PaperPlane size={12} style={{ color: "var(--primary)" }} />
+        : <ArrowLeftRight size={12} style={{ color: "var(--muted-foreground)" }} />
       }
     </span>
   );
@@ -647,7 +639,7 @@ export function ShiftCard({
           {(validationLevel === "error" || hasMarketplaceSignal(shift)) && (
             <div className="flex items-center gap-0.5 flex-shrink-0">
               {validationLevel === "error" && (
-                <AlertTriangle size={11} style={{ color: "var(--destructive)", flexShrink: 0 }} />
+                <TriangleWarning size={11} style={{ color: "var(--destructive)", flexShrink: 0 }} />
               )}
               {hasMarketplaceSignal(shift) && <MarketplaceIndicator shift={shift} />}
             </div>

@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from "react";
+import { Button } from "@fzwp/ui-kit/button";
+import { Divider } from "@fzwp/ui-kit/divider";
 import {
-  Plus,
+  AddPlus,
   Clipboard,
   Copy,
-} from "lucide-react";
+} from "@fzwp/ui-kit/icons";
 
 interface EmptyCellContextMenuProps {
   x: number;
@@ -34,7 +36,7 @@ export function EmptyCellContextMenu({
   const ref = useRef<HTMLDivElement>(null);
 
   const actions: MenuAction[] = [
-    { id: "create", label: "Створити зміну", icon: <Plus size={14} /> },
+    { id: "create", label: "Створити зміну", icon: <AddPlus size={14} /> },
     { id: "paste", label: "Вставити", icon: <Clipboard size={14} />, disabled: !hasClipboard, shortcut: "Ctrl+V" },
     { id: "copy-week", label: "Копіювати тиждень", icon: <Copy size={14} />, disabled: !hasShiftsInWeek, dividerBefore: true },
   ];
@@ -77,21 +79,25 @@ export function EmptyCellContextMenu({
       {actions.map((action) => (
         <div key={action.id}>
           {action.dividerBefore && (
-            <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
+            <Divider />
           )}
-          <button
-            onClick={() => {
+          <Button
+            variant="light"
+            size="sm"
+            isDisabled={action.disabled}
+            onPress={() => {
               if (action.disabled) return;
               onAction(action.id);
               onClose();
             }}
-            disabled={action.disabled}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] disabled:opacity-35 disabled:pointer-events-none"
+            startContent={
+              <span className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>
+                {action.icon}
+              </span>
+            }
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] justify-start rounded-none"
             style={{ minHeight: 0 }}
           >
-            <span className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }}>
-              {action.icon}
-            </span>
             <span
               className="flex-1"
               style={{
@@ -107,7 +113,7 @@ export function EmptyCellContextMenu({
                 {action.shortcut}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       ))}
     </div>

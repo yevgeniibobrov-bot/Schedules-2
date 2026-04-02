@@ -1,17 +1,6 @@
 import React from "react";
-import {
-  Palmtree,
-  Thermometer,
-  Building2,
-  ShieldCheck,
-  Coffee,
-  Layers,
-  ArrowRightLeft,
-  Send,
-  Plus,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { Thermometer } from "lucide-react";
+import { Leaf, Building02, ShieldCheck, Coffee, Layers, ArrowLeftRight, PaperPlane, AddPlus, Clock, TriangleWarning } from "@fzwp/ui-kit/icons";
 import type { ShiftData } from "./ShiftCard";
 import { getSubUnitColor, getSubUnitAlphaColor } from "./subUnitColors";
 
@@ -192,9 +181,9 @@ function shouldShowUnitLabel(segments: TimeSegment[], idx: number): boolean {
 // ── Status helpers ────────────────────────────────────────────────────
 
 const STATUS_ICONS: Record<string, React.ReactNode> = {
-  leave: <Palmtree size={12} />,
+  leave: <Leaf size={12} />,
   sick: <Thermometer size={12} />,
-  "temp-assignment": <Building2 size={12} />,
+  "temp-assignment": <Building02 size={12} />,
   reserved: <ShieldCheck size={12} />,
 };
 
@@ -477,10 +466,10 @@ export function DayShiftCard({
           }}
         >
           {(shift.exchangeStatus === "on-exchange" || shift.marketplaceSource) && (
-            <ArrowRightLeft size={12} style={{ color: "var(--chart-5)" }} />
+            <ArrowLeftRight size={12} style={{ color: "var(--chart-5)" }} />
           )}
           {shift.proposalStatus === "pending" && (
-            <Send size={12} style={{ color: "var(--chart-5)" }} />
+            <PaperPlane size={12} style={{ color: "var(--chart-5)" }} />
           )}
         </div>
       )}
@@ -795,7 +784,7 @@ export function DayOpenShiftCard({
       {/* Main content */}
       <div className="relative z-10 flex flex-col items-center gap-0.5">
         {/* Plus icon (prominent) */}
-        <Plus size={14} style={{ color: "var(--chart-2)" }} />
+        <AddPlus size={14} style={{ color: "var(--chart-2)" }} />
 
         {/* Display text */}
         {displayText && (
@@ -816,10 +805,10 @@ export function DayOpenShiftCard({
         {/* Marketplace/exchange indicators (minimal) */}
         <div className="flex items-center gap-1">
           {shift.exchangeStatus === "on-exchange" && (
-            <ArrowRightLeft size={9} style={{ color: "var(--chart-5)" }} />
+            <ArrowLeftRight size={9} style={{ color: "var(--chart-5)" }} />
           )}
           {shift.proposalStatus === "pending" && (
-            <Send size={9} style={{ color: "var(--chart-5)" }} />
+            <PaperPlane size={9} style={{ color: "var(--chart-5)" }} />
           )}
         </div>
       </div>

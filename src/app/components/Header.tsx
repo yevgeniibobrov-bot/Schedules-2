@@ -1,26 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Printer,
-  Send,
-  AlertCircle,
-  AlertTriangle,
-  Layers,
-  X,
-  Check,
-  Edit3,
-  CheckCircle2,
-  RotateCcw,
-  User,
-  Maximize2,
-  Minimize2,
-  Filter,
-  BarChart3,
-  ArrowLeftRight,
-  Target,
-} from "lucide-react";
+import { Target } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, Printer, PaperPlane, CircleWarning, Layers, CloseMD, Check, EditPencil01, CircleCheck, Undo, Expand, Shrink, ChartBarVertical, ArrowLeftRight } from "@fzwp/ui-kit/icons";
+import { Button } from "@fzwp/ui-kit/button";
 
 import type { Department } from "./WeeklyTable";
 import { ValidationModal } from "./ValidationModal";
@@ -201,9 +182,9 @@ export function Header({
   }, {});
 
   // Status indicator config
-  const STATUS_CONFIG: Record<ScheduleStatus, { icon: typeof Edit3; label: string; desc: string; color: string; bg: string }> = {
-    draft: { icon: Edit3, label: "Чернетка", desc: "Графік редагується", color: "var(--muted-foreground)", bg: "var(--muted)" },
-    published: { icon: CheckCircle2, label: "Опубліковано", desc: "Графік доступний працівникам", color: "var(--chart-2)", bg: "var(--success-alpha-10)" },
+  const STATUS_CONFIG: Record<ScheduleStatus, { icon: typeof EditPencil01; label: string; desc: string; color: string; bg: string }> = {
+    draft: { icon: EditPencil01, label: "Чернетка", desc: "Графік редагується", color: "var(--muted-foreground)", bg: "var(--muted)" },
+    published: { icon: CircleCheck, label: "Опубліковано", desc: "Графік доступний працівникам", color: "var(--chart-2)", bg: "var(--success-alpha-10)" },
   };
   const statusCfg = STATUS_CONFIG[status];
   const StatusIcon = statusCfg.icon;
@@ -250,22 +231,16 @@ export function Header({
       >
       {/* 1. Department dropdown */}
       <div className="relative" ref={deptDropdownRef}>
-        <button
-          onClick={() => setDeptDropdownOpen(!deptDropdownOpen)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+        <Button
+          variant="bordered"
+          size="sm"
+          onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
         >
-          <span style={{
-            fontSize: "var(--text-sm)",
-            fontWeight: "var(--font-weight-medium)",
-            color: "var(--foreground)",
-            whiteSpace: "nowrap",
-          }}>
-            {focusedDeptId
-              ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
-              : "Всі відділи"}
-          </span>
-          <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+          {focusedDeptId
+            ? departments.find(d => d.id === focusedDeptId)?.name ?? "Всі відділи"
+            : "Всі відділи"}
+        </Button>
 
         {/* Dropdown menu */}
         {deptDropdownOpen && (
@@ -278,15 +253,20 @@ export function Header({
           >
             <div className="max-h-[280px] overflow-y-auto">
               {/* "Всі відділи" option */}
-              <button
-                className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
-                style={{
-                  backgroundColor: !focusedDeptId ? "var(--primary-alpha-6)" : undefined,
-                }}
-                onClick={() => {
+              <Button
+                variant="light"
+                size="sm"
+                fullWidth
+                onPress={() => {
                   onFocusedDeptChange?.(null);
                   setDeptDropdownOpen(false);
                 }}
+                className="flex items-center gap-2 justify-start px-3 py-2"
+                style={{
+                  backgroundColor: !focusedDeptId ? "var(--primary-alpha-6)" : undefined,
+                  borderRadius: 0,
+                }}
+                endContent={!focusedDeptId ? <Check size={14} style={{ color: "var(--primary)" }} /> : undefined}
               >
                 <span
                   className="flex-1 text-left"
@@ -298,23 +278,27 @@ export function Header({
                 >
                   Всі відділи
                 </span>
-                {!focusedDeptId && <Check size={14} style={{ color: "var(--primary)" }} />}
-              </button>
+              </Button>
 
               {/* Individual departments */}
               {departments.map((dept) => {
                 const isActive = focusedDeptId === dept.id;
                 return (
-                  <button
+                  <Button
                     key={dept.id}
-                    className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
-                    style={{
-                      backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
-                    }}
-                    onClick={() => {
+                    variant="light"
+                    size="sm"
+                    fullWidth
+                    onPress={() => {
                       onFocusedDeptChange?.(isActive ? null : dept.id);
                       setDeptDropdownOpen(false);
                     }}
+                    className="flex items-center gap-2 justify-start px-3 py-2"
+                    style={{
+                      backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
+                      borderRadius: 0,
+                    }}
+                    endContent={isActive ? <Check size={14} style={{ color: "var(--primary)" }} /> : undefined}
                   >
                     <span
                       className="flex-1 text-left truncate"
@@ -326,8 +310,7 @@ export function Header({
                     >
                       {dept.name}
                     </span>
-                    {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
@@ -338,31 +321,17 @@ export function Header({
       {/* 2. Sub-units focus dropdown — immediately after department */}
       {onFocusedSubUnitChange && subUnitNames.length > 0 && (
         <div className="relative" ref={subUnitDropdownRef}>
-          <button
-            onClick={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border transition-colors"
-            style={{
-              borderColor: focusedSubUnit ? "var(--primary)" : "var(--border)",
-              backgroundColor: focusedSubUnit ? "var(--primary-alpha-8)" : "var(--input-background)",
-            }}
-          >
-            <Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />
-            <span style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: "var(--font-weight-medium)",
-              color: focusedSubUnit ? "var(--primary)" : "var(--foreground)",
-              maxWidth: 160,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}>
-              {focusedSubUnit || "Дільниці"}
-            </span>
-            {focusedSubUnit ? (
-              <X
+          <Button
+            variant={focusedSubUnit ? "flat" : "bordered"}
+            color={focusedSubUnit ? "primary" : "default"}
+            size="sm"
+            onPress={() => setSubUnitDropdownOpen(!subUnitDropdownOpen)}
+            startContent={<Layers size={14} style={{ color: focusedSubUnit ? "var(--primary)" : "var(--muted-foreground)" }} />}
+            endContent={focusedSubUnit ? (
+              <CloseMD
                 size={14}
                 style={{ color: "var(--primary)" }}
-                onClick={(e) => {
+                onClick={(e: React.MouseEvent) => {
                   e.stopPropagation();
                   onFocusedSubUnitChange(null);
                   setSubUnitDropdownOpen(false);
@@ -371,7 +340,20 @@ export function Header({
             ) : (
               <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
             )}
-          </button>
+            style={{
+              borderColor: focusedSubUnit ? "var(--primary)" : "var(--border)",
+              backgroundColor: focusedSubUnit ? "var(--primary-alpha-8)" : "var(--input-background)",
+            }}
+          >
+            <span style={{
+              maxWidth: 160,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}>
+              {focusedSubUnit || "Дільниці"}
+            </span>
+          </Button>
 
           {/* Dropdown menu */}
           {subUnitDropdownOpen && (
@@ -384,18 +366,22 @@ export function Header({
             >
               {/* Clear selection */}
               {focusedSubUnit && (
-                <button
-                  className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors border-b border-[var(--border)]"
-                  onClick={() => {
+                <Button
+                  variant="light"
+                  size="sm"
+                  fullWidth
+                  onPress={() => {
                     onFocusedSubUnitChange(null);
                     setSubUnitDropdownOpen(false);
                   }}
+                  className="flex items-center gap-2 justify-start px-3 py-2 border-b border-[var(--border)]"
+                  style={{ borderRadius: 0 }}
+                  startContent={<CloseMD size={13} style={{ color: "var(--muted-foreground)" }} />}
                 >
-                  <X size={13} style={{ color: "var(--muted-foreground)" }} />
                   <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>
                     Скинути вибір
                   </span>
-                </button>
+                </Button>
               )}
 
               {/* Header label */}
@@ -410,18 +396,23 @@ export function Header({
                 {subUnitNames.map((name) => {
                   const isActive = focusedSubUnit === name;
                   return (
-                    <button
+                    <Button
                       key={name}
-                      className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
-                      style={{
-                        backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
-                      }}
-                      onClick={() => {
+                      variant="light"
+                      size="sm"
+                      fullWidth
+                      onPress={() => {
                         onFocusedSubUnitChange(isActive ? null : name);
                         setSubUnitDropdownOpen(false);
                       }}
+                      className="flex items-center gap-2 justify-start px-3 py-2"
+                      style={{
+                        backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
+                        borderRadius: 0,
+                      }}
+                      startContent={<Layers size={12} style={{ color: isActive ? "var(--primary)" : "var(--secondary)" }} />}
+                      endContent={isActive ? <Check size={14} style={{ color: "var(--primary)" }} /> : undefined}
                     >
-                      <Layers size={12} style={{ color: isActive ? "var(--primary)" : "var(--secondary)" }} />
                       <span
                         className="flex-1 text-left truncate"
                         style={{
@@ -432,8 +423,7 @@ export function Header({
                       >
                         {name}
                       </span>
-                      {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -446,45 +436,41 @@ export function Header({
       <div className="w-px h-6 bg-[var(--border)]" />
 
       {/* 3. Today button — highlighted when navigated away from current week */}
-      <button
-        onClick={onToday}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border transition-colors"
-        style={{
-          borderColor: isCurrentWeek ? "var(--border)" : "var(--primary)",
-          backgroundColor: isCurrentWeek ? "var(--input-background)" : "var(--primary-alpha-8)",
-        }}
+      <Button
+        variant={isCurrentWeek ? "bordered" : "flat"}
+        color={isCurrentWeek ? "default" : "primary"}
+        size="sm"
+        onPress={onToday}
       >
-        <span style={{
-          fontSize: "var(--text-sm)",
-          fontWeight: "var(--font-weight-medium)",
-          color: isCurrentWeek ? "var(--foreground)" : "var(--primary)",
-        }}>
-          Сьогодні
-        </span>
-      </button>
+        Сьогодні
+      </Button>
 
       {/* Week navigation */}
       <div className="flex items-center gap-1">
-        <button
-          onClick={onPrevWeek}
-          disabled={!canGoPrev}
-          className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={onPrevWeek}
+          isDisabled={!canGoPrev}
         >
           <ChevronLeft size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
         <span
           className="min-w-[180px] text-center select-none"
           style={{ fontSize: "var(--text-base)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}
         >
           {weekLabel}
         </span>
-        <button
-          onClick={onNextWeek}
-          disabled={!canGoNext}
-          className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors disabled:opacity-30 disabled:pointer-events-none"
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={onNextWeek}
+          isDisabled={!canGoNext}
         >
           <ChevronRight size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
       </div>
 
       {/* Divider */}
@@ -492,16 +478,14 @@ export function Header({
 
       {/* 4. View dropdown (replaces segmented Week/Day switch) */}
       <div className="relative" ref={viewDropdownRef}>
-        <button
-          onClick={() => setViewDropdownOpen(!viewDropdownOpen)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+        <Button
+          variant="bordered"
+          size="sm"
+          onPress={() => setViewDropdownOpen(!viewDropdownOpen)}
+          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />}
         >
-          
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
-            {viewMode === "week" ? "Тиждень" : "День"}
-          </span>
-          <ChevronDown size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+          {viewMode === "week" ? "Тиждень" : "День"}
+        </Button>
 
         {viewDropdownOpen && (
           <div
@@ -514,16 +498,21 @@ export function Header({
             {(["week", "day"] as const).map((mode) => {
               const isActive = viewMode === mode;
               return (
-                <button
+                <Button
                   key={mode}
-                  className="flex items-center gap-2 w-full px-3 py-2 hover:bg-[var(--muted)] transition-colors"
-                  style={{
-                    backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
-                  }}
-                  onClick={() => {
+                  variant="light"
+                  size="sm"
+                  fullWidth
+                  onPress={() => {
                     onViewModeChange(mode);
                     setViewDropdownOpen(false);
                   }}
+                  className="flex items-center gap-2 justify-start px-3 py-2"
+                  style={{
+                    backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined,
+                    borderRadius: 0,
+                  }}
+                  endContent={isActive ? <Check size={14} style={{ color: "var(--primary)" }} /> : undefined}
                 >
                   <span
                     className="flex-1 text-left"
@@ -535,8 +524,7 @@ export function Header({
                   >
                     {mode === "week" ? "Тиждень" : "День"}
                   </span>
-                  {isActive && <Check size={14} style={{ color: "var(--primary)" }} />}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -546,19 +534,22 @@ export function Header({
       {/* 5. Plan / Fact toggle */}
       <div className="flex items-center rounded-[var(--radius)] border border-[var(--border)] overflow-hidden">
         {(["plan", "fact"] as const).map((mode) => (
-          <button
+          <Button
             key={mode}
-            onClick={() => onPlanFactChange(mode)}
-            className="px-3 py-1.5 transition-colors"
+            variant={planFact === mode ? "solid" : "light"}
+            color={planFact === mode ? "default" : "default"}
+            size="sm"
+            onPress={() => onPlanFactChange(mode)}
             style={{
               fontSize: "var(--text-sm)",
               fontWeight: "var(--font-weight-medium)",
               backgroundColor: planFact === mode ? "var(--secondary)" : "var(--input-background)",
               color: planFact === mode ? "var(--secondary-foreground)" : "var(--muted-foreground)",
+              borderRadius: 0,
             }}
           >
             {mode === "plan" ? "План" : "Факт"}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -579,28 +570,27 @@ export function Header({
 
       {/* 8. Lifecycle action buttons */}
       {status === "draft" && (
-        <button
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-[var(--radius)] hover:opacity-90 transition-opacity"
-          style={{ backgroundColor: "var(--foreground)" }}
-          onClick={handlePublishClick}
+        <Button
+          color="primary"
+          variant="solid"
+          size="sm"
+          onPress={handlePublishClick}
+          startContent={<PaperPlane size={14} />}
+          style={{ backgroundColor: "var(--foreground)", color: "var(--background)" }}
         >
-          <Send size={14} style={{ color: "var(--background)" }} />
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--background)" }}>
-            Відправити
-          </span>
-        </button>
+          Відправити
+        </Button>
       )}
 
       {status === "published" && (
-        <button
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-          onClick={handleReturnToDraft}
+        <Button
+          variant="bordered"
+          size="sm"
+          onPress={handleReturnToDraft}
+          startContent={<Undo size={14} style={{ color: "var(--muted-foreground)" }} />}
         >
-          <RotateCcw size={14} style={{ color: "var(--muted-foreground)" }} />
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
-            Повернути до чернетки
-          </span>
-        </button>
+          Повернути до чернетки
+        </Button>
       )}
       </div>
 
@@ -613,7 +603,7 @@ export function Header({
         {summaryMetrics ? (
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5" title="Прогноз / Графік годин та покриття">
-              <BarChart3 size={13} style={{ color: "var(--muted-foreground)" }} />
+              <ChartBarVertical size={13} style={{ color: "var(--muted-foreground)" }} />
               <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-normal)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                 Прогноз
               </span>
@@ -664,47 +654,50 @@ export function Header({
         {/* Error badge — click opens validation modal */}
         {errorCount > 0 ? (
           <div className="flex items-center gap-0">
-            <button
-              className="flex items-center gap-1.5 px-2.5 py-1.5 transition-all"
+            <Button
+              variant="flat"
+              color="danger"
+              size="sm"
+              onPress={() => setShowValidationModal(true)}
+              startContent={<CircleWarning size={14} style={{ color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)" }} />}
               style={{
                 backgroundColor: issuesFilterActive ? "var(--destructive)" : "var(--destructive-alpha-10)",
-                cursor: "pointer",
                 borderRadius: issuesFilterActive ? "var(--radius) 0 0 var(--radius)" : "var(--radius)",
+                color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
               }}
-              onClick={() => setShowValidationModal(true)}
               title="Перевірка графіку — помилки правил розкладу"
             >
-              <AlertCircle size={14} style={{ color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)" }} />
               <span style={{
                 fontSize: "var(--text-xs)",
                 fontWeight: "var(--font-weight-medium)",
-                color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
               }}>
                 Помилки
               </span>
               <span style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-semibold)",
-                color: issuesFilterActive ? "var(--destructive-foreground)" : "var(--destructive)",
                 minWidth: 16,
                 textAlign: "center",
               }}>
                 {errorCount}
               </span>
-            </button>
+            </Button>
             {issuesFilterActive && (
-              <button
-                className="flex items-center self-stretch px-1.5 transition-colors hover:opacity-80"
+              <Button
+                isIconOnly
+                variant="flat"
+                color="danger"
+                size="sm"
+                onPress={() => onIssuesFilterToggle?.()}
                 style={{
                   backgroundColor: "var(--destructive)",
                   borderRadius: "0 var(--radius) var(--radius) 0",
                   borderLeft: "1px solid rgba(255,255,255,0.2)",
                 }}
-                onClick={(e) => { e.stopPropagation(); onIssuesFilterToggle?.(); }}
                 title="Вимкнути фільтр помилок"
               >
-                <X size={13} style={{ color: "var(--destructive-foreground)" }} />
-              </button>
+                <CloseMD size={13} style={{ color: "var(--destructive-foreground)" }} />
+              </Button>
             )}
           </div>
         ) : (
@@ -717,7 +710,7 @@ export function Header({
             }}
             title="Усі правила дотримано"
           >
-            <CheckCircle2 size={14} style={{ color: "var(--muted-foreground)" }} />
+            <CircleCheck size={14} style={{ color: "var(--muted-foreground)" }} />
             <span style={{
               fontSize: "var(--text-xs)",
               fontWeight: "var(--font-weight-medium)",
@@ -736,30 +729,35 @@ export function Header({
         )}
 
         {/* 6. Print — icon only */}
-        <button
-          className="flex items-center justify-center p-1.5 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
+        <Button
+          isIconOnly
+          variant="bordered"
+          size="sm"
           title="Друк"
         >
           <Printer size={16} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
 
         {/* Focus mode toggle */}
         {onFocusModeToggle && (
-          <button
-            onClick={onFocusModeToggle}
-            className="flex items-center justify-center p-1.5 rounded-[var(--radius)] transition-colors"
+          <Button
+            isIconOnly
+            variant={isFocusMode ? "flat" : "light"}
+            color={isFocusMode ? "primary" : "default"}
+            size="sm"
+            onPress={onFocusModeToggle}
+            title={isFocusMode ? "Вийти з режиму фокусу (Esc)" : "Режим фокусу — приховати навігацію"}
             style={{
               backgroundColor: isFocusMode ? "var(--primary-alpha-10)" : "transparent",
               border: isFocusMode ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
             }}
-            title={isFocusMode ? "Вийти з режиму фокусу (Esc)" : "Режим фокусу — приховати навігацію"}
           >
             {isFocusMode ? (
-              <Minimize2 size={16} style={{ color: "var(--primary)" }} />
+              <Shrink size={16} style={{ color: "var(--primary)" }} />
             ) : (
-              <Maximize2 size={16} style={{ color: "var(--muted-foreground)" }} />
+              <Expand size={16} style={{ color: "var(--muted-foreground)" }} />
             )}
-          </button>
+          </Button>
         )}
       </div>
     </header>
@@ -808,29 +806,22 @@ export function Header({
 
           {/* Modal actions */}
           <div className="flex items-center justify-end gap-2 px-5 pb-5 pt-2">
-            <button
-              className="px-4 py-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-medium)",
-                color: "var(--foreground)",
-              }}
-              onClick={() => setShowPublishModal(false)}
+            <Button
+              variant="bordered"
+              size="sm"
+              onPress={() => setShowPublishModal(false)}
             >
               Скасувати
-            </button>
-            <button
-              className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius)] bg-[var(--primary)] hover:opacity-90 transition-opacity"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-semibold)",
-                color: "var(--primary-foreground)",
-              }}
-              onClick={handlePublishConfirm}
+            </Button>
+            <Button
+              color="primary"
+              variant="solid"
+              size="sm"
+              onPress={handlePublishConfirm}
+              startContent={<PaperPlane size={14} />}
             >
-              <Send size={14} style={{ color: "var(--primary-foreground)" }} />
               Відправити
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -880,12 +871,15 @@ export function Header({
         >
           {snackbarText}
         </span>
-        <button
-          className="ml-1 p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0"
-          onClick={() => setShowSnackbar(false)}
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={() => setShowSnackbar(false)}
+          className="ml-1 flex-shrink-0"
         >
-          <X size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+          <CloseMD size={14} style={{ color: "var(--muted-foreground)" }} />
+        </Button>
       </div>
     )}
     </div>

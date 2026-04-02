@@ -1,23 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import {
-  ChevronDown,
-  ChevronRight,
-  Plus,
-  User,
-  BarChart3,
-  Layers,
-  Clock,
-  AlertTriangle,
-  CircleAlert,
-  TrendingDown,
-  X,
-  ArrowRightLeft,
-  ChevronsUpDown,
-  ChevronsDownUp,
-  Info,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, AddPlus, User01, ChartBarVertical, Layers, Clock, TriangleWarning, CircleWarning, TrendingDown, CloseMD, ArrowLeftRight, UnfoldMore, UnfoldLess, Info, CircleCheck } from "@fzwp/ui-kit/icons";
+import { Button } from "@fzwp/ui-kit/button";
 import { useDrop, useDragLayer } from "react-dnd";
 import {
   ShiftCard,
@@ -136,7 +120,7 @@ function MinorBadge() {
               className="px-3 py-1.5 flex items-center gap-1.5"
               style={{ backgroundColor: "var(--warning-alpha-6)", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}
             >
-              <CircleAlert size={12} style={{ color: "var(--chart-3)", flexShrink: 0 }} />
+              <CircleWarning size={12} style={{ color: "var(--chart-3)", flexShrink: 0 }} />
               <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-3)" }}>
                 Неповнолітній працівник
               </span>
@@ -470,18 +454,18 @@ function DayCell({
               opacity: hovered ? 1 : 0,
             }}
           >
-            <Plus size={14} style={{ color: "var(--primary)" }} />
+            <AddPlus size={14} style={{ color: "var(--primary)" }} />
           </div>
         </div>
       )}
       {isOver && canDrop && hasConflict && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 py-0.5" style={{ backgroundColor: "var(--destructive-alpha-12)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)" }}>
-          <AlertTriangle size={10} /> Конфлікт
+          <TriangleWarning size={10} /> Конфлікт
         </div>
       )}
       {isBlocked && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 py-0.5" style={{ backgroundColor: "var(--destructive-alpha-12)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)" }}>
-          <CircleAlert size={10} /> Заблоковано
+          <CircleWarning size={10} /> Заблоковано
         </div>
       )}
     </td>
@@ -781,18 +765,18 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
             {dept.name}
           </p>
         </div>
-        <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors">
-          <X size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        <Button isIconOnly variant="light" size="sm" onPress={onClose}>
+          <CloseMD size={14} style={{ color: "var(--muted-foreground)" }} />
+        </Button>
       </div>
 
       {/* ── Overall day status ── */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: combinedBg }}>
         {combined === "ok"
-          ? <CheckCircle2 size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+          ? <CircleCheck size={13} style={{ color: combinedColor, flexShrink: 0 }} />
           : combined === "warning"
-            ? <AlertTriangle size={13} style={{ color: combinedColor, flexShrink: 0 }} />
-            : <CircleAlert size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+            ? <TriangleWarning size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+            : <CircleWarning size={13} style={{ color: combinedColor, flexShrink: 0 }} />
         }
         <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: combinedColor }}>
           {combinedText}
@@ -810,8 +794,10 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
             <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: 2 }}>
               {eff.description}
             </p>
-            <button
-              onClick={() => {
+            <Button
+              variant="light"
+              size="sm"
+              onPress={() => {
                 document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
                 onClose();
               }}
@@ -824,7 +810,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
               }}
             >
               Переглянути розподіл →
-            </button>
+            </Button>
           </>
         ) : (
           <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
@@ -893,8 +879,10 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       {/* ── Create open shift CTA — only when coverage is below target ── */}
       {coverageStatus !== "ok" && onCreateOpenShift && (
         <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
-          <button
-            onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
+          <Button
+            variant="light"
+            size="sm"
+            onPress={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
             style={{
               display: "block", width: "100%", textAlign: "center",
               fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
@@ -904,7 +892,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
             }}
           >
             Створити відкриту зміну
-          </button>
+          </Button>
         </div>
       )}
 
@@ -958,7 +946,7 @@ function ResourceSummaryRow({
         title={tooltipText}
       >
         <div className="flex items-center gap-2">
-          <BarChart3 size={13} style={{ color: "var(--muted-foreground)" }} />
+          <ChartBarVertical size={13} style={{ color: "var(--muted-foreground)" }} />
           <div className="flex items-center gap-1">
             <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>Прогноз</span>
             <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{weeklyForecast}г</span>
@@ -1182,7 +1170,7 @@ export function WeeklyTable({
       {/* Read-only mode banner */}
       {readOnly && (
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: "var(--warning-alpha-5)" }}>
-          <CircleAlert size={14} style={{ color: "var(--chart-3)" }} />
+          <CircleWarning size={14} style={{ color: "var(--chart-3)" }} />
           <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-3)" }}>
             Графік заблоковано для редагування
           </span>
@@ -1195,7 +1183,7 @@ export function WeeklyTable({
       {/* Issues filter banner */}
       {issuesFilterActive && (
         <div className="flex items-center gap-2 px-4 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: "var(--destructive-alpha-6)" }}>
-          <AlertTriangle size={14} style={{ color: "var(--destructive)" }} />
+          <TriangleWarning size={14} style={{ color: "var(--destructive)" }} />
           <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--destructive)" }}>
             Показано лише рядки з проблемами
           </span>
@@ -1220,15 +1208,17 @@ export function WeeklyTable({
             >
               <div className="flex items-center justify-between gap-2">
                 <span>Працівник</span>
-                <button
-                  onClick={toggleAll}
-                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors"
+                <Button
+                  variant="light"
+                  size="sm"
+                  onPress={toggleAll}
+                  className="inline-flex items-center gap-1 px-1.5 py-1"
                   style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}
                   title={allCollapsed ? "Розгорнути всі відділи" : "Згорнути всі відділи"}
+                  startContent={allCollapsed ? <UnfoldMore size={12} /> : <UnfoldLess size={12} />}
                 >
-                  {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
-                  <span>{allCollapsed ? "Усі" : "Усі"}</span>
-                </button>
+                  {allCollapsed ? "Усі" : "Усі"}
+                </Button>
               </div>
             </th>
             {days.map((day, i) => (
@@ -1338,7 +1328,7 @@ export function WeeklyTable({
                         onMouseEnter={(e) => showTooltip(e.currentTarget, [`Проблеми: ${deptIssueCount}`, "Конфлікти, перевищення норм або порушення"])}
                         onMouseLeave={hideTooltip}
                       >
-                        <AlertTriangle size={10} />
+                        <TriangleWarning size={10} />
                         {deptIssueCount}
                       </span>
                     )}
@@ -1349,7 +1339,7 @@ export function WeeklyTable({
                         onMouseEnter={(e) => showTooltip(e.currentTarget, [`Зміни на біржі: ${exchangeCount}`, "Очікують призначення працівника"])}
                         onMouseLeave={hideTooltip}
                       >
-                        <ArrowRightLeft size={10} />
+                        <ArrowLeftRight size={10} />
                         {exchangeCount}
                       </span>
                     )}
@@ -1480,7 +1470,7 @@ export function WeeklyTable({
                             {/* Avatar */}
                             <div className="flex-shrink-0">
                               <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--muted)" }}>
-                                <User size={14} style={{ color: "var(--muted-foreground)" }} />
+                                <User01 size={14} style={{ color: "var(--muted-foreground)" }} />
                               </div>
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
@@ -1507,7 +1497,7 @@ export function WeeklyTable({
                                     {emp.workedHours}/{emp.monthlyNorm}г
                                   </span>
                                   {overwork && (
-                                    <AlertTriangle size={10} style={{ color: "var(--destructive)", flexShrink: 0 }} />
+                                    <TriangleWarning size={10} style={{ color: "var(--destructive)", flexShrink: 0 }} />
                                   )}
                                 </div>
                               </EmployeeHoursTooltip>
@@ -1809,13 +1799,13 @@ function OpenShiftDayCell({
             className="flex items-center justify-center rounded-full transition-opacity"
             style={{ width: 22, height: 22, backgroundColor: "var(--success-alpha-12)", opacity: hovered ? 1 : 0 }}
           >
-            <Plus size={14} style={{ color: "var(--chart-2)" }} />
+            <AddPlus size={14} style={{ color: "var(--chart-2)" }} />
           </div>
         </div>
       )}
       {isOver && canDrop && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 py-0.5" style={{ backgroundColor: "var(--success-alpha-12)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-2)" }}>
-          <ArrowRightLeft size={10} /> Зняти призначення
+          <ArrowLeftRight size={10} /> Зняти призначення
         </div>
       )}
     </td>
@@ -1908,7 +1898,7 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
             >
               {overwork ? (
                 <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
+                  <TriangleWarning size={12} style={{ color: "var(--destructive)" }} />
                   <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
                 </div>
               ) : (
