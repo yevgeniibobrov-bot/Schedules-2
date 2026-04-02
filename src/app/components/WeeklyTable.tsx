@@ -714,9 +714,9 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
   }, [onClose]);
 
   const top = anchorRect ? anchorRect.bottom + 4 : 0;
-  let left = anchorRect ? anchorRect.left + anchorRect.width / 2 - 150 : 0;
+  let left = anchorRect ? anchorRect.left + anchorRect.width / 2 - 140 : 0;
   if (left < 8) left = 8;
-  if (left + 300 > window.innerWidth) left = window.innerWidth - 308;
+  if (left + 280 > window.innerWidth) left = window.innerWidth - 288;
 
   const computeMetrics = (su: SubUnitResource) => {
     const sd = su.daily[dayIndex];
@@ -766,121 +766,74 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-[300px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
-      style={{ top, left, backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+      className="fixed z-50 rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+      style={{ top, left, width: 280, backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       {/* ── Header ── */}
-      <div className="flex items-start justify-between px-3 py-2 border-b border-[var(--border)]" style={{ backgroundColor: "var(--muted)" }}>
-        <div>
-          <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: "var(--muted)" }}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", whiteSpace: "nowrap" }}>
             {dayLabel}
           </span>
-          <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 1 }}>
+          <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {dept.name}
-          </p>
+          </span>
         </div>
-        <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors">
-          <X size={14} style={{ color: "var(--muted-foreground)" }} />
+        <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors flex-shrink-0">
+          <X size={13} style={{ color: "var(--muted-foreground)" }} />
         </button>
       </div>
 
-      {/* ── Overall day status ── */}
-      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[var(--border)]" style={{ backgroundColor: combinedBg }}>
+      {/* ── Status + badges in one row ── */}
+      <div style={{ padding: "7px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", gap: 6 }}>
         {combined === "ok"
-          ? <CheckCircle2 size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+          ? <CheckCircle2 size={12} style={{ color: combinedColor, flexShrink: 0 }} />
           : combined === "warning"
-            ? <AlertTriangle size={13} style={{ color: combinedColor, flexShrink: 0 }} />
-            : <CircleAlert size={13} style={{ color: combinedColor, flexShrink: 0 }} />
+            ? <AlertTriangle size={12} style={{ color: combinedColor, flexShrink: 0 }} />
+            : <CircleAlert size={12} style={{ color: combinedColor, flexShrink: 0 }} />
         }
         <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: combinedColor }}>
           {combinedText}
         </span>
-      </div>
-
-      {/* ── Ефективність розподілу ── */}
-      <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>
-        <div className="flex items-center justify-between mb-1">
-          <span style={sectionLabel}>Ефективність розподілу</span>
-          {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
-        </div>
-        {eff.status !== "ok" ? (
-          <>
-            <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: 2 }}>
-              {eff.description}
-            </p>
-            <button
-              onClick={() => {
-                document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
-                onClose();
-              }}
-              style={{
-                display: "block", width: "100%", textAlign: "center",
-                fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
-                color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
-                border: "1px solid var(--primary-alpha-25)", padding: "4px 10px", borderRadius: "var(--radius-sm)",
-                cursor: "pointer", marginTop: 6,
-              }}
-            >
-              Переглянути розподіл →
-            </button>
-          </>
-        ) : (
-          <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
-            Зміни рівномірно розподілені
-          </p>
-        )}
-      </div>
-
-      {/* ── Покриття ── */}
-      <div style={{ padding: "10px 12px 0" }}>
-        <div className="flex items-center justify-between mb-1">
-          <span style={sectionLabel}>Покриття</span>
-          {badge(coverageColor, coverageBadgeBg, `${coveragePct}%`)}
-        </div>
-        {/* Totals row */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогноз:</span>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}:</span>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.:</span>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: deltaColor(deptMetrics.delta) }}>
-              {fmtDelta(deptMetrics.delta)}
-            </span>
-          </div>
+        <div style={{ marginLeft: "auto", display: "flex", gap: 5, flexShrink: 0 }}>
+          <span className="px-1.5 py-px rounded-full" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color: effColor, backgroundColor: effBadgeBg, whiteSpace: "nowrap" }}>
+            Ефект. {eff.efficiency}%
+          </span>
+          <span className="px-1.5 py-px rounded-full" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color: coverageColor, backgroundColor: coverageBadgeBg, whiteSpace: "nowrap" }}>
+            Покриття {coveragePct}%
+          </span>
         </div>
       </div>
 
-      {/* Sub-unit breakdown */}
+      {/* ── Coverage totals ── */}
+      <div style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)", display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>
+          Прогноз: <span style={{ fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.forecast}г</span>
+        </span>
+        <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>
+          {planLabel}: <span style={{ fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{deptMetrics.scheduled}г</span>
+        </span>
+        <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>
+          Різн.: <span style={{ fontWeight: "var(--font-weight-semibold)" as any, color: deltaColor(deptMetrics.delta) }}>{fmtDelta(deptMetrics.delta)}</span>
+        </span>
+      </div>
+
+      {/* ── Sub-unit breakdown (no column headers) ── */}
       {rc.subUnits.length > 0 && (
-        <div className="px-3 pb-2 flex flex-col gap-0.5" style={{ paddingTop: 6 }}>
-          {/* Column headers */}
-          <div className="flex items-center px-2 py-0.5">
-            <span className="flex-1" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Дільниця</span>
-            <div className="flex flex-shrink-0" style={{ width: 130 }}>
-              <span className="w-[36px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Прогн.</span>
-              <span className="w-[40px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{planLabel}</span>
-              <span className="w-[46px] text-right" style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>Різн.</span>
-            </div>
-          </div>
+        <div style={{ maxHeight: 150, overflowY: "auto", padding: "4px 12px 6px" }}>
           {rc.subUnits.map((su) => {
             const m = computeMetrics(su);
             return (
-              <div key={su.name} className="flex items-center px-2 py-1 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
-                <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>
+              <div key={su.name} className="flex items-center py-0.5 rounded-[var(--radius-sm)]" style={{ backgroundColor: heatmapBg(m.delta) }}>
+                <span className="flex-1 truncate" style={{ fontSize: "var(--text-xs)", color: "var(--foreground)" }}>
                   {su.name}
                 </span>
-                <div className="flex flex-shrink-0" style={{ width: 130 }}>
-                  <span className="w-[36px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
-                  <span className="w-[40px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
-                  <span className="w-[46px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
+                <div className="flex flex-shrink-0" style={{ width: 118 }}>
+                  <span className="w-[34px] text-right" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>{m.forecast}г</span>
+                  <span className="w-[38px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)", color: "var(--foreground)" }}>{m.scheduled}г</span>
+                  <span className="w-[42px] text-right" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: deltaColor(m.delta) }}>
                     {fmtDelta(m.delta)}
                   </span>
                 </div>
@@ -890,9 +843,9 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
         </div>
       )}
 
-      {/* ── Create open shift CTA — only when coverage is below target ── */}
+      {/* ── Create open shift CTA ── */}
       {coverageStatus !== "ok" && onCreateOpenShift && (
-        <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
+        <div style={{ padding: "6px 12px 8px", borderTop: rc.subUnits.length > 0 ? "1px solid var(--border)" : undefined }}>
           <button
             onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
             style={{
@@ -900,7 +853,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
               fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
               color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
               border: "1px solid var(--primary-alpha-25)", borderRadius: "var(--radius-sm)",
-              padding: "5px 12px", cursor: "pointer",
+              padding: "4px 12px", cursor: "pointer",
             }}
           >
             Створити відкриту зміну
@@ -1476,43 +1429,59 @@ export function WeeklyTable({
                           style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", borderLeftWidth: 0, borderTopWidth: 0 }}
                           onClick={() => onEmployeeClick(emp)}
                         >
-                          <div className="flex items-center gap-2.5">
-                            {/* Avatar */}
-                            <div className="flex-shrink-0">
-                              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--muted)" }}>
-                                <User size={14} style={{ color: "var(--muted-foreground)" }} />
+                          <EmployeeHoursTooltip emp={emp} weekPlannedHours={weekPlannedHours} remaining={remaining} exceeded={exceeded} overwork={overwork}>
+                            <div className="flex items-center gap-2.5">
+                              {/* Avatar with SVG progress ring */}
+                              <div className="flex-shrink-0" style={{ position: "relative", width: 32, height: 32 }}>
+                                <svg viewBox="0 0 32 32" width={32} height={32} style={{ position: "absolute", top: 0, left: 0 }}>
+                                  <circle cx={16} cy={16} r={14} fill="none" stroke="var(--border)" strokeWidth={2.5} />
+                                  <circle
+                                    cx={16} cy={16} r={14}
+                                    fill="none"
+                                    stroke={progressBarColor}
+                                    strokeWidth={2.5}
+                                    strokeDasharray={`${2 * Math.PI * 14}`}
+                                    strokeDashoffset={`${2 * Math.PI * 14 * (1 - monthlyProgress / 100)}`}
+                                    strokeLinecap="round"
+                                    transform="rotate(-90 16 16)"
+                                  />
+                                  <text
+                                    x={16} y={16}
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    fontSize={10}
+                                    fontWeight={500}
+                                    fill="var(--muted-foreground)"
+                                  >
+                                    {emp.name.split(" ").map((w: string) => w[0]).join("").substring(0, 2).toUpperCase()}
+                                  </text>
+                                </svg>
                               </div>
-                            </div>
-                            <div className="flex flex-col min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <span
-                                  className="truncate"
-                                  title={originTooltip}
-                                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: originTooltip ? "help" : undefined }}
-                                >
-                                  {emp.name}
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span
+                                    className="truncate"
+                                    title={originTooltip}
+                                    style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: originTooltip ? "help" : undefined }}
+                                  >
+                                    {emp.name}
+                                  </span>
+                                  {emp.isMinor && <MinorBadge />}
+                                </div>
+                                <span className="truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
+                                  {emp.position}
                                 </span>
-                                {emp.isMinor && <MinorBadge />}
-                              </div>
-                              <span className="truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
-                                {emp.position} · {emp.fte}%
-                              </span>
-                              {/* Progress bar + hours with tooltip trigger */}
-                              <EmployeeHoursTooltip emp={emp} weekPlannedHours={weekPlannedHours} remaining={remaining} exceeded={exceeded} overwork={overwork}>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <div className="h-1.5 rounded-full overflow-hidden flex-shrink-0" style={{ backgroundColor: "var(--border)", width: 56 }}>
-                                    <div className="h-full rounded-full transition-all" style={{ width: `${monthlyProgress}%`, backgroundColor: progressBarColor }} />
-                                  </div>
-                                  <span className="flex-shrink-0" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: overwork ? "var(--destructive)" : "var(--muted-foreground)" }}>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)" }}>{emp.fte}%</span>
+                                  <span style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", opacity: 0.4 }}>·</span>
+                                  <span style={{ fontSize: "var(--text-2xs)", color: overwork ? "var(--destructive)" : "var(--muted-foreground)", fontWeight: overwork ? "var(--font-weight-medium)" as any : undefined }}>
                                     {emp.workedHours}/{emp.monthlyNorm}г
                                   </span>
-                                  {overwork && (
-                                    <AlertTriangle size={10} style={{ color: "var(--destructive)", flexShrink: 0 }} />
-                                  )}
+                                  {overwork && <AlertTriangle size={9} style={{ color: "var(--destructive)", flexShrink: 0 }} />}
                                 </div>
-                              </EmployeeHoursTooltip>
+                              </div>
                             </div>
-                          </div>
+                          </EmployeeHoursTooltip>
                         </td>
 
                         {/* Day cells with multi-day leave spanning */}
