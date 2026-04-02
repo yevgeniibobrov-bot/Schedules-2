@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { User, AlertTriangle } from "lucide-react";
+import { User01, TriangleWarning } from "@fzwp/ui-kit/icons";
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import type { ShiftData } from "./ShiftCard";
 import { ShiftTooltip } from "./ShiftCard";
@@ -336,7 +336,7 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
             <div className="px-3 py-1.5" style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottom: "1px solid var(--border)" }}>
               {overwork ? (
                 <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
+                  <TriangleWarning size={12} style={{ color: "var(--destructive)" }} />
                   <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
                 </div>
               ) : (
@@ -465,7 +465,7 @@ export function DayEmployeeCell({ emp, onEmployeeClick }: DayEmployeeCellProps) 
     >
       <div className="flex-shrink-0">
         <div className="rounded-full flex items-center justify-center" style={{ width: 32, height: 32, backgroundColor: "var(--muted)" }}>
-          <User size={14} style={{ color: "var(--muted-foreground)" }} />
+          <User01 size={14} style={{ color: "var(--muted-foreground)" }} />
         </div>
       </div>
       <div className="flex flex-col min-w-0 flex-1">
@@ -490,7 +490,7 @@ export function DayEmployeeCell({ emp, onEmployeeClick }: DayEmployeeCellProps) 
             <span className="flex-shrink-0" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: overwork ? "var(--destructive)" : "var(--muted-foreground)" }}>
               {emp.workedHours}/{emp.monthlyNorm}г
             </span>
-            {overwork && <AlertTriangle size={10} style={{ color: "var(--destructive)", flexShrink: 0 }} />}
+            {overwork && <TriangleWarning size={10} style={{ color: "var(--destructive)", flexShrink: 0 }} />}
           </div>
         </EmployeeHoursTooltip>
       </div>

@@ -3,6 +3,12 @@ import svgPaths from "../../imports/svg-jfnxlebcsy";
 import imgImage from "../../assets/88041e830143e9dc2f636f1b7864b368e1816471.png";
 import imgSilpoLogo from "../../assets/d67ff0d1c512da8a24b5df3159e4e6886bbfd634.png";
 
+import { Button } from "@fzwp/ui-kit/button";
+import { Avatar } from "@fzwp/ui-kit/avatar";
+import { Divider } from "@fzwp/ui-kit/divider";
+import { Image } from "@fzwp/ui-kit";
+import { Bell, House01, ChevronDown, ChevronLeft } from "@fzwp/ui-kit/icons";
+
 // ── Sidebar nav item icons ──────────────────────────────────────────
 
 const navItems = [
@@ -44,7 +50,7 @@ function SidebarDivider() {
     <div className="w-full" style={{ height: 32, minHeight: 32 }}>
       <div className="flex flex-row items-center size-full">
         <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
-          <div style={{ width: "100%", height: 1, backgroundColor: "var(--border)" }} />
+          <Divider orientation="horizontal" />
         </div>
       </div>
     </div>
@@ -52,6 +58,7 @@ function SidebarDivider() {
 }
 
 // ── Headphones icon (support) ───────────────────────────────────────
+// TODO: No @fzwp/ui-kit icon equivalent for HeadphonesIcon — keeping custom SVG
 
 function HeadphonesIcon() {
   return (
@@ -70,65 +77,25 @@ function HeadphonesIcon() {
 // ── Bell icon ───────────────────────────────────────────────────────
 
 function BellIcon() {
-  return (
-    <div className="overflow-clip relative shrink-0" style={{ width: 20, height: 20 }}>
-      <div className="absolute" style={{ inset: "12.5% 16.67%" }}>
-        <div className="absolute" style={{ inset: "-5% -5.63%" }}>
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14.8337 16.5">
-            <path d={svgPaths.p3bc9980} stroke="var(--foreground)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
+  return <Bell size={20} color="var(--foreground)" />;
 }
 
 // ── House breadcrumb icon ───────────────────────────────────────────
 
 function HouseBreadcrumbIcon() {
-  return (
-    <div className="overflow-clip relative shrink-0" style={{ width: 16, height: 16 }}>
-      <div className="absolute" style={{ inset: "15.24% 8.33% 16.67% 8.33%" }}>
-        <div className="absolute" style={{ inset: "-5.97% -4.87%" }}>
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14.6333 12.1949">
-            <path d={svgPaths.p2d7d5400} stroke="var(--foreground)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.3" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
+  return <House01 size={16} color="var(--foreground)" />;
 }
 
 // ── Caret down icon ─────────────────────────────────────────────────
 
 function CaretDownIcon() {
-  return (
-    <div className="overflow-clip relative shrink-0" style={{ width: 20, height: 20 }}>
-      <div className="absolute" style={{ inset: "41.67% 33.33%" }}>
-        <div className="absolute" style={{ inset: "-22.5% -11.25%" }}>
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 8.16667 4.83333">
-            <path d={svgPaths.p35021480} stroke="var(--muted-foreground)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
+  return <ChevronDown size={20} color="var(--muted-foreground)" />;
 }
 
 // ── Collapse sidebar icon ───────────────────────────────────────────
 
 function CollapseIcon() {
-  return (
-    <div className="overflow-clip relative shrink-0" style={{ width: 20, height: 20 }}>
-      <div className="absolute" style={{ left: "16.67%", right: "16.67%", top: 3.33, height: 13.333 }}>
-        <div className="absolute" style={{ inset: "-5.63%" }}>
-          <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 14.8333 14.8333">
-            <path d={svgPaths.p1b81ef04} stroke="var(--muted-foreground)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
-          </svg>
-        </div>
-      </div>
-    </div>
-  );
+  return <ChevronLeft size={20} color="var(--muted-foreground)" />;
 }
 
 // ── CRM Shell ───────────────────────────────────────────────────────
@@ -167,7 +134,7 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
                   <div className="flex items-center" style={{ padding: 8, gap: 8 }}>
                     <div className="flex items-center overflow-clip shrink-0" style={{ borderRadius: "var(--radius-md)" }}>
                       <div className="overflow-clip relative shrink-0" style={{ width: 28, height: 28 }}>
-                        <img alt="Silpo" className="absolute block size-full" style={{ maxWidth: "none" }} src={imgSilpoLogo} width={28} height={28} />
+                        <Image alt="Silpo" className="absolute block size-full" style={{ maxWidth: "none" }} src={imgSilpoLogo} width={28} height={28} />
                       </div>
                     </div>
                   </div>
@@ -276,18 +243,18 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
                 <div className="flex items-center shrink-0" style={{ gap: 16 }}>
                   {/* Bell button */}
                   <div className="flex items-center shrink-0" style={{ gap: 8 }}>
-                    <div className="relative shrink-0" style={{ backgroundColor: "var(--primary-alpha-10)", borderRadius: "var(--radius)" }}>
-                      <div className="flex flex-row items-center justify-center size-full">
-                        <div className="flex items-center justify-center" style={{ padding: 6 }}>
-                          <BellIcon />
-                        </div>
-                      </div>
-                    </div>
+                    <Button
+                      variant="light"
+                      isIconOnly
+                      style={{ backgroundColor: "var(--primary-alpha-10)", borderRadius: "var(--radius)", padding: 6 }}
+                    >
+                      <BellIcon />
+                    </Button>
                   </div>
 
                   {/* Vertical divider */}
                   <div className="flex flex-row items-center self-stretch" style={{ padding: "4px 0" }}>
-                    <div style={{ width: 1, height: "100%", backgroundColor: "var(--border)" }} />
+                    <Divider orientation="vertical" />
                   </div>
                 </div>
 
@@ -295,17 +262,12 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
                 <div className="relative shrink-0" style={{ borderRadius: "var(--radius)" }}>
                   <div className="flex flex-row items-center size-full overflow-clip" style={{ borderRadius: "inherit", padding: 8, gap: 8 }}>
                     {/* Avatar */}
-                    <div className="relative shrink-0 rounded-full" style={{ backgroundColor: "var(--primary-alpha-10)" }}>
-                      <div className="flex flex-row items-center justify-center size-full">
-                        <div className="flex items-center justify-center overflow-clip relative shrink-0">
-                          <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                              <img alt="avatar" className="absolute max-w-none w-full" style={{ height: "150%", left: 0, top: "-1.85%" }} src={imgImage} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <Avatar
+                      src={imgImage}
+                      alt="avatar"
+                      size="sm"
+                      style={{ width: 32, height: 32 }}
+                    />
 
                     {/* Name + email */}
                     <div className="flex flex-col items-start shrink-0" style={{ whiteSpace: "nowrap", isolation: "isolate" }}>
@@ -360,11 +322,13 @@ interface NavButtonProps {
 function NavButton({ icon, isActive, onClick }: NavButtonProps) {
   return (
     <div
-      className="shrink-0 w-full cursor-pointer"
+      className="shrink-0 w-full"
       style={{ height: 32, minHeight: 32, overflow: "clip" }}
-      onClick={onClick}
     >
-      <div
+      <Button
+        variant="light"
+        isIconOnly
+        onPress={onClick}
         className="flex flex-row items-center justify-center size-full"
         style={{
           borderRadius: "var(--radius)",
@@ -372,12 +336,11 @@ function NavButton({ icon, isActive, onClick }: NavButtonProps) {
           minHeight: "inherit",
           overflow: "clip",
           transition: "background-color 0.15s",
+          width: "100%",
         }}
       >
-        <div className="flex items-center justify-center size-full" style={{ padding: "0 12px", minHeight: "inherit" }}>
-          {icon}
-        </div>
-      </div>
+        {icon}
+      </Button>
     </div>
   );
 }

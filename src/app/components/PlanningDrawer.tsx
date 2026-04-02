@@ -1,25 +1,26 @@
 import React, { useState, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { Thermometer } from "lucide-react";
 import {
-  X,
+  CloseMD,
   Clock,
-  User,
-  Plus,
-  AlertTriangle,
-  AlertCircle,
-  CheckCircle2,
+  User01,
+  AddPlus,
+  TriangleWarning,
+  CircleWarning,
+  CircleCheck,
   ChevronDown,
-  Trash2,
-  Ban,
+  TrashFull,
+  StopSign,
   CalendarDays,
-  UserPlus,
-  Palmtree,
-  Thermometer,
+  UserAdd,
+  Leaf,
   ShieldCheck,
-  ArrowRightLeft,
-  Send,
-  Sparkles,
-} from "lucide-react";
+  ArrowLeftRight,
+  PaperPlane,
+  Star,
+} from "@fzwp/ui-kit/icons";
+import { Button } from "@fzwp/ui-kit/button";
 import type { ShiftData } from "./ShiftCard";
 import { hasBlockingShift } from "./ShiftCard";
 import type { Employee, Department } from "./WeeklyTable";
@@ -285,17 +286,17 @@ function ValidationRow({
     error: {
       bg: "var(--destructive-alpha-6)",
       color: "var(--destructive)",
-      Icon: AlertTriangle,
+      Icon: TriangleWarning,
     },
     warning: {
       bg: "var(--warning-alpha-8)",
       color: "var(--chart-3)",
-      Icon: AlertTriangle,
+      Icon: TriangleWarning,
     },
     info: {
       bg: "var(--muted)",
       color: "var(--muted-foreground)",
-      Icon: CheckCircle2,
+      Icon: CircleCheck,
     },
   }[type];
 
@@ -797,9 +798,10 @@ function TypeSwitch({ value, onChange }: { value: TypeMode; onChange: (v: TypeMo
       {(["shift", "absence"] as const).map((t) => {
         const active = value === t;
         return (
-          <button
+          <Button
             key={t}
-            onClick={() => onChange(t)}
+            variant="light"
+            onPress={() => onChange(t)}
             className="flex-1 py-1.5 px-3 rounded-[var(--radius-sm)] transition-all"
             style={{
               fontSize: "var(--text-sm)",
@@ -807,11 +809,10 @@ function TypeSwitch({ value, onChange }: { value: TypeMode; onChange: (v: TypeMo
               color: active ? "var(--foreground)" : "var(--muted-foreground)",
               backgroundColor: active ? "var(--card)" : "transparent",
               boxShadow: active ? "var(--elevation-sm)" : "none",
-              cursor: "pointer",
             }}
           >
             {t === "shift" ? "Зміна" : "Відсутність"}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -823,7 +824,7 @@ function TypeSwitch({ value, onChange }: { value: TypeMode; onChange: (v: TypeMo
 // ══════════════════════════════════════════════════════════════════════
 
 const ABSENCE_TYPE_CONFIG: Record<AbsenceType, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
-  vacation: { label: "Відпустка", icon: <Palmtree size={14} />, color: "var(--chart-1)", bg: "var(--primary-alpha-8)" },
+  vacation: { label: "Відпустка", icon: <Leaf size={14} />, color: "var(--chart-1)", bg: "var(--primary-alpha-8)" },
   sick: { label: "Лікарняний", icon: <Thermometer size={14} />, color: "var(--chart-4)", bg: "var(--destructive-alpha-8)" },
   other: { label: "Інше", icon: <ShieldCheck size={14} />, color: "var(--chart-5)", bg: "var(--purple-alpha-5)" },
 };
@@ -856,17 +857,19 @@ function ActionCard({
   disabledHint?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={disabled ? undefined : onClick}
-      className="flex items-start gap-2.5 w-full px-3 py-2.5 rounded-[var(--radius)] transition-all text-left"
+    <Button
+      variant="light"
+      fullWidth
+      isDisabled={disabled}
+      onPress={disabled ? undefined : onClick}
+      className="flex items-start gap-2.5 px-3 py-2.5 rounded-[var(--radius)] transition-all text-left justify-start whitespace-normal min-w-0!"
       style={{
         backgroundColor: disabled ? "var(--muted)" : selected ? bgColor : "transparent",
         borderStyle: "solid",
         borderWidth: selected ? 1.5 : 1,
         borderColor: disabled ? "var(--border)" : selected ? color : "var(--border)",
-        cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.6 : 1,
+        height: "auto",
       }}
     >
       <span className="mt-0.5 flex-shrink-0" style={{ color: disabled ? "var(--muted-foreground)" : color }}>{icon}</span>
@@ -874,14 +877,14 @@ function ActionCard({
         <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: selected ? color : "var(--foreground)" }}>
           {title}
         </span>
-        <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
+        <span className="whitespace-normal" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4, wordBreak: "break-word" }}>
           {disabled && disabledHint ? disabledHint : description}
         </span>
       </div>
       {selected && !disabled && (
-        <CheckCircle2 size={16} className="mt-0.5 ml-auto flex-shrink-0" style={{ color }} />
+        <CircleCheck size={16} className="mt-0.5 ml-auto flex-shrink-0" style={{ color }} />
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -941,6 +944,55 @@ export function PlanningDrawer({
   const [absenceType, setAbsenceType] = useState<AbsenceType>("vacation");
   const [absenceStartDay, setAbsenceStartDay] = useState(dayIndex ?? 0);
   const [absenceEndDay, setAbsenceEndDay] = useState(dayIndex ?? 0);
+
+  // ── Dropdown states (replacing native <select> elements) ───────────
+  const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
+  const deptDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [openUnitDropdownId, setOpenUnitDropdownId] = useState<string | null>(null);
+  const [openBreakDurationId, setOpenBreakDurationId] = useState<string | null>(null);
+  const [empDropdownOpen, setEmpDropdownOpen] = useState(false);
+  const empDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absTypeDropdownOpen, setAbsTypeDropdownOpen] = useState(false);
+  const absTypeDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absStartDropdownOpen, setAbsStartDropdownOpen] = useState(false);
+  const absStartDropdownRef = React.useRef<HTMLDivElement>(null);
+  const [absEndDropdownOpen, setAbsEndDropdownOpen] = useState(false);
+  const absEndDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click
+  React.useEffect(() => {
+    if (!deptDropdownOpen && !openUnitDropdownId && !openBreakDurationId && !empDropdownOpen && !absTypeDropdownOpen && !absStartDropdownOpen && !absEndDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (deptDropdownOpen && deptDropdownRef.current && !deptDropdownRef.current.contains(target)) {
+        setDeptDropdownOpen(false);
+      }
+      if (empDropdownOpen && empDropdownRef.current && !empDropdownRef.current.contains(target)) {
+        setEmpDropdownOpen(false);
+      }
+      if (absTypeDropdownOpen && absTypeDropdownRef.current && !absTypeDropdownRef.current.contains(target)) {
+        setAbsTypeDropdownOpen(false);
+      }
+      if (absStartDropdownOpen && absStartDropdownRef.current && !absStartDropdownRef.current.contains(target)) {
+        setAbsStartDropdownOpen(false);
+      }
+      if (absEndDropdownOpen && absEndDropdownRef.current && !absEndDropdownRef.current.contains(target)) {
+        setAbsEndDropdownOpen(false);
+      }
+      // Unit and break duration dropdowns close if click is outside their containers
+      // (handled via data attributes on the containers)
+      if (openUnitDropdownId) {
+        const unitContainer = document.querySelector(`[data-unit-dropdown="${openUnitDropdownId}"]`);
+        if (unitContainer && !unitContainer.contains(target)) setOpenUnitDropdownId(null);
+      }
+      if (openBreakDurationId) {
+        const breakContainer = document.querySelector(`[data-break-dropdown="${openBreakDurationId}"]`);
+        if (breakContainer && !breakContainer.contains(target)) setOpenBreakDurationId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [deptDropdownOpen, openUnitDropdownId, openBreakDurationId, empDropdownOpen, absTypeDropdownOpen, absStartDropdownOpen, absEndDropdownOpen]);
 
   // Resolve current selections
   const activeDept = (allDepartments ?? [department]).find((d) => d.id === selectedDeptId) ?? department;
@@ -1367,9 +1419,9 @@ export function PlanningDrawer({
             {headerTitle}
           </span>
         </div>
-        <button onClick={onClose} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0" style={{ cursor: "pointer" }}>
-          <X size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        <Button isIconOnly variant="light" size="sm" onPress={onClose} className="p-1 rounded-[var(--radius-sm)] flex-shrink-0">
+          <CloseMD size={18} style={{ color: "var(--muted-foreground)" }} />
+        </Button>
       </div>
 
       {/* Body */}
@@ -1387,7 +1439,7 @@ export function PlanningDrawer({
           const isOpen = !isExchange && !isProposalCard && !hasEmployee;
           const bg = isExchange ? "var(--purple-alpha-5)" : isProposalCard ? "var(--primary-alpha-5)" : isOpen ? "var(--muted)" : "var(--success-alpha-5)";
           const iconColor = isExchange ? "var(--chart-5)" : isProposalCard ? "var(--primary)" : isOpen ? "var(--muted-foreground)" : "var(--chart-2)";
-          const StatusIcon = isExchange ? ArrowRightLeft : isProposalCard ? Send : isOpen ? UserPlus : User;
+          const StatusIcon = isExchange ? ArrowRightLeft : isProposalCard ? PaperPlane : isOpen ? UserAdd : User01;
           const title = isExchange ? "Зміна біржі" : isProposalCard ? "Персональна пропозиція" : isOpen ? "Відкрита зміна" : "Призначена працівнику";
           const desc = isExchange
             ? "Видима всім відповідним працівникам на біржі."
@@ -1443,24 +1495,61 @@ export function PlanningDrawer({
               {/* Employee selector — primary control for shift type */}
               <div className="flex flex-col gap-1">
                 <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Працівник</span>
-                <div className="relative">
-                  <select
-                    value={selectedEmpId}
-                    onChange={(e) => {
-                      setSelectedEmpId(e.target.value);
-                      if (!e.target.value) { setShiftActionStatus("standard"); }
-                    }}
-                    className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                    style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                <div className="relative" ref={empDropdownRef}>
+                  <Button
+                    variant="bordered"
+                    size="sm"
+                    fullWidth
+                    onPress={() => setEmpDropdownOpen(!empDropdownOpen)}
+                    endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: empDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                    className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                    style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)" }}
                   >
-                    <option value="">
-                      {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
-                    </option>
-                    {allEmpList.map((e) => (
-                      <option key={e.id} value={e.id}>{e.name} — {e.position}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                    <span className="truncate text-left flex-1">
+                      {selectedEmpId
+                        ? (() => { const emp = allEmpList.find((e) => e.id === selectedEmpId); return emp ? `${emp.name} — ${emp.position}` : ""; })()
+                        : (typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)")}
+                    </span>
+                  </Button>
+                  {empDropdownOpen && (
+                    <div
+                      className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                      style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                    >
+                      <div className="max-h-[200px] overflow-y-auto">
+                        <Button
+                          variant="light"
+                          size="sm"
+                          fullWidth
+                          onPress={() => { setSelectedEmpId(""); setShiftActionStatus("standard"); setEmpDropdownOpen(false); }}
+                          className="flex items-center justify-start px-3 py-2"
+                          style={{ backgroundColor: !selectedEmpId ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                        >
+                          <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: !selectedEmpId ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: !selectedEmpId ? "var(--primary)" : "var(--muted-foreground)" }}>
+                            {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
+                          </span>
+                        </Button>
+                        {allEmpList.map((e) => {
+                          const isActive = e.id === selectedEmpId;
+                          return (
+                            <Button
+                              key={e.id}
+                              variant="light"
+                              size="sm"
+                              fullWidth
+                              onPress={() => { setSelectedEmpId(e.id); setEmpDropdownOpen(false); }}
+                              className="flex items-center justify-start px-3 py-2"
+                              style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                            >
+                              <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                {e.name} — {e.position}
+                              </span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {typeMode === "shift" && (() => {
                   if (shiftActionStatus === "proposal" && hasEmployee) return (
@@ -1498,7 +1587,7 @@ export function PlanningDrawer({
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}>Дії <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", opacity: 0.6 }}>(опціонально)</span></span>
                       <ActionCard
                         selected={true}
-                        icon={<ArrowRightLeft size={15} />}
+                        icon={<ArrowLeftRight size={15} />}
                         title="Зняти з біржі"
                         description="Зміна стане звичайною відкритою зміною"
                         onClick={() => setShiftActionStatus("standard")}
@@ -1519,7 +1608,7 @@ export function PlanningDrawer({
                       return (
                         <ActionCard
                           selected={shiftActionStatus === "marketplace"}
-                          icon={<ArrowRightLeft size={15} />}
+                          icon={<ArrowLeftRight size={15} />}
                           title="Розмістити на біржі"
                           description="Зміна буде доступна будь-якому працівнику на біржі"
                           onClick={() => setShiftActionStatus(shiftActionStatus === "marketplace" ? "standard" : "marketplace")}
@@ -1533,7 +1622,7 @@ export function PlanningDrawer({
                     {hasEmployee && (
                       <ActionCard
                         selected={shiftActionStatus === "proposal"}
-                        icon={<Send size={15} />}
+                        icon={<PaperPlane size={15} />}
                         title="Запропонувати працівнику"
                         description="Персональна пропозиція тільки цьому працівнику через біржу"
                         onClick={() => setShiftActionStatus(shiftActionStatus === "proposal" ? "standard" : "proposal")}
@@ -1551,18 +1640,45 @@ export function PlanningDrawer({
                   {/* Absence Type */}
                   <div className="flex flex-col gap-1">
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Тип відсутності</span>
-                    <div className="relative">
-                      <select
-                        value={absenceType}
-                        onChange={(e) => setAbsenceType(e.target.value as AbsenceType)}
-                        className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                        style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                    <div className="relative" ref={absTypeDropdownRef}>
+                      <Button
+                        variant="bordered"
+                        size="sm"
+                        fullWidth
+                        onPress={() => setAbsTypeDropdownOpen(!absTypeDropdownOpen)}
+                        endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absTypeDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                        className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                        style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
                       >
-                        <option value="vacation">Відпустка</option>
-                        <option value="sick">Лікарняний</option>
-                        <option value="other">Інше</option>
-                      </select>
-                      <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                        <span className="truncate text-left flex-1">{ABSENCE_TYPE_CONFIG[absenceType].label}</span>
+                      </Button>
+                      {absTypeDropdownOpen && (
+                        <div
+                          className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                          style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                        >
+                          <div className="max-h-[200px] overflow-y-auto">
+                            {(["vacation", "sick", "other"] as AbsenceType[]).map((t) => {
+                              const isActive = t === absenceType;
+                              return (
+                                <Button
+                                  key={t}
+                                  variant="light"
+                                  size="sm"
+                                  fullWidth
+                                  onPress={() => { setAbsenceType(t); setAbsTypeDropdownOpen(false); }}
+                                  className="flex items-center justify-start px-3 py-2"
+                                  style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                >
+                                  <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                    {ABSENCE_TYPE_CONFIG[t].label}
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1581,35 +1697,91 @@ export function PlanningDrawer({
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Початок</span>
-                      <div className="relative">
-                        <select
-                          value={absenceStartDay}
-                          onChange={(e) => {
-                            const v = Number(e.target.value);
-                            setAbsenceStartDay(v);
-                            if (absenceEndDay < v) setAbsenceEndDay(v);
-                          }}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                      <div className="relative" ref={absStartDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setAbsStartDropdownOpen(!absStartDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absStartDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
                         >
-                          {DAY_LABELS.map((d, i) => <option key={i} value={i}>{d}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                          <span className="truncate text-left flex-1">{DAY_LABELS[absenceStartDay]}</span>
+                        </Button>
+                        {absStartDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {DAY_LABELS.map((d, i) => {
+                                const isActive = i === absenceStartDay;
+                                return (
+                                  <Button
+                                    key={i}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { setAbsenceStartDay(i); if (absenceEndDay < i) setAbsenceEndDay(i); setAbsStartDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-foreground)", marginTop: 16 }}>до</span>
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Кінець</span>
-                      <div className="relative">
-                        <select
-                          value={absenceEndDay}
-                          onChange={(e) => setAbsenceEndDay(Number(e.target.value))}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                      <div className="relative" ref={absEndDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setAbsEndDropdownOpen(!absEndDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: absEndDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
                         >
-                          {DAY_LABELS.map((d, i) => <option key={i} value={i} disabled={i < absenceStartDay}>{d}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                          <span className="truncate text-left flex-1">{DAY_LABELS[absenceEndDay]}</span>
+                        </Button>
+                        {absEndDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {DAY_LABELS.map((d, i) => {
+                                const isActive = i === absenceEndDay;
+                                const isDisabled = i < absenceStartDay;
+                                return (
+                                  <Button
+                                    key={i}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    isDisabled={isDisabled}
+                                    onPress={() => { setAbsenceEndDay(i); setAbsEndDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0, opacity: isDisabled ? 0.4 : 1 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1631,14 +1803,45 @@ export function PlanningDrawer({
                   {allDepartments && allDepartments.length > 1 && dayIndex == null && (
                     <div className="flex flex-col gap-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Відділ</span>
-                      <div className="relative">
-                        <select value={selectedDeptId} onChange={(e) => setSelectedDeptId(e.target.value)}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                      <div className="relative" ref={deptDropdownRef}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setDeptDropdownOpen(!deptDropdownOpen)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: deptDropdownOpen ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)" }}
                         >
-                          {allDepartments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                          <span className="truncate text-left flex-1">{allDepartments.find((d) => d.id === selectedDeptId)?.name ?? "Оберіть відділ..."}</span>
+                        </Button>
+                        {deptDropdownOpen && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              {allDepartments.map((d) => {
+                                const isActive = d.id === selectedDeptId;
+                                return (
+                                  <Button
+                                    key={d.id}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { setSelectedDeptId(d.id); setDeptDropdownOpen(false); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {d.name}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1670,7 +1873,7 @@ export function PlanningDrawer({
             <div className="rounded-[var(--radius)] overflow-hidden" style={{ backgroundColor: "var(--muted)" }}>
               <div className="flex items-center gap-3 px-3 py-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--border)" }}>
-                  <User size={18} style={{ color: "var(--muted-foreground)" }} />
+                  <User01 size={18} style={{ color: "var(--muted-foreground)" }} />
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="truncate" style={{ fontSize: "var(--text-lg)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.25 }}>
@@ -1740,7 +1943,7 @@ export function PlanningDrawer({
                   {wl.overScheduled && (
                     <div className="flex flex-col gap-0.5">
                       <div className="flex items-center gap-1.5">
-                        <AlertTriangle size={11} style={{ color: "var(--destructive)" }} />
+                        <TriangleWarning size={11} style={{ color: "var(--destructive)" }} />
                         <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>
                           Перевищення норми на {wl.overtimeHours.toFixed(1)}г
                         </span>
@@ -1841,34 +2044,79 @@ export function PlanningDrawer({
                         style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--primary)", backgroundColor: "var(--primary-alpha-10)" }}>
                         {fmtDuration(dur)}
                       </span>
-                      <button onClick={() => removeBlock(block.id)} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors" style={{ cursor: "pointer" }}>
-                        <Trash2 size={14} style={{ color: "var(--muted-foreground)" }} />
-                      </button>
+                      <Button isIconOnly variant="light" size="sm" onPress={() => removeBlock(block.id)} className="p-1 rounded-[var(--radius-sm)]">
+                        <TrashFull size={14} style={{ color: "var(--muted-foreground)" }} />
+                      </Button>
                     </div>
                     <div className="px-3 py-2 flex items-center gap-2">
                       <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>Дільниця</span>
-                      <div className="relative flex-1">
-                        <select value={block.unit} onChange={(e) => updateBlock(block.id, "unit", e.target.value)}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                      <div className="relative flex-1" data-unit-dropdown={block.id}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          fullWidth
+                          onPress={() => setOpenUnitDropdownId(openUnitDropdownId === block.id ? null : block.id)}
+                          endContent={<ChevronDown size={14} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: openUnitDropdownId === block.id ? "rotate(180deg)" : undefined }} />}
+                          className="w-full justify-between px-2.5 py-1.5 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", color: block.unit ? "var(--foreground)" : "var(--muted-foreground)" }}
                         >
-                          <option value="">Оберіть дільницю...</option>
-                          {availableUnits.map((u) => <option key={u} value={u}>{u}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                          <span className="truncate text-left flex-1">{block.unit || "Оберіть дільницю..."}</span>
+                        </Button>
+                        {openUnitDropdownId === block.id && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 w-full rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)" }}
+                          >
+                            <div className="max-h-[200px] overflow-y-auto">
+                              <Button
+                                variant="light"
+                                size="sm"
+                                fullWidth
+                                onPress={() => { updateBlock(block.id, "unit", ""); setOpenUnitDropdownId(null); }}
+                                className="flex items-center justify-start px-3 py-2"
+                                style={{ backgroundColor: !block.unit ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                              >
+                                <span className="flex-1 text-left" style={{ fontSize: "var(--text-sm)", fontWeight: !block.unit ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: !block.unit ? "var(--primary)" : "var(--muted-foreground)" }}>
+                                  Оберіть дільницю...
+                                </span>
+                              </Button>
+                              {availableUnits.map((u) => {
+                                const isActive = block.unit === u;
+                                return (
+                                  <Button
+                                    key={u}
+                                    variant="light"
+                                    size="sm"
+                                    fullWidth
+                                    onPress={() => { updateBlock(block.id, "unit", u); setOpenUnitDropdownId(null); }}
+                                    className="flex items-center justify-start px-3 py-2"
+                                    style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                  >
+                                    <span className="flex-1 text-left truncate" style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                      {u}
+                                    </span>
+                                  </Button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {block.unit && (unitRecommendations[block.unit] || []).length > 0 && (
                       <div className="px-3 py-1.5 flex items-center gap-1.5 flex-wrap" style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}>
-                        <Sparkles size={10} className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }} />
+                        <Star size={10} className="flex-shrink-0" style={{ color: "var(--muted-foreground)" }} />
                         <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>Рекомендації:</span>
                         {(unitRecommendations[block.unit] || []).map((rec) => {
                           const isActive = block.start === rec.start && block.end === rec.end;
                           return (
-                            <button
+                            <Button
                               key={rec.label}
-                              onClick={() => {
+                              size="sm"
+                              variant={isActive ? "solid" : "flat"}
+                              color="primary"
+                              onPress={() => {
                                 setTimeBlocks((prev) => prev.map((b) =>
                                   b.id === block.id ? { ...b, start: rec.start, end: rec.end } : b
                                 ));
@@ -1879,12 +2127,11 @@ export function PlanningDrawer({
                                 fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
                                 color: isActive ? "var(--background)" : "var(--primary)",
                                 backgroundColor: isActive ? "var(--primary)" : "var(--primary-alpha-10)",
-                                cursor: "pointer",
                                 whiteSpace: "nowrap",
                               }}
                             >
                               {rec.label}
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>
@@ -1895,8 +2142,8 @@ export function PlanningDrawer({
                         {bv.messages.map((msg, mi) => (
                           <div key={mi} className="flex items-start gap-1.5">
                             {bv.severity === "error"
-                              ? <AlertCircle size={12} className="mt-px flex-shrink-0" style={{ color: "var(--destructive)" }} />
-                              : <AlertTriangle size={12} className="mt-px flex-shrink-0" style={{ color: "var(--chart-3)" }} />}
+                              ? <CircleWarning size={12} className="mt-px flex-shrink-0" style={{ color: "var(--destructive)" }} />
+                              : <TriangleWarning size={12} className="mt-px flex-shrink-0" style={{ color: "var(--chart-3)" }} />}
                             <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)", color: bv.severity === "error" ? "var(--destructive)" : "var(--chart-3)", lineHeight: 1.4 }}>{msg}</span>
                           </div>
                         ))}
@@ -1905,12 +2152,12 @@ export function PlanningDrawer({
                   </div>
                 );
               })}
-              <button onClick={addBlock}
-                className="w-full py-2 flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] border-dashed hover:bg-[var(--muted)] transition-colors"
-                style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+              <Button variant="bordered" color="primary" fullWidth size="sm" onPress={addBlock} startContent={<AddPlus size={14} />}
+                className="justify-center"
+                style={{ borderStyle: "dashed" }}
               >
-                <Plus size={14} /> Додати частину
-              </button>
+                Додати частину
+              </Button>
             </div>
 
             {/* Internal divider */}
@@ -1938,19 +2185,42 @@ export function PlanningDrawer({
                   {breakEntries.map((brk) => (
                     <div key={brk.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)]" style={{ backgroundColor: "var(--muted)" }}>
                       {/* Duration selector */}
-                      <div className="relative">
-                        <select
-                          value={brk.durationMin}
-                          onChange={(e) => updateBreakDuration(brk.id, Number(e.target.value))}
-                          className="appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)", width: 80 }}
+                      <div className="relative" data-break-dropdown={brk.id}>
+                        <Button
+                          variant="bordered"
+                          size="sm"
+                          onPress={() => setOpenBreakDurationId(openBreakDurationId === brk.id ? null : brk.id)}
+                          endContent={<ChevronDown size={12} style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: openBreakDurationId === brk.id ? "rotate(180deg)" : undefined }} />}
+                          className="px-2 py-1 rounded-[var(--radius-sm)]"
+                          style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", width: 90 }}
                         >
-                          <option value={30}>30 хв</option>
-                          <option value={60}>60 хв</option>
-                          <option value={90}>90 хв</option>
-                          <option value={120}>120 хв</option>
-                        </select>
-                        <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
+                          {brk.durationMin} хв
+                        </Button>
+                        {openBreakDurationId === brk.id && (
+                          <div
+                            className="absolute top-full left-0 mt-1 z-50 rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+                            style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)", minWidth: 90 }}
+                          >
+                            {[30, 60, 90, 120].map((dur) => {
+                              const isActive = brk.durationMin === dur;
+                              return (
+                                <Button
+                                  key={dur}
+                                  variant="light"
+                                  size="sm"
+                                  fullWidth
+                                  onPress={() => { updateBreakDuration(brk.id, dur); setOpenBreakDurationId(null); }}
+                                  className="flex items-center justify-start px-3 py-1.5"
+                                  style={{ backgroundColor: isActive ? "var(--primary-alpha-6)" : undefined, borderRadius: 0 }}
+                                >
+                                  <span style={{ fontSize: "var(--text-sm)", fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-normal)", color: isActive ? "var(--primary)" : "var(--foreground)" }}>
+                                    {dur} хв
+                                  </span>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
 
                       {/* Start time */}
@@ -1959,9 +2229,9 @@ export function PlanningDrawer({
                       <span className="flex-1" />
 
                       {/* Delete */}
-                      <button onClick={() => removeBreak(brk.id)} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors" style={{ cursor: "pointer" }}>
-                        <Trash2 size={13} style={{ color: "var(--muted-foreground)" }} />
-                      </button>
+                      <Button isIconOnly variant="light" size="sm" onPress={() => removeBreak(brk.id)} className="p-1 rounded-[var(--radius-sm)]">
+                        <TrashFull size={13} style={{ color: "var(--muted-foreground)" }} />
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -1969,20 +2239,26 @@ export function PlanningDrawer({
 
               {/* Quick add buttons (spec #8: no duplicated + in text) */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => addBreak(30)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                <Button
+                  variant="bordered"
+                  color="primary"
+                  size="sm"
+                  onPress={() => addBreak(30)}
+                  startContent={<AddPlus size={13} />}
+                  style={{ borderStyle: "dashed" }}
                 >
-                  <Plus size={13} /> 30 хв
-                </button>
-                <button
-                  onClick={() => addBreak(60)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                  30 хв
+                </Button>
+                <Button
+                  variant="bordered"
+                  color="primary"
+                  size="sm"
+                  onPress={() => addBreak(60)}
+                  startContent={<AddPlus size={13} />}
+                  style={{ borderStyle: "dashed" }}
                 >
-                  <Plus size={13} /> 60 хв
-                </button>
+                  60 хв
+                </Button>
               </div>
             </div>
 
@@ -2031,8 +2307,11 @@ export function PlanningDrawer({
       {isShiftOrCreate && (
         <div className="px-4 py-3" style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}>
           {isShiftMode && !isAnyCreate && onDeleteShift && shift && (
-            <button
-              onClick={() => {
+            <Button
+              variant="bordered"
+              color="danger"
+              fullWidth
+              onPress={() => {
                 onDeleteShift({
                   deptId: selectedDeptId,
                   employeeId: selectedEmpId,
@@ -2041,40 +2320,22 @@ export function PlanningDrawer({
                 });
                 onClose();
               }}
-              className="w-full h-10 rounded-[var(--radius)] transition-colors"
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: "var(--font-weight-medium)" as any,
-                lineHeight: 1.2,
-                color: "var(--destructive)",
-                backgroundColor: "transparent",
-                border: "1px solid var(--destructive)",
-                cursor: "pointer",
-                marginBottom: 8,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--destructive-alpha-10)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
+              size="md"
+              startContent={<TrashFull size={13} />}
+              className="justify-center"
+              style={{ marginBottom: 8 }}
             >
-              <span className="inline-flex items-center gap-1.5 justify-center">
-                <Trash2 size={13} />
-                Видалити зміну
-              </span>
-            </button>
+              Видалити зміну
+            </Button>
           )}
         <div className="flex items-center gap-2">
-          <button onClick={onClose}
-            className="px-4 py-2 rounded-[var(--radius)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", cursor: "pointer", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-          >
+          <Button variant="bordered" color="default" size="md" onPress={onClose}>
             Скасувати
-          </button>
-          <button
-            disabled={isBlocked}
-            onClick={() => {
+          </Button>
+          <Button
+            color="primary"
+            isDisabled={isBlocked}
+            onPress={() => {
               if (isBlocked) return;
               // Determine effective status for save
               // Spec: marketplace card on assigned shift → becomes open marketplace shift
@@ -2139,29 +2400,25 @@ export function PlanningDrawer({
               }
               onClose();
             }}
-            className="flex-1 py-2 rounded-[var(--radius)] transition-opacity"
+            variant="solid"
+            size="md"
+            className="flex-1"
             style={{
-              fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any,
-              color: "var(--primary-foreground)",
               backgroundColor: isBlocked
                 ? "var(--muted-foreground)"
                 : typeMode === "absence"
                   ? ABSENCE_TYPE_CONFIG[absenceType].color
                   : shiftActionStatus === "marketplace"
                     ? "var(--chart-5)"
-                    : shiftActionStatus === "proposal"
-                      ? "var(--primary)"
-                      : "var(--primary)",
-              opacity: isBlocked ? 0.5 : 1,
-              cursor: isBlocked ? "not-allowed" : "pointer",
+                    : undefined,
             }}
           >
             {hasHardErrors ? (
-              <span className="inline-flex items-center gap-1.5 justify-center"><Ban size={14} />{primaryButtonLabel}</span>
+              <span className="inline-flex items-center gap-1.5 justify-center"><StopSign size={14} />{primaryButtonLabel}</span>
             ) : (
               primaryButtonLabel
             )}
-          </button>
+          </Button>
         </div>
         </div>
       )}

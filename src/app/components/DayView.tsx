@@ -1,13 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import {
-  ChevronDown,
-  ChevronRight,
-  BarChart3,
-  Layers,
-  AlertTriangle,
-  ArrowRightLeft,
-  ChevronsUpDown,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, ChartBarVertical, Layers, TriangleWarning, ArrowLeftRight, UnfoldMore } from "@fzwp/ui-kit/icons";
+import { Button } from "@fzwp/ui-kit/button";
 import type { ShiftData } from "./ShiftCard";
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import {
@@ -215,7 +208,7 @@ export function DayView({
               className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
               style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)" }}
             >
-              <AlertTriangle size={10} />
+              <TriangleWarning size={10} />
               {deptIssueCount}
             </span>
           )}
@@ -224,7 +217,7 @@ export function DayView({
               className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
               style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
             >
-              <ArrowRightLeft size={10} />
+              <ArrowLeftRight size={10} />
               {exchangeCount}
             </span>
           )}
@@ -265,7 +258,7 @@ export function DayView({
         >
           {/* Inline label + values */}
           <div className="flex items-center gap-2">
-            <BarChart3 size={14} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+            <ChartBarVertical size={14} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
             <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
               План / Графік
             </span>
@@ -407,7 +400,7 @@ export function DayView({
           className="flex items-center gap-2 px-4 py-1.5"
           style={{ backgroundColor: "var(--destructive-alpha-6)", borderBottom: "1px solid var(--border)" }}
         >
-          <AlertTriangle size={14} style={{ color: "var(--destructive)" }} />
+          <TriangleWarning size={14} style={{ color: "var(--destructive)" }} />
           <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--destructive)" }}>
             Показано лише рядки з проблемами
           </span>
@@ -445,22 +438,20 @@ export function DayView({
               Працівник
             </span>
             {/* "Усі" toggle — normal-sized tertiary control */}
-            <button
-              onClick={toggleAll}
-              className="flex items-center gap-1.5 hover:bg-[var(--border)] transition-colors px-2 py-1 rounded-[var(--radius-sm)]"
+            <Button
+              onPress={toggleAll}
+              variant="light"
+              size="sm"
               title={allCollapsed ? "Розгорнути всі" : "Згорнути всі"}
+              startContent={<UnfoldMore size={14} style={{ color: "var(--muted-foreground)" }} />}
               style={{
                 fontSize: "var(--text-xs)",
                 fontWeight: "var(--font-weight-medium)",
                 color: "var(--muted-foreground)",
-                cursor: "pointer",
-                border: "none",
-                backgroundColor: "transparent",
               }}
             >
-              <ChevronsUpDown size={14} style={{ color: "var(--muted-foreground)" }} />
               Усі
-            </button>
+            </Button>
           </div>
           {leftRows}
         </div>
@@ -488,28 +479,24 @@ export function DayView({
                 {JUMP_RANGES.map((r, idx) => {
                   const isActive = idx === activeRange;
                   return (
-                    <button
+                    <Button
                       key={idx}
-                      onClick={() => {
+                      onPress={() => {
                         setActiveRange(idx);
                         onActiveRangeChange?.(idx);
                       }}
+                      variant={isActive ? "flat" : "light"}
+                      size="sm"
+                      color={isActive ? "primary" : "default"}
                       style={{
                         fontSize: "var(--text-2xs)",
                         fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
-                        color: isActive ? "var(--primary)" : "var(--muted-foreground)",
-                        backgroundColor: isActive ? "var(--primary-alpha-10)" : "transparent",
-                        border: isActive ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
-                        borderRadius: "var(--radius-sm, 4px)",
-                        padding: "3px 10px",
-                        cursor: "pointer",
-                        transition: "all 0.15s",
                         whiteSpace: "nowrap",
                         lineHeight: 1.4,
                       }}
                     >
                       {rangeLabel(r)}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown } from "@fzwp/ui-kit/icons";
+import { Button } from "@fzwp/ui-kit/button";
 import type { Department } from "./WeeklyTable";
 import { JUMP_RANGES } from "./DayViewComponents";
 
@@ -558,8 +559,10 @@ export function EfficiencyTable({
       }}
     >
       {/* ── Collapse toggle ── */}
-      <button
-        onClick={() => setExpanded((p) => !p)}
+      <Button
+        variant="light"
+        fullWidth
+        onPress={() => setExpanded((p) => !p)}
         className="flex items-center gap-2.5 w-full px-4 cursor-pointer transition-colors"
         style={{
           minHeight: 44,
@@ -568,13 +571,9 @@ export function EfficiencyTable({
           backgroundColor: expanded ? "var(--background)" : "var(--muted)",
           minWidth: 0,
           overflow: "hidden",
+          borderRadius: 0,
+          justifyContent: "flex-start",
         }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = expanded ? "var(--muted)" : "var(--primary-alpha-5)")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = expanded ? "var(--background)" : "var(--muted)")
-        }
       >
         {/* Icon button — consistent container in both states */}
         <div
@@ -620,7 +619,7 @@ export function EfficiencyTable({
         >
           {expanded ? "Згорнути" : "Розгорнути"}
         </span>
-      </button>
+      </Button>
 
       {/* ── Content ── */}
       {expanded && (
@@ -647,9 +646,11 @@ export function EfficiencyTable({
                 {(["week", "day"] as const).map((tab) => {
                   const active = activeTab === tab;
                   return (
-                    <button
+                    <Button
                       key={tab}
-                      onClick={() => setActiveTab(tab)}
+                      variant={active ? "solid" : "light"}
+                      size="sm"
+                      onPress={() => setActiveTab(tab)}
                       style={{
                         fontSize: "var(--text-2xs)",
                         fontWeight: active
@@ -657,16 +658,15 @@ export function EfficiencyTable({
                           : ("var(--font-weight-normal)" as any),
                         color: active ? "var(--foreground)" : "var(--muted-foreground)",
                         backgroundColor: active ? "var(--background)" : "transparent",
-                        border: "none",
                         borderRadius: "var(--radius-sm)",
                         padding: "2px 10px",
-                        cursor: "pointer",
-                        transition: "all 100ms",
                         boxShadow: active ? "var(--elevation-sm)" : "none",
+                        minWidth: "auto",
+                        height: "auto",
                       }}
                     >
                       {tab === "week" ? "Тиждень" : "День"}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

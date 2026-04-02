@@ -1,15 +1,16 @@
 import React, { useEffect, useRef } from "react";
+import { Button } from "@fzwp/ui-kit/button";
+import { Divider } from "@fzwp/ui-kit/divider";
 import {
-  Pencil,
+  EditPencil01,
   Copy,
   Clipboard,
-  Trash2,
-  ArrowRightLeft,
-  UserPlus,
-  UserCheck,
+  TrashFull,
   ArrowLeftRight,
-  Undo2,
-} from "lucide-react";
+  UserAdd,
+  UserCheck,
+  Undo,
+} from "@fzwp/ui-kit/icons";
 
 export interface ContextMenuAction {
   id: string;
@@ -34,24 +35,24 @@ interface ContextMenuProps {
 
 function buildEmployeeActions(hasClipboard: boolean): ContextMenuAction[] {
   return [
-    { id: "edit", label: "Редагувати зміну", icon: <Pencil size={14} /> },
+    { id: "edit", label: "Редагувати зміну", icon: <EditPencil01 size={14} /> },
     { id: "copy", label: "Копіювати", icon: <Copy size={14} />, shortcut: "Ctrl+C" },
     { id: "paste", label: "Вставити", icon: <Clipboard size={14} />, shortcut: "Ctrl+V", disabled: !hasClipboard },
     {
       id: "exchange",
       label: "Відправити на біржу",
-      icon: <ArrowRightLeft size={14} />,
+      icon: <ArrowLeftRight size={14} />,
       dividerBefore: true,
     },
     {
       id: "open-shift",
       label: "Перетворити на відкриту зміну",
-      icon: <UserPlus size={14} />,
+      icon: <UserAdd size={14} />,
     },
     {
       id: "delete",
       label: "Видалити",
-      icon: <Trash2 size={14} />,
+      icon: <TrashFull size={14} />,
       danger: true,
       dividerBefore: true,
     },
@@ -60,7 +61,7 @@ function buildEmployeeActions(hasClipboard: boolean): ContextMenuAction[] {
 
 function buildOpenShiftActions(hasClipboard: boolean): ContextMenuAction[] {
   return [
-    { id: "edit", label: "Редагувати зміну", icon: <Pencil size={14} /> },
+    { id: "edit", label: "Редагувати зміну", icon: <EditPencil01 size={14} /> },
     { id: "copy", label: "Копіювати", icon: <Copy size={14} />, shortcut: "Ctrl+C" },
     { id: "paste", label: "Вставити", icon: <Clipboard size={14} />, shortcut: "Ctrl+V", disabled: !hasClipboard },
     {
@@ -77,7 +78,7 @@ function buildOpenShiftActions(hasClipboard: boolean): ContextMenuAction[] {
     {
       id: "delete",
       label: "Видалити",
-      icon: <Trash2 size={14} />,
+      icon: <TrashFull size={14} />,
       danger: true,
       dividerBefore: true,
     },
@@ -86,13 +87,13 @@ function buildOpenShiftActions(hasClipboard: boolean): ContextMenuAction[] {
 
 function buildOnExchangeActions(hasClipboard: boolean): ContextMenuAction[] {
   return [
-    { id: "edit", label: "Редагувати зміну", icon: <Pencil size={14} /> },
+    { id: "edit", label: "Редагувати зміну", icon: <EditPencil01 size={14} /> },
     { id: "copy", label: "Копіювати", icon: <Copy size={14} />, shortcut: "Ctrl+C" },
     { id: "paste", label: "Вставити", icon: <Clipboard size={14} />, shortcut: "Ctrl+V", disabled: !hasClipboard },
     {
       id: "remove-exchange",
       label: "Зняти з біржі",
-      icon: <Undo2 size={14} />,
+      icon: <Undo size={14} />,
       dividerBefore: true,
     },
     {
@@ -103,7 +104,7 @@ function buildOnExchangeActions(hasClipboard: boolean): ContextMenuAction[] {
     {
       id: "delete",
       label: "Видалити",
-      icon: <Trash2 size={14} />,
+      icon: <TrashFull size={14} />,
       danger: true,
       dividerBefore: true,
     },
@@ -171,31 +172,32 @@ export function ShiftContextMenu({
       {actions.map((action) => (
         <div key={action.id}>
           {action.dividerBefore && (
-            <div
-              className="h-px"
-              style={{ backgroundColor: "var(--border)" }}
-            />
+            <Divider />
           )}
-          <button
-            onClick={() => {
+          <Button
+            variant="light"
+            size="sm"
+            isDisabled={action.disabled}
+            onPress={() => {
               if (action.disabled) return;
               onAction(action.id);
               onClose();
             }}
-            disabled={action.disabled}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] disabled:opacity-35 disabled:pointer-events-none"
+            startContent={
+              <span
+                className="flex-shrink-0"
+                style={{
+                  color: action.danger
+                    ? "var(--destructive)"
+                    : "var(--muted-foreground)",
+                }}
+              >
+                {action.icon}
+              </span>
+            }
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-[var(--muted)] justify-start rounded-none"
             style={{ minHeight: 0 }}
           >
-            <span
-              className="flex-shrink-0"
-              style={{
-                color: action.danger
-                  ? "var(--destructive)"
-                  : "var(--muted-foreground)",
-              }}
-            >
-              {action.icon}
-            </span>
             <span
               className="flex-1"
               style={{
@@ -219,7 +221,7 @@ export function ShiftContextMenu({
                 {action.shortcut}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       ))}
     </div>
