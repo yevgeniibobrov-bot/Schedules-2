@@ -32,6 +32,12 @@ import {
   type DragItem,
 } from "./ShiftCard";
 
+import { Button } from '@fzwp/ui-kit/button';
+import { Tooltip } from '@fzwp/ui-kit/tooltip';
+
+import { Progress } from '@fzwp/ui-kit/progress';
+import { Divider } from '@fzwp/ui-kit/divider';
+
 export interface Employee {
   id: string;
   name: string;
@@ -78,92 +84,69 @@ export interface Department {
 // ── Minor badge with hover tooltip ─────────────────────────────────────
 
 function MinorBadge() {
-  const [show, setShow] = useState(false);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const triggerRef = useRef<HTMLSpanElement>(null);
-
-  const handleEnter = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-    }
-    setShow(true);
-  };
-
   const restrictions = [
     { label: "Нічні зміни", value: "заборонено (22:00–06:00)", warn: true },
     { label: "Робочих днів/тижд.", value: "макс. 5" },
     { label: "Годин/тижд.", value: "макс. 36" },
   ];
 
+  const tooltipContent = (
+    <div style={{ minWidth: 200, maxWidth: 260 }}>
+      {/* Header */}
+      <div
+        className="px-3 py-1.5 flex items-center gap-1.5"
+        style={{ backgroundColor: "var(--warning-alpha-6)", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}
+      >
+        <CircleAlert size={12} style={{ color: "var(--chart-3)", flexShrink: 0 }} />
+        <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-3)" }}>
+          Неповнолітній працівник
+        </span>
+      </div>
+      {/* Content */}
+      <div className="px-3 py-2 flex flex-col gap-1">
+        {restrictions.map((r, i) => (
+          <div key={i} className="flex items-center justify-between gap-3">
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>
+              {r.label}
+            </span>
+            <span style={{
+              fontSize: "var(--text-xs)",
+              fontWeight: "var(--font-weight-medium)" as any,
+              color: r.warn ? "var(--chart-3)" : "var(--foreground)",
+              textAlign: "right",
+              whiteSpace: "nowrap",
+            }}>
+              {r.value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <span className="inline-flex items-center flex-shrink-0">
-      <span
-        ref={triggerRef}
-        onMouseEnter={handleEnter}
-        onMouseLeave={() => setShow(false)}
-        className="inline-flex items-center justify-center rounded-[var(--radius-sm)] cursor-help select-none"
-        style={{
-          height: 18,
-          paddingLeft: 5, paddingRight: 5,
-          fontSize: "var(--text-2xs)",
-          fontWeight: "var(--font-weight-semibold)" as any,
-          color: "var(--chart-3)",
-          backgroundColor: "var(--warning-alpha-10)",
-          lineHeight: 1,
-          whiteSpace: "nowrap",
-        }}
+      <Tooltip
+        content={tooltipContent}
+        placement="top"
+        classNames={{ content: "p-0 rounded-[var(--radius)] overflow-hidden border border-[var(--border)] bg-[var(--popover)]" }}
       >
-        &lt;18
-      </span>
-      {show && pos && createPortal(
-        <div
-          className="fixed pointer-events-none"
-          style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}
+        <span
+          className="inline-flex items-center justify-center rounded-[var(--radius-sm)] cursor-help select-none"
+          style={{
+            height: 18,
+            paddingLeft: 5, paddingRight: 5,
+            fontSize: "var(--text-2xs)",
+            fontWeight: "var(--font-weight-semibold)" as any,
+            color: "var(--chart-3)",
+            backgroundColor: "var(--warning-alpha-10)",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+          }}
         >
-          <div
-            className="rounded-[var(--radius)] overflow-hidden pointer-events-auto"
-            style={{
-              borderStyle: "solid", borderWidth: 1,
-              borderColor: "var(--border)",
-              backgroundColor: "var(--popover)",
-              boxShadow: "var(--elevation-md)",
-              minWidth: 220, maxWidth: 280,
-            }}
-          >
-            {/* Header */}
-            <div
-              className="px-3 py-1.5 flex items-center gap-1.5"
-              style={{ backgroundColor: "var(--warning-alpha-6)", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}
-            >
-              <CircleAlert size={12} style={{ color: "var(--chart-3)", flexShrink: 0 }} />
-              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-3)" }}>
-                Неповнолітній працівник
-              </span>
-            </div>
-            {/* Content */}
-            <div className="px-3 py-2 flex flex-col gap-1">
-              {restrictions.map((r, i) => (
-                <div key={i} className="flex items-center justify-between gap-3">
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>
-                    {r.label}
-                  </span>
-                  <span style={{
-                    fontSize: "var(--text-xs)",
-                    fontWeight: "var(--font-weight-medium)" as any,
-                    color: r.warn ? "var(--chart-3)" : "var(--foreground)",
-                    textAlign: "right",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {r.value}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          &lt;18
+        </span>
+      </Tooltip>
     </span>
   );
 }
@@ -455,24 +438,25 @@ function DayCell({
       </div>
       {/* Empty cell: full-area hover hint with centered "+" */}
       {(isEmpty || hasOnlyAbsences) && !isFact && !blocked && !isOver && !readOnly && (
-        <div
-          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors"
-          style={{ backgroundColor: hovered ? "var(--primary-alpha-4)" : "transparent" }}
-          onClick={() => onEmptyCellClick(employee, dayIndex, dept)}
-          title="Натисніть, щоб створити зміну"
-        >
+        <Tooltip content="Натисніть, щоб створити зміну" placement="top">
           <div
-            className="flex items-center justify-center rounded-full transition-opacity"
-            style={{
-              width: 22,
-              height: 22,
-              backgroundColor: "var(--primary-alpha-12)",
-              opacity: hovered ? 1 : 0,
-            }}
+            className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors"
+            style={{ backgroundColor: hovered ? "var(--primary-alpha-4)" : "transparent" }}
+            onClick={() => onEmptyCellClick(employee, dayIndex, dept)}
           >
-            <Plus size={14} style={{ color: "var(--primary)" }} />
+            <div
+              className="flex items-center justify-center rounded-full transition-opacity"
+              style={{
+                width: 22,
+                height: 22,
+                backgroundColor: "var(--primary-alpha-12)",
+                opacity: hovered ? 1 : 0,
+              }}
+            >
+              <Plus size={14} style={{ color: "var(--primary)" }} />
+            </div>
           </div>
-        </div>
+        </Tooltip>
       )}
       {isOver && canDrop && hasConflict && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 py-0.5" style={{ backgroundColor: "var(--destructive-alpha-12)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)" }}>
@@ -757,8 +741,21 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
     letterSpacing: "0.05em",
   };
   // Shared badge style (no dot — consistent for both sections)
-  const badge = (color: string, bg: string, text: string) => (
-    <span className="px-1.5 py-px rounded-full" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)" as any, color, backgroundColor: bg }}>
+  const badgeEl = (color: string, bg: string, text: string) => (
+    <span
+      style={{
+        fontSize: "var(--text-2xs)",
+        fontWeight: "var(--font-weight-semibold)" as any,
+        color,
+        backgroundColor: bg,
+        paddingLeft: 6,
+        paddingRight: 6,
+        borderRadius: 9999,
+        display: "inline-flex",
+        alignItems: "center",
+        lineHeight: 1,
+      }}
+    >
       {text}
     </span>
   );
@@ -781,9 +778,16 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
             {dept.name}
           </p>
         </div>
-        <button onClick={onClose} className="p-0.5 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors">
+        <Button
+          isIconOnly
+          variant="light"
+          size="sm"
+          onPress={onClose}
+          className="p-0.5 rounded-[var(--radius-sm)]"
+          aria-label="Закрити"
+        >
           <X size={14} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
       </div>
 
       {/* ── Overall day status ── */}
@@ -803,28 +807,29 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)" }}>
         <div className="flex items-center justify-between mb-1">
           <span style={sectionLabel}>Ефективність розподілу</span>
-          {badge(effColor, effBadgeBg, `${eff.efficiency}%`)}
+          {badgeEl(effColor, effBadgeBg, `${eff.efficiency}%`)}
         </div>
         {eff.status !== "ok" ? (
           <>
             <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", lineHeight: 1.45, marginTop: 2 }}>
               {eff.description}
             </p>
-            <button
-              onClick={() => {
+            <Button
+              variant="bordered"
+              size="sm"
+              onPress={() => {
                 document.dispatchEvent(new CustomEvent("open-efficiency-panel", { detail: { dayIndex, deptId: dept.id } }));
                 onClose();
               }}
+              className="w-full mt-1.5"
               style={{
-                display: "block", width: "100%", textAlign: "center",
                 fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
                 color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
-                border: "1px solid var(--primary-alpha-25)", padding: "4px 10px", borderRadius: "var(--radius-sm)",
-                cursor: "pointer", marginTop: 6,
+                border: "1px solid var(--primary-alpha-25)",
               }}
             >
               Переглянути розподіл →
-            </button>
+            </Button>
           </>
         ) : (
           <p style={{ fontSize: "var(--text-2xs)", color: "var(--muted-foreground)", marginTop: 2 }}>
@@ -837,7 +842,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       <div style={{ padding: "10px 12px 0" }}>
         <div className="flex items-center justify-between mb-1">
           <span style={sectionLabel}>Покриття</span>
-          {badge(coverageColor, coverageBadgeBg, `${coveragePct}%`)}
+          {badgeEl(coverageColor, coverageBadgeBg, `${coveragePct}%`)}
         </div>
         {/* Totals row */}
         <div className="flex items-center gap-3">
@@ -893,18 +898,19 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
       {/* ── Create open shift CTA — only when coverage is below target ── */}
       {coverageStatus !== "ok" && onCreateOpenShift && (
         <div style={{ padding: "8px 12px", borderTop: "1px solid var(--border)" }}>
-          <button
-            onClick={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
+          <Button
+            variant="bordered"
+            size="sm"
+            onPress={() => { onCreateOpenShift(dept.id, dayIndex); onClose(); }}
+            className="w-full"
             style={{
-              display: "block", width: "100%", textAlign: "center",
               fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any,
               color: "var(--primary)", backgroundColor: "var(--primary-alpha-5)",
-              border: "1px solid var(--primary-alpha-25)", borderRadius: "var(--radius-sm)",
-              padding: "5px 12px", cursor: "pointer",
+              border: "1px solid var(--primary-alpha-25)",
             }}
           >
             Створити відкриту зміну
-          </button>
+          </Button>
         </div>
       )}
 
@@ -914,7 +920,7 @@ function ResourcePopover({ dept, rc, dayIndex, dayLabel, days, isFact, onClose, 
 
 // ══════════════════════════════════════════════════════════════════════
 // Resource Summary Row — compact row with popover on day click
-// ═════════════════════════════════════════════════��════════════════════
+// ══════════════════════════════════════════════════════════════════════
 
 interface ResourceSummaryRowProps {
   dept: Department;
@@ -955,27 +961,38 @@ function ResourceSummaryRow({
       <td
         className="sticky left-0 z-10 px-3 py-1.5 border-b border-r border-[var(--border)]"
         style={{ backgroundColor: "var(--muted)" }}
-        title={tooltipText}
       >
-        <div className="flex items-center gap-2">
-          <BarChart3 size={13} style={{ color: "var(--muted-foreground)" }} />
-          <div className="flex items-center gap-1">
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>Прогноз</span>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{weeklyForecast}г</span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>/</span>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>Графік</span>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{weeklyCompare}г</span>
+        <Tooltip
+          content={
+            <div className="flex flex-col gap-0.5 p-1" style={{ fontSize: "var(--text-xs)" }}>
+              <span>Тижневе покриття: {pct}%</span>
+              <span>Прогноз: {weeklyForecast}г</span>
+              <span>{isFact ? "Фактично" : "Заплановано"}: {weeklyCompare}г</span>
+              <span>Різниця: {gapLabel}</span>
+            </div>
+          }
+          placement="right"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart3 size={13} style={{ color: "var(--muted-foreground)" }} />
+            <div className="flex items-center gap-1">
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>Прогноз</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{weeklyForecast}г</span>
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>/</span>
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>Графік</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>{weeklyCompare}г</span>
+            </div>
+            {focusedSubUnit && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full"
+                style={{ fontSize: "var(--text-3xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
+              >
+                <Layers size={9} />
+                {focusedSubUnit}
+              </span>
+            )}
           </div>
-          {focusedSubUnit && (
-            <span
-              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-              style={{ fontSize: "var(--text-3xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
-            >
-              <Layers size={9} />
-              {focusedSubUnit}
-            </span>
-          )}
-        </div>
+        </Tooltip>
       </td>
       {days.map((_, di) => {
         const d = effectiveDaily[di];
@@ -1102,19 +1119,6 @@ export function WeeklyTable({
     dotTimerRef.current = setTimeout(() => setDotPopover(null), 200);
   };
 
-  // ── Instant tooltip state (badges only) ────────────────────────────
-  const [tooltip, setTooltip] = useState<{ rect: DOMRect; lines: string[] } | null>(null);
-  const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const cancelTooltipTimer = () => { if (tooltipTimerRef.current) { clearTimeout(tooltipTimerRef.current); tooltipTimerRef.current = null; } };
-  const showTooltip = (el: HTMLElement, lines: string[]) => {
-    cancelTooltipTimer();
-    setTooltip({ rect: el.getBoundingClientRect(), lines });
-  };
-  const hideTooltip = () => {
-    cancelTooltipTimer();
-    tooltipTimerRef.current = setTimeout(() => setTooltip(null), 120);
-  };
-
   const toggleDept = (deptId: string) => {
     setCollapsed((prev) => ({ ...prev, [deptId]: !prev[deptId] }));
   };
@@ -1220,15 +1224,20 @@ export function WeeklyTable({
             >
               <div className="flex items-center justify-between gap-2">
                 <span>Працівник</span>
-                <button
-                  onClick={toggleAll}
-                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors"
-                  style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}
-                  title={allCollapsed ? "Розгорнути всі відділи" : "Згорнути всі відділи"}
-                >
-                  {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
-                  <span>{allCollapsed ? "Усі" : "Усі"}</span>
-                </button>
+                <Tooltip content={allCollapsed ? "Розгорнути всі відділи" : "Згорнути всі відділи"}>
+                  <div className="inline-flex">
+                    <Button
+                      variant="light"
+                      size="sm"
+                      onPress={toggleAll}
+                      className="inline-flex items-center gap-1 px-1.5 py-1"
+                      style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)" }}
+                    >
+                      {allCollapsed ? <ChevronsUpDown size={12} /> : <ChevronsDownUp size={12} />}
+                      <span>{allCollapsed ? "Усі" : "Усі"}</span>
+                    </Button>
+                  </div>
+                </Tooltip>
               </div>
             </th>
             {days.map((day, i) => (
@@ -1323,35 +1332,84 @@ export function WeeklyTable({
                     >
                       {dept.name}
                     </span>
-                    <span
-                      className="px-1.5 py-px rounded-full shrink-0"
-                      style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)" }}
-                      onMouseEnter={(e) => showTooltip(e.currentTarget, [`Працівників у відділі: ${dept.employees.length}`])}
-                      onMouseLeave={hideTooltip}
-                    >
-                      {dept.employees.length}
-                    </span>
-                    {deptIssueCount > 0 && (
+                    <Tooltip content={`Працівників у відділі: ${dept.employees.length}`}>
                       <span
-                        className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
-                        style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)" }}
-                        onMouseEnter={(e) => showTooltip(e.currentTarget, [`Проблеми: ${deptIssueCount}`, "Конфлікти, перевищення норм або порушення"])}
-                        onMouseLeave={hideTooltip}
+                        style={{
+                          fontSize: "var(--text-2xs)",
+                          fontWeight: "var(--font-weight-medium)",
+                          color: "var(--muted-foreground)",
+                          backgroundColor: "var(--border)",
+                          paddingLeft: 6,
+                          paddingRight: 6,
+                          borderRadius: 9999,
+                          flexShrink: 0,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          lineHeight: 1,
+                        }}
                       >
-                        <AlertTriangle size={10} />
-                        {deptIssueCount}
+                        {dept.employees.length}
                       </span>
+                    </Tooltip>
+                    {deptIssueCount > 0 && (
+                      <Tooltip
+                        content={
+                          <div className="flex flex-col gap-0.5">
+                            <span style={{ fontWeight: "var(--font-weight-semibold)" as any }}>Проблеми: {deptIssueCount}</span>
+                            <span>Конфлікти, перевищення норм або порушення</span>
+                          </div>
+                        }
+                      >
+                        <span
+                          style={{
+                            fontSize: "var(--text-2xs)",
+                            fontWeight: "var(--font-weight-semibold)",
+                            color: "var(--destructive)",
+                            backgroundColor: "var(--destructive-alpha-10)",
+                            paddingLeft: 6,
+                            paddingRight: 6,
+                            borderRadius: 9999,
+                            flexShrink: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 2,
+                            lineHeight: 1,
+                          }}
+                        >
+                          <AlertTriangle size={10} />
+                          {deptIssueCount}
+                        </span>
+                      </Tooltip>
                     )}
                     {exchangeCount > 0 && (
-                      <span
-                        className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
-                        style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
-                        onMouseEnter={(e) => showTooltip(e.currentTarget, [`Зміни на біржі: ${exchangeCount}`, "Очікують призначення працівника"])}
-                        onMouseLeave={hideTooltip}
+                      <Tooltip
+                        content={
+                          <div className="flex flex-col gap-0.5">
+                            <span style={{ fontWeight: "var(--font-weight-semibold)" as any }}>Зміни на біржі: {exchangeCount}</span>
+                            <span>Очікують призначення працівника</span>
+                          </div>
+                        }
                       >
-                        <ArrowRightLeft size={10} />
-                        {exchangeCount}
-                      </span>
+                        <span
+                          style={{
+                            fontSize: "var(--text-2xs)",
+                            fontWeight: "var(--font-weight-semibold)",
+                            color: "var(--chart-5)",
+                            backgroundColor: "var(--purple-alpha-12)",
+                            paddingLeft: 6,
+                            paddingRight: 6,
+                            borderRadius: 9999,
+                            flexShrink: 0,
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 2,
+                            lineHeight: 1,
+                          }}
+                        >
+                          <ArrowRightLeft size={10} />
+                          {exchangeCount}
+                        </span>
+                      </Tooltip>
                     )}
                   </div>
                 </td>
@@ -1438,11 +1496,11 @@ export function WeeklyTable({
                     const monthlyProgress = Math.min((emp.workedHours / emp.monthlyNorm) * 100, 100);
                     const overwork = emp.workedHours > emp.monthlyNorm;
                     const nearLimit = !overwork && emp.workedHours >= emp.monthlyNorm * 0.9;
-                    const progressBarColor = overwork
-                      ? "var(--destructive)"
+                    const progressColor: "danger" | "warning" | "success" = overwork
+                      ? "danger"
                       : nearLimit
-                        ? "var(--chart-3)"
-                        : "var(--chart-2)";
+                        ? "warning"
+                        : "success";
 
                     const originTooltip = emp.origin
                       ? emp.origin.type === "another-department"
@@ -1485,13 +1543,23 @@ export function WeeklyTable({
                             </div>
                             <div className="flex flex-col min-w-0 flex-1">
                               <div className="flex items-center gap-1.5">
-                                <span
-                                  className="truncate"
-                                  title={originTooltip}
-                                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: originTooltip ? "help" : undefined }}
-                                >
-                                  {emp.name}
-                                </span>
+                                {originTooltip ? (
+                                  <Tooltip content={originTooltip}>
+                                    <span
+                                      className="truncate"
+                                      style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33, cursor: "help" }}
+                                    >
+                                      {emp.name}
+                                    </span>
+                                  </Tooltip>
+                                ) : (
+                                  <span
+                                    className="truncate"
+                                    style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)", lineHeight: 1.33 }}
+                                  >
+                                    {emp.name}
+                                  </span>
+                                )}
                                 {emp.isMinor && <MinorBadge />}
                               </div>
                               <span className="truncate" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
@@ -1500,9 +1568,18 @@ export function WeeklyTable({
                               {/* Progress bar + hours with tooltip trigger */}
                               <EmployeeHoursTooltip emp={emp} weekPlannedHours={weekPlannedHours} remaining={remaining} exceeded={exceeded} overwork={overwork}>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <div className="h-1.5 rounded-full overflow-hidden flex-shrink-0" style={{ backgroundColor: "var(--border)", width: 56 }}>
-                                    <div className="h-full rounded-full transition-all" style={{ width: `${monthlyProgress}%`, backgroundColor: progressBarColor }} />
-                                  </div>
+                                  <Progress
+                                    value={monthlyProgress}
+                                    color={progressColor}
+                                    size="sm"
+                                    aria-label={`${emp.workedHours}/${emp.monthlyNorm}г`}
+                                    className="flex-shrink-0"
+                                    style={{ width: 56, height: 6 }}
+                                    classNames={{
+                                      track: "h-1.5",
+                                      indicator: "h-1.5",
+                                    }}
+                                  />
                                   <span className="flex-shrink-0" style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: overwork ? "var(--destructive)" : "var(--muted-foreground)" }}>
                                     {emp.workedHours}/{emp.monthlyNorm}г
                                   </span>
@@ -1567,13 +1644,39 @@ export function WeeklyTable({
                           <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--muted-foreground)", lineHeight: 1.4 }}>
                             Залучені з інших відділів
                           </span>
-                          <Info
-                            size={12}
-                            style={{ color: "var(--muted-foreground)", flexShrink: 0, cursor: "help" }}
-                            onMouseEnter={(e) => showTooltip(e.currentTarget as HTMLElement, ["Залучені з інших відділів", "Співробітники з інших відділів або з біржі змін,", "що тимчасово працюють у цьому відділі"])}
-                            onMouseLeave={hideTooltip}
-                          />
-                          <span className="inline-flex items-center justify-center rounded-full" style={{ height: 16, minWidth: 16, paddingLeft: 6, paddingRight: 6, fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--muted-foreground)", backgroundColor: "var(--muted)", lineHeight: 1 }}>
+                          <Tooltip
+                            content={
+                              <div className="flex flex-col gap-0.5">
+                                <span style={{ fontWeight: "var(--font-weight-semibold)" as any }}>Залучені з інших відділів</span>
+                                <span>Співробітники з інших відділів або з біржі змін,</span>
+                                <span>що тимчасово працюють у цьому відділі</span>
+                              </div>
+                            }
+                          >
+                            <span style={{ display: "inline-flex" }}>
+                              <Info
+                                size={12}
+                                style={{ color: "var(--muted-foreground)", flexShrink: 0, cursor: "help" }}
+                              />
+                            </span>
+                          </Tooltip>
+                          <span
+                            style={{
+                              fontSize: "var(--text-xs)",
+                              fontWeight: "var(--font-weight-medium)" as any,
+                              color: "var(--muted-foreground)",
+                              backgroundColor: "var(--muted)",
+                              height: 16,
+                              minWidth: 16,
+                              paddingLeft: 6,
+                              paddingRight: 6,
+                              borderRadius: 9999,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: 1,
+                            }}
+                          >
                             {tempEmps.length}
                           </span>
                         </div>
@@ -1618,42 +1721,6 @@ export function WeeklyTable({
           document.body
         );
       })()}
-
-      {/* Instant tooltip portal — badges */}
-      {tooltip && createPortal(
-        <div
-          className="fixed z-[100] pointer-events-none"
-          style={{
-            top: tooltip.rect.bottom + 6,
-            left: Math.max(8, Math.min(tooltip.rect.left + tooltip.rect.width / 2 - 100, window.innerWidth - 216)),
-            width: 200,
-          }}
-        >
-          <div
-            className="px-2.5 py-1.5 rounded-[var(--radius)] border border-[var(--border)]"
-            style={{
-              backgroundColor: "var(--popover)",
-              boxShadow: "var(--elevation-sm)",
-            }}
-          >
-            {tooltip.lines.map((line, i) => (
-              <div
-                key={i}
-                style={{
-                  fontSize: i === 0 ? "var(--text-xs)" : "var(--text-2xs)",
-                  fontWeight: i === 0 ? "var(--font-weight-semibold)" : "var(--font-weight-normal)" as any,
-                  color: i === 0 ? "var(--foreground)" : "var(--muted-foreground)",
-                  lineHeight: 1.4,
-                  marginTop: i > 0 ? 2 : 0,
-                }}
-              >
-                {line}
-              </div>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
@@ -1800,18 +1867,19 @@ function OpenShiftDayCell({
       </div>
       {/* Empty open-shift cell overlay */}
       {isEmpty && !isOver && !readOnly && (
-        <div
-          className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors"
-          style={{ backgroundColor: hovered ? "var(--success-alpha-5)" : "transparent" }}
-          title="Створити відкриту зміну"
-        >
+        <Tooltip content="Створити відкриту зміну" placement="top">
           <div
-            className="flex items-center justify-center rounded-full transition-opacity"
-            style={{ width: 22, height: 22, backgroundColor: "var(--success-alpha-12)", opacity: hovered ? 1 : 0 }}
+            className="absolute inset-0 flex items-center justify-center cursor-pointer transition-colors"
+            style={{ backgroundColor: hovered ? "var(--success-alpha-5)" : "transparent" }}
           >
-            <Plus size={14} style={{ color: "var(--chart-2)" }} />
+            <div
+              className="flex items-center justify-center rounded-full transition-opacity"
+              style={{ width: 22, height: 22, backgroundColor: "var(--success-alpha-12)", opacity: hovered ? 1 : 0 }}
+            >
+              <Plus size={14} style={{ color: "var(--chart-2)" }} />
+            </div>
           </div>
-        </div>
+        </Tooltip>
       )}
       {isOver && canDrop && (
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-1 py-0.5" style={{ backgroundColor: "var(--success-alpha-12)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-2)" }}>
@@ -1834,29 +1902,16 @@ interface EmployeeHoursTooltipProps {
 }
 
 function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, overwork, children }: EmployeeHoursTooltipProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
   const MONTH_NAMES = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
   const currentMonth = MONTH_NAMES[2]; // March 2026
 
-  // Multi-month check
   const weekStart = new Date(2026, 2, 2);
   const weekEnd = new Date(2026, 2, 8);
   const isCrossMonth = weekStart.getMonth() !== weekEnd.getMonth();
 
-  const handleEnter = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setPos({ top: rect.top - 8, left: rect.left + rect.width / 2 });
-    }
-    setIsOpen(true);
-  };
-
   const actualHours = Math.round(emp.workedHours * 0.79);
+  const mktHours = emp.marketplaceHours || 0;
 
-  // ── Compute absences + marketplace ──
   const ABSENCE_LABELS: Record<string, string> = {
     leave: "Відпустка",
     sick: "Лікарняний",
@@ -1874,152 +1929,129 @@ function EmployeeHoursTooltip({ emp, weekPlannedHours, remaining, exceeded, over
   }
   const absenceEntries = Object.entries(absenceSummary);
   const totalAbsenceDays = absenceEntries.reduce((s, [, v]) => s + v, 0);
-  const mktHours = emp.marketplaceHours || 0;
 
-  return (
-    <div
-      ref={triggerRef}
-      onMouseEnter={handleEnter}
-      onMouseLeave={() => setIsOpen(false)}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {children}
-      {isOpen && pos && createPortal(
-        <div
-          className="fixed pointer-events-none"
-          style={{ zIndex: 9999, top: pos.top, left: pos.left, transform: "translate(-50%, -100%)" }}
-        >
-          <div
-            className="rounded-[var(--radius)] overflow-hidden pointer-events-auto"
-            style={{
-              borderStyle: "solid", borderWidth: 1,
-              borderTopColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderRightColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderBottomColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              borderLeftColor: overwork ? "var(--destructive-alpha-15)" : "var(--border)",
-              backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)",
-              minWidth: 220, maxWidth: 300,
-            }}
-          >
-            {/* Header */}
-            <div
-              className="px-3 py-1.5"
-              style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}
-            >
-              {overwork ? (
-                <div className="flex items-center gap-1.5">
-                  <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
-                  <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
-                </div>
-              ) : (
-                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
-              )}
+  const tooltipContent = (
+    <div style={{ minWidth: 220, maxWidth: 300 }}>
+      <div className="px-3 py-1.5" style={{ backgroundColor: overwork ? "var(--destructive-alpha-6)" : "var(--muted)", borderBottom: "1px solid var(--border)" }}>
+        {overwork ? (
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle size={12} style={{ color: "var(--destructive)" }} />
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищення норми</span>
+          </div>
+        ) : (
+          <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{currentMonth}</span>
+        )}
+      </div>
+      <div className="px-3 py-2 flex flex-col gap-1">
+        {overwork ? (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
             </div>
-            {/* Content */}
-            <div className="px-3 py-2 flex flex-col gap-1">
-              {overwork ? (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
-                    </div>
-                  )}
-                  <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
-                  </div>
-                  {!emp.isMinor && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
-                      <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
-                    </div>
-                  )}
-                </div>
-              ) : isCrossMonth ? (
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekStart.getMonth()]}</span>
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.6)} / {emp.monthlyNorm}г</span>
-                    </div>
-                  </div>
-                  <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
-                  <div className="flex flex-col gap-0.5">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekEnd.getMonth()]}</span>
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                      <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.4)} / {emp.monthlyNorm}г</span>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
-                  </div>
-                  {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
-                    </div>
-                  )}
-                  <div className="h-px" style={{ backgroundColor: "var(--border)" }} />
-                  <div className="flex items-center justify-between">
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
-                  </div>
-                  {!emp.isMinor && (
-                    <div className="flex items-center justify-between gap-2">
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
-                      <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
             </div>
-            {/* ── Absences ── */}
-            {totalAbsenceDays > 0 && (
-              <div
-                className="px-3 py-1.5 flex flex-col gap-0.5"
-                style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}
-              >
-                {absenceEntries.map(([label, count]) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
-                      <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
-                    </div>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
-                      {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
-                    </span>
-                  </div>
-                ))}
+            {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
+              </div>
+            )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>Перевищено на</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--destructive)" }}>+{exceeded}г</span>
+            </div>
+            {!emp.isMinor && (
+              <div className="flex items-center justify-between gap-2">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
+                <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
               </div>
             )}
           </div>
-        </div>,
-        document.body
+        ) : isCrossMonth ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekStart.getMonth()]}</span>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.6)} / {emp.monthlyNorm}г</span>
+              </div>
+            </div>
+            <Divider />
+            <div className="flex flex-col gap-0.5">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--primary)" }}>{MONTH_NAMES[weekEnd.getMonth()]}</span>
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+                <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{Math.round(weekPlannedHours * 0.4)} / {emp.monthlyNorm}г</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Норма</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.monthlyNorm}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Заплановано</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{emp.workedHours}г</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Фактично</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>{actualHours}г</span>
+            </div>
+            {emp.marketplaceHours != null && emp.marketplaceHours > 0 && (
+              <div className="flex items-center justify-between">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>Біржа змін</span>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--chart-5)" }}>{emp.marketplaceHours}г</span>
+              </div>
+            )}
+            <Divider />
+            <div className="flex items-center justify-between">
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>Залишок</span>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--chart-2)" }}>{remaining}г</span>
+            </div>
+            {!emp.isMinor && (
+              <div className="flex items-center justify-between gap-2">
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Загальне навантаження</span>
+                <span className="shrink-0 whitespace-nowrap" style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>{(emp.workedHours + mktHours).toFixed(1)} / 250г</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {totalAbsenceDays > 0 && (
+        <div className="px-3 py-1.5 flex flex-col gap-0.5" style={{ borderTop: "1px solid var(--border)" }}>
+          {absenceEntries.map(([label, count]) => (
+            <div key={label} className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: label === "Лікарняний" ? "var(--chart-3)" : label === "Відпустка" ? "var(--chart-5)" : "var(--muted-foreground)" }} />
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--muted-foreground)" }}>{label}</span>
+              </div>
+              <span style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}>
+                {count} {count === 1 ? "день" : count < 5 ? "дні" : "днів"}
+              </span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
+  );
+
+  return (
+    <Tooltip
+      content={tooltipContent}
+      placement="top"
+      classNames={{
+        content: `p-0 rounded-[var(--radius)] overflow-hidden bg-[var(--popover)] ${overwork ? "border border-[var(--destructive-alpha-15)]" : "border border-[var(--border)]"}`,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    </Tooltip>
   );
 }

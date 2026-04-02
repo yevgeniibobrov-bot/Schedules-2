@@ -8,6 +8,9 @@ import {
   ArrowRightLeft,
   ChevronsUpDown,
 } from "lucide-react";
+import { Button } from "@fzwp/ui-kit/button";
+import { Tooltip } from "@fzwp/ui-kit/tooltip";
+
 import type { ShiftData } from "./ShiftCard";
 import type { Employee, Department, OpenShift } from "./WeeklyTable";
 import {
@@ -205,15 +208,15 @@ export function DayView({
             {dept.name}
           </span>
           <span
-            className="px-1.5 py-px rounded-full shrink-0"
-            style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)" }}
+            className="shrink-0"
+            style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", backgroundColor: "var(--border)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
           >
             {dept.employees.length}
           </span>
           {deptIssueCount > 0 && (
             <span
-              className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
-              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)" }}
+              className="inline-flex items-center gap-0.5 shrink-0"
+              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--destructive)", backgroundColor: "var(--destructive-alpha-10)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
             >
               <AlertTriangle size={10} />
               {deptIssueCount}
@@ -221,8 +224,8 @@ export function DayView({
           )}
           {exchangeCount > 0 && (
             <span
-              className="inline-flex items-center gap-0.5 px-1.5 py-px rounded-full shrink-0"
-              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)" }}
+              className="inline-flex items-center gap-0.5 shrink-0"
+              style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--chart-5)", backgroundColor: "var(--purple-alpha-12)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, borderRadius: 9999 }}
             >
               <ArrowRightLeft size={10} />
               {exchangeCount}
@@ -445,22 +448,22 @@ export function DayView({
               Працівник
             </span>
             {/* "Усі" toggle — normal-sized tertiary control */}
-            <button
-              onClick={toggleAll}
-              className="flex items-center gap-1.5 hover:bg-[var(--border)] transition-colors px-2 py-1 rounded-[var(--radius-sm)]"
-              title={allCollapsed ? "Розгорнути всі" : "Згорнути всі"}
-              style={{
-                fontSize: "var(--text-xs)",
-                fontWeight: "var(--font-weight-medium)",
-                color: "var(--muted-foreground)",
-                cursor: "pointer",
-                border: "none",
-                backgroundColor: "transparent",
-              }}
-            >
-              <ChevronsUpDown size={14} style={{ color: "var(--muted-foreground)" }} />
-              Усі
-            </button>
+            <Tooltip content={allCollapsed ? "Розгорнути всі" : "Згорнути всі"}>
+              <Button
+                variant="light"
+                size="sm"
+                onPress={toggleAll}
+                className="flex items-center gap-1.5"
+                style={{
+                  fontSize: "var(--text-xs)",
+                  fontWeight: "var(--font-weight-medium)",
+                  color: "var(--muted-foreground)",
+                }}
+              >
+                <ChevronsUpDown size={14} style={{ color: "var(--muted-foreground)" }} />
+                Усі
+              </Button>
+            </Tooltip>
           </div>
           {leftRows}
         </div>
@@ -488,9 +491,11 @@ export function DayView({
                 {JUMP_RANGES.map((r, idx) => {
                   const isActive = idx === activeRange;
                   return (
-                    <button
+                    <Button
                       key={idx}
-                      onClick={() => {
+                      variant={isActive ? "bordered" : "light"}
+                      size="sm"
+                      onPress={() => {
                         setActiveRange(idx);
                         onActiveRangeChange?.(idx);
                       }}
@@ -499,17 +504,14 @@ export function DayView({
                         fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
                         color: isActive ? "var(--primary)" : "var(--muted-foreground)",
                         backgroundColor: isActive ? "var(--primary-alpha-10)" : "transparent",
-                        border: isActive ? "1px solid var(--primary-alpha-25)" : "1px solid transparent",
-                        borderRadius: "var(--radius-sm, 4px)",
+                        borderColor: isActive ? "var(--primary-alpha-25)" : "transparent",
                         padding: "3px 10px",
-                        cursor: "pointer",
-                        transition: "all 0.15s",
                         whiteSpace: "nowrap",
                         lineHeight: 1.4,
                       }}
                     >
                       {rangeLabel(r)}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>

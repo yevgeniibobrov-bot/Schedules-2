@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { createPortal } from "react-dom";
 import {
   X,
   Clock,
@@ -23,6 +22,16 @@ import {
 import type { ShiftData } from "./ShiftCard";
 import { hasBlockingShift } from "./ShiftCard";
 import type { Employee, Department } from "./WeeklyTable";
+
+import { Drawer } from "@fzwp/ui-kit/drawer";
+import { Button } from "@fzwp/ui-kit/button";
+import { Select, SelectItem } from "@fzwp/ui-kit/select";
+import { Textarea } from "@fzwp/ui-kit/textarea";
+import { Divider } from "@fzwp/ui-kit/divider";
+
+import { Tooltip } from "@fzwp/ui-kit/tooltip";
+import { Popover, PopoverTrigger, PopoverContent } from "@fzwp/ui-kit/popover";
+import { PopoverLayout } from "@fzwp/ui-kit/popover";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -188,7 +197,7 @@ function buildColorMapFromUnits(units: string[]): Record<string, string> {
 // ── Small shared components ───────────────────────────────────────────
 
 function SectionDivider() {
-  return <div className="h-px bg-[var(--border)]" />;
+  return <Divider />;
 }
 
 function StatRow({
@@ -321,11 +330,9 @@ function ValidationRow({
 function SubUnitPill({ name, color }: { name: string; color: string }) {
   return (
     <span
-      className="relative inline-flex items-center px-1.5 py-px rounded-full flex-shrink-0 whitespace-nowrap overflow-hidden"
-      style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", color }}
+      style={{ color, backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999, fontSize: "var(--text-xs)" }}
     >
-      <span className="absolute inset-0 rounded-full pointer-events-none" style={{ backgroundColor: color, opacity: 0.12 }} />
-      <span className="relative">{name}</span>
+      {name}
     </span>
   );
 }
@@ -383,40 +390,32 @@ function TimelineBar({ segments, breaks }: { segments: TimelineSegment[]; breaks
           const left = toPercent(seg.start);
           const width = toPercent(seg.end) - left;
           return (
-            <div key={`seg-${i}`} className="absolute top-0 h-full rounded-[var(--radius-sm)]"
-              style={{ left: `${left}%`, width: `${Math.max(width, 0.5)}%`, backgroundColor: seg.color, opacity: 0.65, zIndex: 1 }}
-              onMouseEnter={() => setHoveredSeg(i)} onMouseLeave={() => setHoveredSeg(null)}
-            >
-              {hoveredSeg === i && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 rounded-[var(--radius-sm)] whitespace-nowrap pointer-events-none"
-                  style={{ backgroundColor: "var(--foreground)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", zIndex: 20 }}
-                >{seg.label}</div>
-              )}
-            </div>
+            <Tooltip key={`seg-${i}`} content={seg.label}>
+              <div className="absolute top-0 h-full rounded-[var(--radius-sm)]"
+                style={{ left: `${left}%`, width: `${Math.max(width, 0.5)}%`, backgroundColor: seg.color, opacity: 0.65, zIndex: 1 }}
+                onMouseEnter={() => setHoveredSeg(i)} onMouseLeave={() => setHoveredSeg(null)}
+              />
+            </Tooltip>
           );
         })}
         {breaks.map((brk, i) => {
           const left = toPercent(brk.start);
           const width = toPercent(brk.end) - left;
           return (
-            <div key={`brk-${i}`} className="absolute top-0 h-full"
-              style={{
-                left: `${left}%`, width: `${Math.max(width, 0.5)}%`, zIndex: 2,
-                backgroundColor: "var(--card)",
-                backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 2px, var(--muted-foreground) 2px, var(--muted-foreground) 2.5px)",
-                backgroundSize: "6px 6px",
-                opacity: 0.35,
-                borderLeft: "1.5px solid var(--muted-foreground)",
-                borderRight: "1.5px solid var(--muted-foreground)",
-              }}
-              onMouseEnter={() => setHoveredBrk(i)} onMouseLeave={() => setHoveredBrk(null)}
-            >
-              {hoveredBrk === i && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-1.5 py-0.5 rounded-[var(--radius-sm)] whitespace-nowrap pointer-events-none"
-                  style={{ backgroundColor: "var(--foreground)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", zIndex: 20 }}
-                >{brk.label}</div>
-              )}
-            </div>
+            <Tooltip key={`brk-${i}`} content={brk.label}>
+              <div className="absolute top-0 h-full"
+                style={{
+                  left: `${left}%`, width: `${Math.max(width, 0.5)}%`, zIndex: 2,
+                  backgroundColor: "var(--card)",
+                  backgroundImage: "repeating-linear-gradient(135deg, transparent, transparent 2px, var(--muted-foreground) 2px, var(--muted-foreground) 2.5px)",
+                  backgroundSize: "6px 6px",
+                  opacity: 0.35,
+                  borderLeft: "1.5px solid var(--muted-foreground)",
+                  borderRight: "1.5px solid var(--muted-foreground)",
+                }}
+                onMouseEnter={() => setHoveredBrk(i)} onMouseLeave={() => setHoveredBrk(null)}
+              />
+            </Tooltip>
           );
         })}
       </div>
@@ -632,7 +631,6 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
   const [draft, setDraft] = React.useState(value);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const listRef = React.useRef<HTMLDivElement>(null);
-  const containerRef = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => { setDraft(value); }, [value]);
 
   // Scroll to the selected/matching item when dropdown opens
@@ -669,98 +667,74 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
     return TIME_OPTIONS.filter((t) => t.startsWith(cleaned) || t.includes(cleaned));
   }, [draft, value]);
 
-  // Close dropdown on outside click (check both container and portal dropdown)
-  React.useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      const target = e.target as Node;
-      if (
-        containerRef.current && !containerRef.current.contains(target) &&
-        listRef.current && !listRef.current.contains(target)
-      ) {
-        commit();
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [open, commit]);
-
-  // Compute dropdown position based on input element
-  const [dropdownPos, setDropdownPos] = React.useState<{ top: number; left: number; width: number } | null>(null);
-  React.useEffect(() => {
-    if (open && inputRef.current) {
-      const rect = inputRef.current.getBoundingClientRect();
-      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-    }
-  }, [open]);
-
   return (
-    <div ref={containerRef} className="relative" style={{ width: 82 }}>
-      <div className="relative">
-        <input
-          ref={inputRef}
-          type="text"
-          value={draft}
-          onChange={(e) => { setDraft(e.target.value); if (!open) setOpen(true); }}
-          onFocus={() => { setOpen(true); setTimeout(() => inputRef.current?.select(), 0); }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") { commit(); inputRef.current?.blur(); }
-            if (e.key === "Escape") { setDraft(value); setOpen(false); inputRef.current?.blur(); }
-            if (e.key === "ArrowDown" && !open) setOpen(true);
-          }}
-          className="w-full appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-          style={{
-            fontSize: "var(--text-sm)", color: "var(--foreground)",
-            borderStyle: "solid", borderWidth: 1,
-            borderColor: open ? "var(--ring)" : "var(--border)",
-            textAlign: "center",
-          }}
-          placeholder="ЧЧ:ХХ"
-          maxLength={5}
-        />
-        <ChevronDown
-          size={12}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"
-          style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
-        />
-      </div>
-      {open && dropdownPos && createPortal(
-        <div
-          ref={listRef}
-          className="fixed rounded-[var(--radius)] border border-[var(--border)] overflow-auto"
-          style={{
-            top: dropdownPos.top,
-            left: dropdownPos.left,
-            width: dropdownPos.width,
-            backgroundColor: "var(--popover)",
-            boxShadow: "var(--elevation-md)",
-            maxHeight: 200,
-            zIndex: 9999,
-          }}
-        >
-          {filtered.length > 0 ? filtered.map((t) => (
-            <div
-              key={t}
-              className="px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-[var(--muted)]"
-              style={{
-                fontSize: "var(--text-sm)",
-                color: t === value ? "var(--primary)" : "var(--foreground)",
-                fontWeight: (t === value ? "var(--font-weight-semibold)" : "var(--font-weight-normal)") as any,
-                backgroundColor: t === value ? "var(--primary-alpha-6)" : undefined,
-              }}
-              onMouseDown={(e) => { e.preventDefault(); handleSelect(t); }}
-            >
-              {t}
-            </div>
-          )) : (
-            <div className="px-2.5 py-2 text-center" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
-              Не знайдено
-            </div>
-          )}
-        </div>,
-        document.body
-      )}
-    </div>
+    <Popover
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) commit();
+        setOpen(isOpen);
+      }}
+      placement="bottom-start"
+    >
+      <PopoverTrigger asChild>
+        <div className="relative" style={{ width: 82 }}>
+          <input
+            ref={inputRef}
+            type="text"
+            value={draft}
+            onChange={(e) => { setDraft(e.target.value); if (!open) setOpen(true); }}
+            onFocus={() => { setOpen(true); setTimeout(() => inputRef.current?.select(), 0); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { commit(); inputRef.current?.blur(); }
+              if (e.key === "Escape") { setDraft(value); setOpen(false); inputRef.current?.blur(); }
+              if (e.key === "ArrowDown" && !open) setOpen(true);
+            }}
+            className="w-full appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
+            style={{
+              fontSize: "var(--text-sm)", color: "var(--foreground)",
+              borderStyle: "solid", borderWidth: 1,
+              borderColor: open ? "var(--ring)" : "var(--border)",
+              textAlign: "center",
+            }}
+            placeholder="ЧЧ:ХХ"
+            maxLength={5}
+          />
+          <ChevronDown
+            size={12}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: "var(--muted-foreground)", transition: "transform 0.15s", transform: open ? "rotate(180deg)" : undefined }}
+          />
+        </div>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[82px] rounded-[var(--radius)] border border-[var(--border)] overflow-hidden"
+        style={{ backgroundColor: "var(--popover)", boxShadow: "var(--elevation-md)", padding: 0 }}
+      >
+        <PopoverLayout>
+          <div ref={listRef} className="max-h-[200px] overflow-auto">
+            {filtered.length > 0 ? filtered.map((t) => (
+              <div
+                key={t}
+                className="px-2.5 py-1.5 cursor-pointer transition-colors hover:bg-[var(--muted)]"
+                style={{
+                  fontSize: "var(--text-sm)",
+                  color: t === value ? "var(--primary)" : "var(--foreground)",
+                  fontWeight: (t === value ? "var(--font-weight-semibold)" : "var(--font-weight-normal)") as any,
+                  backgroundColor: t === value ? "var(--primary-alpha-6)" : undefined,
+                }}
+                onMouseDown={(e) => { e.preventDefault(); handleSelect(t); }}
+              >
+                {t}
+              </div>
+            )) : (
+              <div className="px-2.5 py-2 text-center" style={{ fontSize: "var(--text-xs)", color: "var(--muted-foreground)" }}>
+                Не знайдено
+              </div>
+            )}
+          </div>
+        </PopoverLayout>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -797,21 +771,22 @@ function TypeSwitch({ value, onChange }: { value: TypeMode; onChange: (v: TypeMo
       {(["shift", "absence"] as const).map((t) => {
         const active = value === t;
         return (
-          <button
+          <Button
             key={t}
-            onClick={() => onChange(t)}
-            className="flex-1 py-1.5 px-3 rounded-[var(--radius-sm)] transition-all"
+            onPress={() => onChange(t)}
+            variant={active ? "solid" : "light"}
+            size="sm"
+            className="flex-1"
             style={{
               fontSize: "var(--text-sm)",
               fontWeight: active ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
               color: active ? "var(--foreground)" : "var(--muted-foreground)",
               backgroundColor: active ? "var(--card)" : "transparent",
               boxShadow: active ? "var(--elevation-sm)" : "none",
-              cursor: "pointer",
             }}
           >
             {t === "shift" ? "Зміна" : "Відсутність"}
-          </button>
+          </Button>
         );
       })}
     </div>
@@ -830,7 +805,7 @@ const ABSENCE_TYPE_CONFIG: Record<AbsenceType, { label: string; icon: React.Reac
 
 // ══════════════════════════════════════════════════════════════════════
 // SHIFT ACTION STATUS — unified state machine (mutually exclusive)
-// ════════════��═════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
 
 type ShiftActionStatus = "standard" | "marketplace" | "proposal";
 
@@ -856,16 +831,16 @@ function ActionCard({
   disabledHint?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={disabled ? undefined : onClick}
-      className="flex items-start gap-2.5 w-full px-3 py-2.5 rounded-[var(--radius)] transition-all text-left"
+    <Button
+      variant="light"
+      onPress={disabled ? undefined : onClick}
+      isDisabled={disabled}
+      className="flex items-start gap-2.5 w-full px-3 py-2.5 rounded-[var(--radius)] transition-all text-left h-auto"
       style={{
         backgroundColor: disabled ? "var(--muted)" : selected ? bgColor : "transparent",
         borderStyle: "solid",
         borderWidth: selected ? 1.5 : 1,
         borderColor: disabled ? "var(--border)" : selected ? color : "var(--border)",
-        cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.6 : 1,
       }}
     >
@@ -881,7 +856,7 @@ function ActionCard({
       {selected && !disabled && (
         <CheckCircle2 size={16} className="mt-0.5 ml-auto flex-shrink-0" style={{ color }} />
       )}
-    </button>
+    </Button>
   );
 }
 
@@ -1175,7 +1150,7 @@ export function PlanningDrawer({
     return map;
   }, [department, dayIndex]);
 
-  // ── Validation (shift mode only) ────────────────────────────���────��─
+  // ── Validation (shift mode only) ────────────────────────────────────
   const overlappingBlockIds = useMemo(
     () => (isShiftOrCreate && typeMode === "shift" ? detectOverlaps(timeBlocks) : new Set<string>()),
     [isShiftOrCreate, typeMode, timeBlocks]
@@ -1342,7 +1317,7 @@ export function PlanningDrawer({
     return shift ? "Зберегти" : "Створити";
   })();
 
-  // ═══════════════════════════════════════════════════════════���═══════
+  // ═══════════════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════════════
 
@@ -1353,12 +1328,9 @@ export function PlanningDrawer({
   const contextDate = new Date(WEEK_START);
   contextDate.setDate(WEEK_START.getDate() + contextDayIdx);
 
-  const drawerContent = (
-    <>
-      {/* Overlay */}
-      <div className="fixed inset-0 z-39 bg-black/45" onClick={onClose} />
-
-      <div className="fixed top-0 right-0 bottom-0 z-40 w-[380px] bg-[var(--card)] flex flex-col" style={{ borderLeftWidth: 1, borderLeftStyle: "solid", borderLeftColor: "var(--border)", boxShadow: "var(--elevation-lg)" }}>
+  return (
+    <Drawer opened={true} onClose={onClose} placement="right" size="sm" showCloseBtn={false} title="" showFooter={false}>
+      <Drawer.Content>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderBottomStyle: "solid", borderBottomColor: "var(--border)" }}>
         <div className="flex items-center gap-2">
@@ -1367,9 +1339,9 @@ export function PlanningDrawer({
             {headerTitle}
           </span>
         </div>
-        <button onClick={onClose} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors flex-shrink-0" style={{ cursor: "pointer" }}>
+        <Button isIconOnly variant="light" size="sm" onPress={onClose}>
           <X size={18} style={{ color: "var(--muted-foreground)" }} />
-        </button>
+        </Button>
       </div>
 
       {/* Body */}
@@ -1433,7 +1405,7 @@ export function PlanningDrawer({
 
         {/* ═══ Create/Edit Mode – shared selectors ═══════════════════ */}
         {isShiftOrCreate && (
-          <div className="contents">
+          <>
             <SectionDivider />
             <div className="flex flex-col gap-3">
               <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", color: "var(--foreground)" }}>
@@ -1443,25 +1415,21 @@ export function PlanningDrawer({
               {/* Employee selector — primary control for shift type */}
               <div className="flex flex-col gap-1">
                 <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Працівник</span>
-                <div className="relative">
-                  <select
-                    value={selectedEmpId}
-                    onChange={(e) => {
-                      setSelectedEmpId(e.target.value);
-                      if (!e.target.value) { setShiftActionStatus("standard"); }
-                    }}
-                    className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                    style={{ fontSize: "var(--text-sm)", color: selectedEmpId ? "var(--foreground)" : "var(--muted-foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                  >
-                    <option value="">
-                      {typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
-                    </option>
-                    {allEmpList.map((e) => (
-                      <option key={e.id} value={e.id}>{e.name} — {e.position}</option>
-                    ))}
-                  </select>
-                  <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                </div>
+                <Select
+                  selectedKeys={selectedEmpId ? [selectedEmpId] : []}
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string ?? "";
+                    setSelectedEmpId(val);
+                    if (!val) { setShiftActionStatus("standard"); }
+                  }}
+                  placeholder={typeMode === "absence" ? "Оберіть працівника..." : "Немає (Відкрита зміна)"}
+                  size="sm"
+                  className="w-full"
+                >
+                  {allEmpList.map((e) => (
+                    <SelectItem key={e.id}>{e.name} — {e.position}</SelectItem>
+                  ))}
+                </Select>
                 {typeMode === "shift" && (() => {
                   if (shiftActionStatus === "proposal" && hasEmployee) return (
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-normal)" as any, color: "var(--chart-5)" }}>
@@ -1547,23 +1515,20 @@ export function PlanningDrawer({
 
               {/* ── Absence-specific fields ─────────────────────────── */}
               {typeMode === "absence" && (
-                <div className="contents">
+                <>
                   {/* Absence Type */}
                   <div className="flex flex-col gap-1">
                     <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Тип відсутності</span>
-                    <div className="relative">
-                      <select
-                        value={absenceType}
-                        onChange={(e) => setAbsenceType(e.target.value as AbsenceType)}
-                        className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                        style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                      >
-                        <option value="vacation">Відпустка</option>
-                        <option value="sick">Лікарняний</option>
-                        <option value="other">Інше</option>
-                      </select>
-                      <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                    </div>
+                    <Select
+                      selectedKeys={[absenceType]}
+                      onSelectionChange={(keys) => setAbsenceType(Array.from(keys)[0] as AbsenceType)}
+                      size="sm"
+                      className="w-full"
+                    >
+                      <SelectItem key="vacation">Відпустка</SelectItem>
+                      <SelectItem key="sick">Лікарняний</SelectItem>
+                      <SelectItem key="other">Інше</SelectItem>
+                    </Select>
                   </div>
 
                   {/* Absence type preview chip */}
@@ -1581,36 +1546,31 @@ export function PlanningDrawer({
                   <div className="flex items-center gap-2">
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Початок</span>
-                      <div className="relative">
-                        <select
-                          value={absenceStartDay}
-                          onChange={(e) => {
-                            const v = Number(e.target.value);
-                            setAbsenceStartDay(v);
-                            if (absenceEndDay < v) setAbsenceEndDay(v);
-                          }}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                        >
-                          {DAY_LABELS.map((d, i) => <option key={i} value={i}>{d}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                      </div>
+                      <Select
+                        selectedKeys={[String(absenceStartDay)]}
+                        onSelectionChange={(keys) => {
+                          const v = Number(Array.from(keys)[0]);
+                          setAbsenceStartDay(v);
+                          if (absenceEndDay < v) setAbsenceEndDay(v);
+                        }}
+                        size="sm"
+                        className="w-full"
+                      >
+                        {DAY_LABELS.map((d, i) => <SelectItem key={String(i)}>{d}</SelectItem>)}
+                      </Select>
                     </div>
                     <span style={{ fontSize: "var(--text-sm)", color: "var(--muted-foreground)", marginTop: 16 }}>до</span>
                     <div className="flex flex-col gap-1 flex-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Кінець</span>
-                      <div className="relative">
-                        <select
-                          value={absenceEndDay}
-                          onChange={(e) => setAbsenceEndDay(Number(e.target.value))}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                        >
-                          {DAY_LABELS.map((d, i) => <option key={i} value={i} disabled={i < absenceStartDay}>{d}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                      </div>
+                      <Select
+                        selectedKeys={[String(absenceEndDay)]}
+                        onSelectionChange={(keys) => setAbsenceEndDay(Number(Array.from(keys)[0]))}
+                        size="sm"
+                        className="w-full"
+                        disabledKeys={DAY_LABELS.map((_, i) => i).filter(i => i < absenceStartDay).map(String)}
+                      >
+                        {DAY_LABELS.map((d, i) => <SelectItem key={String(i)}>{d}</SelectItem>)}
+                      </Select>
                     </div>
                   </div>
 
@@ -1621,33 +1581,32 @@ export function PlanningDrawer({
                       {absenceEndDay - absenceStartDay + 1} дн.
                     </span>
                   </div>
-                </div>
+                </>
               )}
 
               {/* ── Shift-specific selectors ───────────────────────── */}
               {typeMode === "shift" && (
-                <div className="contents">
+                <>
                   {/* Department selector — hidden when opened from a specific department row (dayIndex provided) */}
                   {allDepartments && allDepartments.length > 1 && dayIndex == null && (
                     <div className="flex flex-col gap-1">
                       <span style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)" }}>Відділ</span>
-                      <div className="relative">
-                        <select value={selectedDeptId} onChange={(e) => setSelectedDeptId(e.target.value)}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                        >
-                          {allDepartments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                      </div>
+                      <Select
+                        selectedKeys={[selectedDeptId]}
+                        onSelectionChange={(keys) => setSelectedDeptId(Array.from(keys)[0] as string)}
+                        size="sm"
+                        className="w-full"
+                      >
+                        {allDepartments.map((d) => <SelectItem key={d.id}>{d.name}</SelectItem>)}
+                      </Select>
                     </div>
                   )}
 
 
-                </div>
+                </>
               )}
             </div>
-          </div>
+          </>
         )}
 
         {/* ═══ Employee-only: A) Profile → B) Monthly Balance → C) Total Workload → D) This Week ═══ */}
@@ -1665,7 +1624,7 @@ export function PlanningDrawer({
           }, 0);
 
           return (
-          <div className="contents">
+          <>
             {/* ── A. Employee Profile ──────────────────────────── */}
             <div className="rounded-[var(--radius)] overflow-hidden" style={{ backgroundColor: "var(--muted)" }}>
               <div className="flex items-center gap-3 px-3 py-3">
@@ -1807,13 +1766,13 @@ export function PlanningDrawer({
                 </div>
               </div>
             </div>
-          </div>
+          </>
           );
         })()}
 
         {/* ═══ Shift Mode – Combined Parts / Breaks / Timeline block ═══ */}
         {isShiftOrCreate && typeMode === "shift" && (
-          <div className="contents">
+          <>
             <SectionDivider />
 
             {/* Single cohesive block for shift configuration */}
@@ -1841,22 +1800,21 @@ export function PlanningDrawer({
                         style={{ fontSize: "var(--text-xs)", fontWeight: "var(--font-weight-semibold)", color: "var(--primary)", backgroundColor: "var(--primary-alpha-10)" }}>
                         {fmtDuration(dur)}
                       </span>
-                      <button onClick={() => removeBlock(block.id)} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors" style={{ cursor: "pointer" }}>
+                      <Button isIconOnly variant="light" size="sm" onPress={() => removeBlock(block.id)}>
                         <Trash2 size={14} style={{ color: "var(--muted-foreground)" }} />
-                      </button>
+                      </Button>
                     </div>
                     <div className="px-3 py-2 flex items-center gap-2">
                       <span style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>Дільниця</span>
-                      <div className="relative flex-1">
-                        <select value={block.unit} onChange={(e) => updateBlock(block.id, "unit", e.target.value)}
-                          className="w-full appearance-none px-2.5 py-1.5 pr-8 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
-                        >
-                          <option value="">Оберіть дільницю...</option>
-                          {availableUnits.map((u) => <option key={u} value={u}>{u}</option>)}
-                        </select>
-                        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                      </div>
+                      <Select
+                        selectedKeys={block.unit ? [block.unit] : []}
+                        onSelectionChange={(keys) => updateBlock(block.id, "unit", Array.from(keys)[0] as string ?? "")}
+                        placeholder="Оберіть дільницю..."
+                        size="sm"
+                        className="flex-1"
+                      >
+                        {availableUnits.map((u) => <SelectItem key={u}>{u}</SelectItem>)}
+                      </Select>
                     </div>
 
                     {block.unit && (unitRecommendations[block.unit] || []).length > 0 && (
@@ -1866,25 +1824,26 @@ export function PlanningDrawer({
                         {(unitRecommendations[block.unit] || []).map((rec) => {
                           const isActive = block.start === rec.start && block.end === rec.end;
                           return (
-                            <button
+                            <Button
                               key={rec.label}
-                              onClick={() => {
+                              size="sm"
+                              variant={isActive ? "solid" : "flat"}
+                              onPress={() => {
                                 setTimeBlocks((prev) => prev.map((b) =>
                                   b.id === block.id ? { ...b, start: rec.start, end: rec.end } : b
                                 ));
                               }}
-                              className="px-1.5 py-0.5 rounded-[var(--radius-sm)] transition-colors"
+                              className="px-1.5 py-0.5 min-w-0 h-auto"
                               style={{
                                 fontSize: "var(--text-2xs)",
                                 fontWeight: isActive ? "var(--font-weight-semibold)" : "var(--font-weight-medium)",
                                 color: isActive ? "var(--background)" : "var(--primary)",
                                 backgroundColor: isActive ? "var(--primary)" : "var(--primary-alpha-10)",
-                                cursor: "pointer",
                                 whiteSpace: "nowrap",
                               }}
                             >
                               {rec.label}
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>
@@ -1905,16 +1864,19 @@ export function PlanningDrawer({
                   </div>
                 );
               })}
-              <button onClick={addBlock}
-                className="w-full py-2 flex items-center justify-center gap-1.5 rounded-[var(--radius-sm)] border-dashed hover:bg-[var(--muted)] transition-colors"
-                style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+              <Button
+                variant="bordered"
+                onPress={addBlock}
+                className="w-full"
+                style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", borderStyle: "dashed" }}
+                startContent={<Plus size={14} />}
               >
-                <Plus size={14} /> Додати частину
-              </button>
+                Додати частину
+              </Button>
             </div>
 
             {/* Internal divider */}
-            <div className="h-px bg-[var(--border)]" />
+            <Divider />
 
             {/* ── Breaks ── */}
             <div className="flex flex-col gap-2 p-3">
@@ -1938,20 +1900,17 @@ export function PlanningDrawer({
                   {breakEntries.map((brk) => (
                     <div key={brk.id} className="flex items-center gap-2 px-2.5 py-1.5 rounded-[var(--radius-sm)]" style={{ backgroundColor: "var(--muted)" }}>
                       {/* Duration selector */}
-                      <div className="relative">
-                        <select
-                          value={brk.durationMin}
-                          onChange={(e) => updateBreakDuration(brk.id, Number(e.target.value))}
-                          className="appearance-none px-2 py-1 pr-6 rounded-[var(--radius-sm)] bg-[var(--input-background)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                          style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)", width: 80 }}
-                        >
-                          <option value={30}>30 хв</option>
-                          <option value={60}>60 хв</option>
-                          <option value={90}>90 хв</option>
-                          <option value={120}>120 хв</option>
-                        </select>
-                        <ChevronDown size={12} className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--muted-foreground)" }} />
-                      </div>
+                      <Select
+                        selectedKeys={[String(brk.durationMin)]}
+                        onSelectionChange={(keys) => updateBreakDuration(brk.id, Number(Array.from(keys)[0]))}
+                        size="sm"
+                        className="w-[80px]"
+                      >
+                        <SelectItem key="30">30 хв</SelectItem>
+                        <SelectItem key="60">60 хв</SelectItem>
+                        <SelectItem key="90">90 хв</SelectItem>
+                        <SelectItem key="120">120 хв</SelectItem>
+                      </Select>
 
                       {/* Start time */}
                       <TimeInput value={brk.startTime} onChange={(v) => updateBreakStart(brk.id, v)} />
@@ -1959,9 +1918,9 @@ export function PlanningDrawer({
                       <span className="flex-1" />
 
                       {/* Delete */}
-                      <button onClick={() => removeBreak(brk.id)} className="p-1 rounded-[var(--radius-sm)] hover:bg-[var(--border)] transition-colors" style={{ cursor: "pointer" }}>
+                      <Button isIconOnly variant="light" size="sm" onPress={() => removeBreak(brk.id)}>
                         <Trash2 size={13} style={{ color: "var(--muted-foreground)" }} />
-                      </button>
+                      </Button>
                     </div>
                   ))}
                 </div>
@@ -1969,61 +1928,63 @@ export function PlanningDrawer({
 
               {/* Quick add buttons (spec #8: no duplicated + in text) */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => addBreak(30)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                <Button
+                  variant="bordered"
+                  size="sm"
+                  onPress={() => addBreak(30)}
+                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", borderStyle: "dashed" }}
+                  startContent={<Plus size={13} />}
                 >
-                  <Plus size={13} /> 30 хв
-                </button>
-                <button
-                  onClick={() => addBreak(60)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[var(--radius-sm)] hover:bg-[var(--muted)] transition-colors"
-                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--primary)", cursor: "pointer", borderStyle: "dashed", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+                  30 хв
+                </Button>
+                <Button
+                  variant="bordered"
+                  size="sm"
+                  onPress={() => addBreak(60)}
+                  style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)", color: "var(--primary)", borderStyle: "dashed" }}
+                  startContent={<Plus size={13} />}
                 >
-                  <Plus size={13} /> 60 хв
-                </button>
+                  60 хв
+                </Button>
               </div>
             </div>
 
             {/* ── Timeline (visual preview) ── */}
             {timeBlocks.length > 0 && (
-              <div className="contents">
-                <div className="h-px bg-[var(--border)]" />
+              <>
+                <Divider />
                 <div className="p-3">
                   <ShiftTimeline timeBlocks={timeBlocks} breakState={breakState} colorMap={shiftColorMap} breakEntries={breakEntries} />
                 </div>
-              </div>
+              </>
             )}
 
             </div>{/* end cohesive block */}
 
-          </div>
+          </>
         )}
 
         {/* ═══ Validation (both shift and absence) ═══════════════════ */}
         {isShiftOrCreate && (
-          <div className="contents">
+          <>
             <SectionDivider />
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <label style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any, color: "var(--foreground)" }}>Перевірка</label>
                 {hardErrorCount > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full"
-                    style={{ backgroundColor: "var(--destructive)", color: "var(--destructive-foreground)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", lineHeight: 1 }}>
+                  <span style={{ backgroundColor: "var(--destructive)", color: "var(--destructive-foreground)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999 }}>
                     {hardErrorCount}
                   </span>
                 )}
                 {warningCount > 0 && hardErrorCount === 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full"
-                    style={{ backgroundColor: "var(--chart-3)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", lineHeight: 1 }}>
+                  <span style={{ backgroundColor: "var(--chart-3)", color: "var(--card)", fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-semibold)", display: "inline-flex", alignItems: "center", lineHeight: 1, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2, borderRadius: 9999 }}>
                     {warningCount}
                   </span>
                 )}
               </div>
               {validationMessages.map((msg, i) => <ValidationRow key={i} type={msg.type} text={msg.text} />)}
             </div>
-          </div>
+          </>
         )}
       </div>
 
@@ -2031,8 +1992,10 @@ export function PlanningDrawer({
       {isShiftOrCreate && (
         <div className="px-4 py-3" style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: "var(--border)" }}>
           {isShiftMode && !isAnyCreate && onDeleteShift && shift && (
-            <button
-              onClick={() => {
+            <Button
+              variant="bordered"
+              color="danger"
+              onPress={() => {
                 onDeleteShift({
                   deptId: selectedDeptId,
                   employeeId: selectedEmpId,
@@ -2041,40 +2004,29 @@ export function PlanningDrawer({
                 });
                 onClose();
               }}
-              className="w-full h-10 rounded-[var(--radius)] transition-colors"
+              className="w-full"
               style={{
                 fontSize: "var(--text-sm)",
                 fontWeight: "var(--font-weight-medium)" as any,
                 lineHeight: 1.2,
-                color: "var(--destructive)",
-                backgroundColor: "transparent",
-                border: "1px solid var(--destructive)",
-                cursor: "pointer",
                 marginBottom: 8,
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--destructive-alpha-10)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-              }}
+              startContent={<Trash2 size={13} />}
             >
-              <span className="inline-flex items-center gap-1.5 justify-center">
-                <Trash2 size={13} />
-                Видалити зміну
-              </span>
-            </button>
+              Видалити зміну
+            </Button>
           )}
         <div className="flex items-center gap-2">
-          <button onClick={onClose}
-            className="px-4 py-2 rounded-[var(--radius)] bg-[var(--input-background)] hover:bg-[var(--muted)] transition-colors"
-            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)", cursor: "pointer", borderStyle: "solid", borderWidth: 1, borderTopColor: "var(--border)", borderRightColor: "var(--border)", borderBottomColor: "var(--border)", borderLeftColor: "var(--border)" }}
+          <Button
+            variant="bordered"
+            onPress={onClose}
+            style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-medium)" as any, color: "var(--foreground)" }}
           >
             Скасувати
-          </button>
-          <button
-            disabled={isBlocked}
-            onClick={() => {
+          </Button>
+          <Button
+            isDisabled={isBlocked}
+            onPress={() => {
               if (isBlocked) return;
               // Determine effective status for save
               // Spec: marketplace card on assigned shift → becomes open marketplace shift
@@ -2139,7 +2091,7 @@ export function PlanningDrawer({
               }
               onClose();
             }}
-            className="flex-1 py-2 rounded-[var(--radius)] transition-opacity"
+            className="flex-1"
             style={{
               fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)" as any,
               color: "var(--primary-foreground)",
@@ -2153,7 +2105,6 @@ export function PlanningDrawer({
                       ? "var(--primary)"
                       : "var(--primary)",
               opacity: isBlocked ? 0.5 : 1,
-              cursor: isBlocked ? "not-allowed" : "pointer",
             }}
           >
             {hasHardErrors ? (
@@ -2161,14 +2112,11 @@ export function PlanningDrawer({
             ) : (
               primaryButtonLabel
             )}
-          </button>
+          </Button>
         </div>
         </div>
       )}
-      </div>
-    </>
+      </Drawer.Content>
+    </Drawer>
   );
-
-  if (typeof document === "undefined") return drawerContent;
-  return createPortal(drawerContent, document.body);
 }

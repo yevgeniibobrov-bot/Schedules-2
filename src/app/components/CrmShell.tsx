@@ -3,16 +3,22 @@ import svgPaths from "../../imports/svg-jfnxlebcsy";
 import imgImage from "../../assets/88041e830143e9dc2f636f1b7864b368e1816471.png";
 import imgSilpoLogo from "../../assets/d67ff0d1c512da8a24b5df3159e4e6886bbfd634.png";
 
+import { Avatar } from '@fzwp/ui-kit/avatar';
+import { Button } from '@fzwp/ui-kit/button';
+import { Divider } from '@fzwp/ui-kit/divider';
+import { Tooltip } from '@fzwp/ui-kit/tooltip';
+import { User } from '@fzwp/ui-kit/user';
+
 // ── Sidebar nav item icons ──────────────────────────────────────────
 
 const navItems = [
-  { id: "home", path: svgPaths.p308b2180, viewBox: "0 0 18.1667 15.1186", inset: "15.24% 8.33% 16.67% 8.33%", outerInset: "-5.51% -4.5%" },
-  { id: "schedule", path: svgPaths.p2f744080, viewBox: "0 0 14.8333 16.5", inset: "12.5% 16.67%", outerInset: "-5% -5.63% -5% -5.62%", active: true },
-  { id: "delivery", path: svgPaths.p3d1c100, viewBox: "0 0 17.3333 14.0001", inset: "18.75% 10.42%", outerInset: "-6% -4.74%", fill: true },
-  { id: "move", path: svgPaths.p2d6d9a00, viewBox: "0 0 16.5 16.5", inset: "12.5%", outerInset: "-5%" },
-  { id: "checklist", path: svgPaths.p1589ddc0, viewBox: "0 0 14.8334 12.3334", inset: "20.83% 16.67% 25% 16.67%", outerInset: "-6.92% -5.63%" },
-  { id: "exchange", path: svgPaths.p3ad15980, viewBox: "0 0 13.1667 13.1667", inset: "20.83%", outerInset: "-6.43%" },
-  { id: "receipt", path: svgPaths.p6807900, viewBox: "0 0 17.75 16.5", inset: "12.5% 9.38%", outerInset: "-5% -4.62%", fill: true },
+  { id: "home", name: "Головна", path: svgPaths.p308b2180, viewBox: "0 0 18.1667 15.1186", inset: "15.24% 8.33% 16.67% 8.33%", outerInset: "-5.51% -4.5%" },
+  { id: "schedule", name: "Графік", path: svgPaths.p2f744080, viewBox: "0 0 14.8333 16.5", inset: "12.5% 16.67%", outerInset: "-5% -5.63% -5% -5.62%", active: true },
+  { id: "delivery", name: "Доставка", path: svgPaths.p3d1c100, viewBox: "0 0 17.3333 14.0001", inset: "18.75% 10.42%", outerInset: "-6% -4.74%", fill: true },
+  { id: "move", name: "Переміщення", path: svgPaths.p2d6d9a00, viewBox: "0 0 16.5 16.5", inset: "12.5%", outerInset: "-5%" },
+  { id: "checklist", name: "Чеклист", path: svgPaths.p1589ddc0, viewBox: "0 0 14.8334 12.3334", inset: "20.83% 16.67% 25% 16.67%", outerInset: "-6.92% -5.63%" },
+  { id: "exchange", name: "Обмін", path: svgPaths.p3ad15980, viewBox: "0 0 13.1667 13.1667", inset: "20.83%", outerInset: "-6.43%" },
+  { id: "receipt", name: "Накладна", path: svgPaths.p6807900, viewBox: "0 0 17.75 16.5", inset: "12.5% 9.38%", outerInset: "-5% -4.62%", fill: true },
 ] as const;
 
 interface NavIconProps {
@@ -31,20 +37,6 @@ function NavIcon({ item }: NavIconProps) {
               <path d={item.path} stroke="var(--foreground)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" />
             )}
           </svg>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Divider line ────────────────────────────────────────────────────
-
-function SidebarDivider() {
-  return (
-    <div className="w-full" style={{ height: 32, minHeight: 32 }}>
-      <div className="flex flex-row items-center size-full">
-        <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
-          <div style={{ width: "100%", height: 1, backgroundColor: "var(--border)" }} />
         </div>
       </div>
     </div>
@@ -186,7 +178,13 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
                 />
 
                 {/* Divider after home */}
-                <SidebarDivider />
+                <div className="w-full" style={{ height: 32, minHeight: 32 }}>
+                  <div className="flex flex-row items-center size-full">
+                    <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
+                      <Divider />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Schedule (active) */}
                 <NavButton
@@ -209,7 +207,13 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
 
             {/* Bottom section */}
             <div className="flex flex-col items-center justify-end shrink-0 w-full" style={{ backgroundColor: "var(--sidebar)" }}>
-              <SidebarDivider />
+              <div className="w-full" style={{ height: 32, minHeight: 32 }}>
+                <div className="flex flex-row items-center size-full">
+                  <div className="flex items-center w-full" style={{ paddingLeft: 12, paddingRight: 12 }}>
+                    <Divider />
+                  </div>
+                </div>
+              </div>
               <NavButton
                 icon={<HeadphonesIcon />}
                 isActive={false}
@@ -219,11 +223,9 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
 
             {/* Collapse button */}
             <div className="absolute" style={{ right: -12, top: 20, borderRadius: "var(--radius-md)" }}>
-              <div className="flex flex-row items-center justify-center size-full">
-                <div className="flex items-center justify-center" style={{ padding: 2 }}>
-                  <CollapseIcon />
-                </div>
-              </div>
+              <Button isIconOnly variant="light">
+                <CollapseIcon />
+              </Button>
             </div>
           </div>
         </div>
@@ -276,50 +278,25 @@ export function CrmShell({ children, isFocusMode = false }: CrmShellProps) {
                 <div className="flex items-center shrink-0" style={{ gap: 16 }}>
                   {/* Bell button */}
                   <div className="flex items-center shrink-0" style={{ gap: 8 }}>
-                    <div className="relative shrink-0" style={{ backgroundColor: "var(--primary-alpha-10)", borderRadius: "var(--radius)" }}>
-                      <div className="flex flex-row items-center justify-center size-full">
-                        <div className="flex items-center justify-center" style={{ padding: 6 }}>
-                          <BellIcon />
-                        </div>
-                      </div>
-                    </div>
+                    <Button isIconOnly variant="light">
+                      <BellIcon />
+                    </Button>
                   </div>
 
                   {/* Vertical divider */}
                   <div className="flex flex-row items-center self-stretch" style={{ padding: "4px 0" }}>
-                    <div style={{ width: 1, height: "100%", backgroundColor: "var(--border)" }} />
+                    <Divider orientation="vertical" />
                   </div>
                 </div>
 
                 {/* User button */}
                 <div className="relative shrink-0" style={{ borderRadius: "var(--radius)" }}>
                   <div className="flex flex-row items-center size-full overflow-clip" style={{ borderRadius: "inherit", padding: 8, gap: 8 }}>
-                    {/* Avatar */}
-                    <div className="relative shrink-0 rounded-full" style={{ backgroundColor: "var(--primary-alpha-10)" }}>
-                      <div className="flex flex-row items-center justify-center size-full">
-                        <div className="flex items-center justify-center overflow-clip relative shrink-0">
-                          <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
-                            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                              <img alt="avatar" className="absolute max-w-none w-full" style={{ height: "150%", left: 0, top: "-1.85%" }} src={imgImage} />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Name + email */}
-                    <div className="flex flex-col items-start shrink-0" style={{ whiteSpace: "nowrap", isolation: "isolate" }}>
-                      <div className="flex flex-col justify-center relative shrink-0" style={{ zIndex: 1 }}>
-                        <p style={{ fontSize: "var(--text-sm)", fontWeight: "var(--font-weight-semibold)", lineHeight: "14px", color: "var(--foreground)" }}>
-                          Валентин Острозький
-                        </p>
-                      </div>
-                      <div className="flex flex-col justify-center relative shrink-0">
-                        <p style={{ fontSize: "var(--text-2xs)", fontWeight: "var(--font-weight-medium)", lineHeight: "12px", color: "var(--muted-foreground)" }}>
-                          v.ostrozkyi@silpo.ua
-                        </p>
-                      </div>
-                    </div>
+                    <User
+                      name="Валентин Острозький"
+                      description="v.ostrozkyi@silpo.ua"
+                      avatarProps={{ src: imgImage }}
+                    />
 
                     {/* Caret */}
                     <CaretDownIcon />
@@ -359,25 +336,20 @@ interface NavButtonProps {
 
 function NavButton({ icon, isActive, onClick }: NavButtonProps) {
   return (
-    <div
-      className="shrink-0 w-full cursor-pointer"
-      style={{ height: 32, minHeight: 32, overflow: "clip" }}
-      onClick={onClick}
+    <Button
+      isIconOnly
+      variant="light"
+      onPress={onClick}
+      className="shrink-0 w-full"
+      style={{
+        height: 32,
+        minHeight: 32,
+        borderRadius: "var(--radius)",
+        backgroundColor: isActive ? "var(--background)" : "transparent",
+        transition: "background-color 0.15s",
+      }}
     >
-      <div
-        className="flex flex-row items-center justify-center size-full"
-        style={{
-          borderRadius: "var(--radius)",
-          backgroundColor: isActive ? "var(--background)" : "transparent",
-          minHeight: "inherit",
-          overflow: "clip",
-          transition: "background-color 0.15s",
-        }}
-      >
-        <div className="flex items-center justify-center size-full" style={{ padding: "0 12px", minHeight: "inherit" }}>
-          {icon}
-        </div>
-      </div>
-    </div>
+      {icon}
+    </Button>
   );
 }
